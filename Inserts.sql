@@ -1,7 +1,9 @@
 USE GestionDeActivos;
 
 -- Tipos de activos
-INSERT INTO Tipos (Nombre, AdmiteComponentes) VALUES ('PC', 1), ('RAM', 0), ('Procesador', 0), ('Impresora', 0), ('Camara', 0);
+INSERT INTO Tipos (Nombre, AdmiteComponentes) VALUES ('PC', 1), ('RAM', 0), ('Procesador', 0), ('Impresora', 1), ('Camara', 0),('Tarjet SIM',0),('Celular',1);
+
+Insert into ComposicionTipos (idTipoPadre, idTipoComponente) values (1,2,0),(1,3,0),(7,6,0);
 
 -- Atributos para PC
 INSERT INTO Atributos (Nombre, idTipo, Obligatorio, `Default`) VALUES ('SO', 1, 1, 'windows 10'), ('IP', 1, 0, ''), ('MAC', 1, 0, ''), ('Aplicaciones', 1, 0, '');
@@ -32,6 +34,8 @@ VALUES
 -- RAM de la PC 1
 ('RAM Kingston 8GB', NOW(), 2, JSON_OBJECT('Tamaño','8 GB'), 1),
 ('RAM Kingston 8GB', NOW(), 2, JSON_OBJECT('Tamaño','8 GB'), 1),
+('RAM Kingston 8GB', NOW(), 2, JSON_OBJECT('Tamaño','8 GB'), 1),
+('RAM Kingston 8GB', NOW(), 2, JSON_OBJECT('Tamaño','8 GB'), 1),
 
 -- RAM de la PC 2
 ('RAM Corsair 16GB', NOW(), 2, JSON_OBJECT('Tamaño','16 GB'), 2),
@@ -41,6 +45,17 @@ VALUES
 ('Intel Core i5-10400', NOW(), 3, JSON_OBJECT('Procesador','Intel Core i5-10400'), 1),
 
 -- Procesador de la PC 2
-('AMD Ryzen 5 5600G', NOW(), 3, JSON_OBJECT('Procesador','AMD Ryzen 5 5600G'), 2);
+('AMD Ryzen 5 5600G', NOW(), 3, JSON_OBJECT('Procesador','AMD Ryzen 5 5600G'), 2),
 
+-- Celulares
+('CEL01',NOW(),7,null,null),
+('CEL02',NOW(),7,null,null);
+insert into Activos  (Nombre, FechaCreación, idTipo, Atributos, Compone)values 
+
+
+-- Tarjetas SIM
+('SIM1',now(),6,null,(select idActivo from Activos a where a.Nombre='CEL01')),
+('SIM2',now(),6,null,(select idActivo from Activos a where a.Nombre='CEL02'));
 select * from Activos;
+select * from Activos a where a.Compone is null;
+select * from Tipos a where a.AdmiteComponentes = true;
