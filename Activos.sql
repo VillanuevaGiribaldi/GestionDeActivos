@@ -47,9 +47,9 @@ ENGINE = InnoDB;
 
 
 -- -----------------------------------------------------
--- Table `GestionDeActivos`.`Estado`
+-- Table `GestionDeActivos`.`Estados`
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `GestionDeActivos`.`Estado` (
+CREATE TABLE IF NOT EXISTS `GestionDeActivos`.`Estados` (
   `idEstado` INT NOT NULL AUTO_INCREMENT,
   `nombre` VARCHAR(45) NOT NULL,
   `descripcion` VARCHAR(200) NULL,
@@ -86,16 +86,37 @@ ENGINE = InnoDB;
 
 
 -- -----------------------------------------------------
+-- Table `GestionDeActivos`.`Proveedores`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `GestionDeActivos`.`Proveedores` (
+  `idProveedor` INT NOT NULL AUTO_INCREMENT,
+  `nombre` VARCHAR(100) NOT NULL,
+  `direccion` VARCHAR(100) NULL,
+  `telefono` VARCHAR(45) NULL,
+  `mail` VARCHAR(150) NULL,
+  `descripcion` VARCHAR(200) NULL,
+  PRIMARY KEY (`idProveedor`))
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
 -- Table `GestionDeActivos`.`Facturas`
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `GestionDeActivos`.`Facturas` (
   `idFactura` INT NOT NULL AUTO_INCREMENT,
+  `idProveedor` INT NULL,
   `fecha` DATETIME NOT NULL,
   `monto` DECIMAL(12,2) NOT NULL,
   `moneda` VARCHAR(3) NOT NULL,
   `numero` VARCHAR(45) NOT NULL,
   `ruta` VARCHAR(255) NOT NULL,
-  PRIMARY KEY (`idFactura`))
+  PRIMARY KEY (`idFactura`),
+  INDEX `fk_Facturas_Proveedores1_idx` (`idProveedor` ASC) VISIBLE,
+  CONSTRAINT `fk_Facturas_Proveedores1`
+    FOREIGN KEY (`idProveedor`)
+    REFERENCES `GestionDeActivos`.`Proveedores` (`idProveedor`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
 ENGINE = InnoDB;
 
 
@@ -112,9 +133,11 @@ CREATE TABLE IF NOT EXISTS `GestionDeActivos`.`Activos` (
   `idPersona` INT NULL,
   `compone` INT NULL,
   `nombre` VARCHAR(45) NULL,
-  `fechaCreacion` DATETIME NULL,
+  `fechaRegistro` DATETIME NULL,
   `atributosExtra` JSON NULL,
   `precioUnitario` DECIMAL(12,2) NULL,
+  `numeroSerie` VARCHAR(100) NULL,
+  `modelo` VARCHAR(50) NULL,
   PRIMARY KEY (`idActivo`),
   INDEX `fk_Activos_Activos1_idx` (`compone` ASC) VISIBLE,
   INDEX `fk_Activos_Ubicaciones1_idx` (`idUbicacion` ASC) VISIBLE,
@@ -123,6 +146,7 @@ CREATE TABLE IF NOT EXISTS `GestionDeActivos`.`Activos` (
   INDEX `fk_Activos_Personas1_idx` (`idPersona` ASC) VISIBLE,
   INDEX `fk_Activos_Tipos1_idx` (`idTipo` ASC) VISIBLE,
   INDEX `fk_Activos_Facturas1_idx` (`idFactura` ASC) VISIBLE,
+  UNIQUE INDEX `numeroSerie_UNIQUE` (`numeroSerie` ASC) VISIBLE,
   CONSTRAINT `fk_Activos_Activos1`
     FOREIGN KEY (`compone`)
     REFERENCES `GestionDeActivos`.`Activos` (`idActivo`)
@@ -140,7 +164,7 @@ CREATE TABLE IF NOT EXISTS `GestionDeActivos`.`Activos` (
     ON UPDATE NO ACTION,
   CONSTRAINT `fk_Activos_Estado1`
     FOREIGN KEY (`idEstado`)
-    REFERENCES `GestionDeActivos`.`Estado` (`idEstado`)
+    REFERENCES `GestionDeActivos`.`Estados` (`idEstado`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION,
   CONSTRAINT `fk_Activos_Personas1`
@@ -167,9 +191,9 @@ ENGINE = InnoDB;
 CREATE TABLE IF NOT EXISTS `GestionDeActivos`.`Atributos` (
   `idAtributo` INT NOT NULL AUTO_INCREMENT,
   `idTipo` INT NOT NULL,
-  `obligatorio` TINYINT NULL,
   `porDefecto` VARCHAR(100) NULL,
   `nombre` VARCHAR(45) NULL,
+  `obligatorio` BOOLEAN NULL,
   PRIMARY KEY (`idAtributo`),
   UNIQUE INDEX `UX_tipoNombre` (`idTipo` ASC, `nombre` ASC) VISIBLE,
   CONSTRAINT `fk_Atributos_Tipos1`
@@ -257,16 +281,46 @@ ENGINE = InnoDB;
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `GestionDeActivos`.`Imagenes` (
   `idImagen` INT NOT NULL AUTO_INCREMENT,
-  `Activos_idActivo` INT NOT NULL,
+  `idActivo` INT NOT NULL,
   `ruta` VARCHAR(255) NOT NULL,
   `estado` CHAR(1) NOT NULL,
-  `fecha` VARCHAR(45) NULL,
-  `Imagenescol` VARCHAR(45) NULL,
+  `fecha` DATETIME NULL,
+  `descripcion` VARCHAR(100) NULL,
   PRIMARY KEY (`idImagen`),
-  INDEX `fk_Imagenes_Activos1_idx` (`Activos_idActivo` ASC) VISIBLE,
+  INDEX `fk_Imagenes_Activos1_idx` (`idActivo` ASC) VISIBLE,
   CONSTRAINT `fk_Imagenes_Activos1`
-    FOREIGN KEY (`Activos_idActivo`)
+    FOREIGN KEY (`idActivo`)
     REFERENCES `GestionDeActivos`.`Activos` (`idActivo`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `GestionDeActivos`.`Mantenimientos`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `GestionDeActivos`.`Mantenimientos` (
+  `idMantenimiento` INT NOT NULL,
+  `Mantenimientoscol` VARCHAR(45) NULL,
+  `idActivo` INT NOT NULL,
+  `idProveedor` INT NOT NULL,
+  `fallaReportada` VARCHAR(200) NULL,
+  `reparacionRealizada` VARCHAR(200) NULL,
+  `fechaEnvio` DATE NULL,
+  `fechaDevolucion` DATE NULL,
+  `costoTotal` DECIMAL(12,2) NULL,
+  `Mantenimientoscol1` VARCHAR(45) NULL,
+  PRIMARY KEY (`idMantenimiento`),
+  INDEX `fk_Mantenimientos_Activos1_idx` (`idActivo` ASC) VISIBLE,
+  INDEX `fk_Mantenimientos_Proveedores1_idx` (`idProveedor` ASC) VISIBLE,
+  CONSTRAINT `fk_Mantenimientos_Activos1`
+    FOREIGN KEY (`idActivo`)
+    REFERENCES `GestionDeActivos`.`Activos` (`idActivo`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_Mantenimientos_Proveedores1`
+    FOREIGN KEY (`idProveedor`)
+    REFERENCES `GestionDeActivos`.`Proveedores` (`idProveedor`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION)
 ENGINE = InnoDB;
