@@ -11,7 +11,7 @@ SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,N
 -- -----------------------------------------------------
 -- Schema GestionDeActivos
 -- -----------------------------------------------------
-DROP DATABASE IF EXISTS `GestionDeActivos`;
+DROP SCHEMA IF EXISTS `GestionDeActivos`;
 CREATE SCHEMA IF NOT EXISTS `GestionDeActivos` DEFAULT CHARACTER SET utf8 ;
 USE `GestionDeActivos` ;
 
