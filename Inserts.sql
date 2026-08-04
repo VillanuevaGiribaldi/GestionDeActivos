@@ -1,61 +1,39 @@
 USE GestionDeActivos;
+INSERT INTO Tipos (nombre, estado, descripcion) 
+VALUES ('PC', 'A', 'Computadora de escritorio'), ('Celular', 'A', 'Telefono movil'), ('Monitor', 'A', 'Monitor de computadora'), ('Teclado', 'A', 'Teclado'), ('Mouse', 'A', 'Mouse'), ('Camara', 'A', 'Camara de seguridad'), ('Impresora', 'A', 'Impresora'), ('RAM', 'A', 'Memoria RAM'), ('CPU', 'A', 'Procesador'), ('Fuente', 'A', 'Fuente de alimentacion'), ('Disco', 'A', 'Disco de almacenamiento'), ('SIM', 'A', 'Tarjeta SIM'), ('Micro SD', 'A', 'Tarjeta de memoria');
 
--- Tipos de activos
-INSERT INTO Tipos (Nombre, AdmiteComponentes) VALUES ('PC', 1), ('RAM', 0), ('Procesador', 0), ('Impresora', 1), ('Camara', 0),('Tarjet SIM',0),('Celular',1);
+INSERT INTO ComposicionTipos (idTipoPadre, idTipoComponente, Obligatorio) 
+VALUES (1, 8, 1), (1, 9, 1), (1, 10, 1), (1, 11, 1), (2, 12, 1), (2, 13, 0);
 
-Insert into ComposicionTipos (idTipoPadre, idTipoComponente) values (1,2,0),(1,3,0),(7,6,0);
+INSERT INTO Atributos (idTipo, porDefecto, nombre, obligatorio) 
+VALUES (1, 'Windows 11', 'Sistema Operativo', 1), (1, NULL, 'Direccion IP', 0), (2, 'Android', 'Sistema Operativo', 1), (2, NULL, 'IMEI', 1), (3, '24', 'Pulgadas', 1), (3, '1920x1080', 'Resolucion', 1), (4, 'ES', 'Distribucion', 1), (5, 'Optico', 'Tipo Sensor', 1), (6, '1080p', 'Resolucion', 1), (6, 'Exterior', 'Ubicacion de uso', 0), (7, 'Laser', 'Tecnologia', 1), (7, 'Monocromatica', 'Color', 1), (8, '8 GB', 'Capacidad', 1), (8, 'DDR4', 'Tipo', 1), (9, NULL, 'Modelo', 1), (9, NULL, 'Frecuencia', 1), (10, '500 W', 'Potencia', 1), (11, 'SSD', 'Tecnologia', 1), (11, '512 GB', 'Capacidad', 1), (12, NULL, 'Numero', 1), (12, 'Claro', 'Operadora', 1), (13, '64 GB', 'Capacidad', 1);
 
--- Atributos para PC
-INSERT INTO Atributos (Nombre, idTipo, Obligatorio, `Default`) VALUES ('SO', 1, 1, 'windows 10'), ('IP', 1, 0, ''), ('MAC', 1, 0, ''), ('Aplicaciones', 1, 0, '');
-
--- Atributos para RAM
-INSERT INTO Atributos (Nombre, idTipo, Obligatorio, `Default`) VALUES ('Tamaño', 2, 1, '');
-
--- Atributos para Procesador
-INSERT INTO Atributos (Nombre, idTipo, Obligatorio, `Default`) VALUES ('Procesador', 3, 1, '');
-
--- Atributos para Impresora
-INSERT INTO Atributos (Nombre, idTipo, Obligatorio, `Default`) VALUES ('TipoToner', 4, 1, 'X86'), ('IP', 4, 0, ''), ('MAC', 4, 0, ''), ('Conexion', 4, 0, 'USB'), ('Duplex', 4, 0, 'No');
-
--- Atributos para Cámara
-INSERT INTO Atributos (Nombre, idTipo, Obligatorio, `Default`) VALUES ('Resolucion', 5, 1, '1080p'), ('VisionNocturna', 5, 0, 'Sí'), ('TipoConexion', 5, 0, 'IP'), ('IP', 5, 0, ''), ('MAC', 5, 0, '');
+INSERT INTO Marcas (nombre, descripcion, estado) 
+VALUES ('Dell', 'PC y monitores', 'A'), ('HP', 'PC, impresoras y monitores', 'A'), ('Lenovo', 'PC y monitores', 'A'), ('Samsung', 'Celulares, monitores y micro SD', 'A'), ('Motorola', 'Celulares', 'A'), ('Logitech', 'Teclados y mouse', 'A'), ('Genius', 'Perifericos', 'A'), ('Hikvision', 'Camaras de seguridad', 'A'), ('Kingston', 'RAM y almacenamiento', 'A'), ('Intel', 'Procesadores', 'A'), ('AMD', 'Procesadores', 'A'), ('Corsair', 'RAM y fuentes de alimentacion', 'A'), ('Seagate', 'Discos de almacenamiento', 'A'), ('Western Digital', 'Discos de almacenamiento', 'A'), ('SanDisk', 'Micro SD y almacenamiento', 'A');
 
 select * from Atributos;
 select * from Tipos;
-USE GestionDeActivos;
+select * from Marcas;
 
-INSERT INTO Activos
-(Nombre, FechaCreación, idTipo, Atributos, Compone)
-VALUES
--- PCs
-('PC-Administracion-01', NOW(), 1, JSON_OBJECT('SO','Windows 11','IP','192.168.1.10','MAC','00:11:22:33:44:55','Aplicaciones','Office, Chrome'), NULL),
-('PC-Desarrollo-01', NOW(), 1, JSON_OBJECT('SO','Ubuntu 24.04','IP','192.168.1.20','MAC','AA:BB:CC:DD:EE:FF','Aplicaciones','VS Code, Docker'), NULL),
+INSERT INTO Personas (nombre, apellido, dni, cargo, estado) 
+VALUES ('Juan', 'Perez', '30111222', 'Administrador de Sistemas', 'A'), ('Maria', 'Gomez', '28444555', 'Soporte Tecnico', 'A'), ('Carlos', 'Lopez', '32999888', 'Contador', 'A'), ('Ana', 'Rodriguez', '35666777', 'Gerente', 'A'), ('Lucas', 'Fernandez', '38999111', 'Vendedor', 'A'), ('Sofia', 'Martinez', '41222333', 'Recepcionista', 'A');
 
--- RAM de la PC 1
-('RAM Kingston 8GB', NOW(), 2, JSON_OBJECT('Tamaño','8 GB'), 1),
-('RAM Kingston 8GB', NOW(), 2, JSON_OBJECT('Tamaño','8 GB'), 1),
-('RAM Kingston 8GB', NOW(), 2, JSON_OBJECT('Tamaño','8 GB'), 1),
-('RAM Kingston 8GB', NOW(), 2, JSON_OBJECT('Tamaño','8 GB'), 1),
+INSERT INTO Usuarios (idPersona, username, password, rol, estado) 
+VALUES (1, 'jperez', '$2a$10$admin123', 'Administrador', 'A'), (2, 'mgomez', '$2a$10$tecnico123', 'Tecnico', 'A');
 
--- RAM de la PC 2
-('RAM Corsair 16GB', NOW(), 2, JSON_OBJECT('Tamaño','16 GB'), 2),
-('RAM Corsair 16GB', NOW(), 2, JSON_OBJECT('Tamaño','16 GB'), 2),
+select * from usuarios;
+select * from personas;
 
--- Procesador de la PC 1
-('Intel Core i5-10400', NOW(), 3, JSON_OBJECT('Procesador','Intel Core i5-10400'), 1),
+INSERT INTO Ubicaciones (idUbicacionPadre, nombre, descripcion, estado) 
+VALUES (NULL, 'Sucursal Centro', 'Casa central', 'A'), (NULL, 'Sucursal Norte', 'Sucursal zona norte', 'A');
 
--- Procesador de la PC 2
-('AMD Ryzen 5 5600G', NOW(), 3, JSON_OBJECT('Procesador','AMD Ryzen 5 5600G'), 2),
-
--- Celulares
-('CEL01',NOW(),7,null,null),
-('CEL02',NOW(),7,null,null);
-insert into Activos  (Nombre, FechaCreación, idTipo, Atributos, Compone)values 
+INSERT INTO Ubicaciones (idUbicacionPadre, nombre, descripcion, estado) 
+VALUES (1, 'Caja 1', 'Caja de atencion 1', 'A'), (1, 'Caja 2', 'Caja de atencion 2', 'A'), (1, 'Oficina', 'Oficina administrativa', 'A'), (2, 'Caja 1', 'Caja de atencion 1', 'A'), (2, 'Caja 2', 'Caja de atencion 2', 'A'), (2, 'Oficina', 'Oficina administrativa', 'A');
 
 
--- Tarjetas SIM
-('SIM1',now(),6,null,(select idActivo from Activos a where a.Nombre='CEL01')),
-('SIM2',now(),6,null,(select idActivo from Activos a where a.Nombre='CEL02'));
-select * from Activos;
-select * from Activos a where a.Compone is null;
-select * from Tipos a where a.AdmiteComponentes = true;
+
+select * from Ubicaciones;
+
+INSERT INTO Estados (nombre, descripcion) 
+VALUES ('Activo', 'El activo se encuentra operativo y en uso'), ('Roto', 'El activo presenta una falla y requiere reparacion'), ('Baja', 'El activo fue retirado definitivamente del inventario'), ('Obsoleto', 'El activo funciona, pero quedo desactualizado o fue reemplazado');
+
