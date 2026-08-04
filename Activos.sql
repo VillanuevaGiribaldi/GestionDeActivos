@@ -210,7 +210,7 @@ ENGINE = InnoDB;
 CREATE TABLE IF NOT EXISTS `GestionDeActivos`.`ComposicionTipos` (
   `idTipoPadre` INT NOT NULL,
   `idTipoComponente` INT NOT NULL,
-  `Obligatorio` TINYINT NOT NULL,
+  `Obligatorio` BOOLEAN NOT NULL,
   PRIMARY KEY (`idTipoPadre`, `idTipoComponente`),
   INDEX `fk_ComposicionTipos_Tipos1_idx` (`idTipoPadre` ASC) VISIBLE,
   INDEX `fk_ComposicionTipos_Tipos2_idx` (`idTipoComponente` ASC) VISIBLE,

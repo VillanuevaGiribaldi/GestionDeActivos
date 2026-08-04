@@ -19,7 +19,18 @@ INSERT INTO `Marcas` (`nombre`, `descripcion`, `estado`) VALUES
 INSERT INTO `Tipos` (`nombre`, `descripcion`, `estado`) VALUES 
 ('Notebook', 'Computadora portátil', 'A'),
 ('Monitor', 'Pantalla externa', 'A'),
-('Mouse', 'Mouse inalámbrico o cableado', 'A');
+('Mouse', 'Mouse inalámbrico o cableado', 'A'),
+('PC', 'Computadoras de escritorio', 'A'),
+('RAM', 'Memoria RAM', 'A'),
+('CPU', 'Procesador', 'A'),
+('Fuente', 'Fuente de alimentación', 'A'),
+('Disco', 'Disco de almacenamiento', 'A'),
+('SIM', 'Tarjeta SIM', 'A');
+
+-- Componer los tipos
+call sp_componerTipos('PC','CPU',null);
+call sp_componerTipos('PC','ram',null);
+call sp_componerTipos('PC','Fuente',null);
 
 -- 4. Insertar Ubicaciones (Probando la relación Padre-Hijo)
 -- Primero creamos la Sede Principal (No tiene padre, idUbicacionPadre es NULL)
@@ -92,7 +103,7 @@ INSERT INTO `Activos` (
 -- ===============================================================
 
 -- Consulta 1: El inventario completo y legible para un humano
-
+select * from Tipos;
 SELECT 
     a.nombre AS 'Nombre Equipo',
     a.numeroSerie AS 'Nro Serie',
