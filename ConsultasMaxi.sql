@@ -97,6 +97,20 @@ INSERT INTO `Activos` (
   'NB-VT-001', NOW(), '{"ram": "8GB", "cpu": "i5", "almacenamiento": "256GB SSD"}', 750000.00, 'LEN-SN-888', 'ThinkPad E14'
 );
 
+-- Activo 3: Una PC para maría
+INSERT INTO `Activos` (
+  `idMarca`, `idUbicacion`, `idTipo`, `idEstado`, `idFactura`, `idPersona`, 
+  `nombre`, `fechaRegistro`, `atributosExtra`, `precioUnitario`, `numeroSerie`, `modelo`
+) VALUES (
+  2, -- Lenovo
+  3, -- Oficina Ventas
+  4, -- Notebook
+  1, -- Operativo
+  null, -- sin factura
+  2, -- Asignada a María
+  'PC-VT-001', NOW(), '{"ram": "8GB", "cpu": "i5", "almacenamiento": "256GB SSD"}', 750000.00, 'LEN-PC-888', 'ThinkPad E14'
+);
+
 
 -- ===============================================================
 -- 							CONSULTAS
@@ -140,3 +154,5 @@ SELECT
 FROM Facturas f
 INNER JOIN Proveedores prov ON f.idProveedor = prov.idProveedor
 INNER JOIN Activos a ON f.idFactura = f.idFactura;
+
+
