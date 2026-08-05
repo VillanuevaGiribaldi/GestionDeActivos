@@ -164,7 +164,6 @@ DELIMITER //
 CREATE procedure sp_modificarActivo(
 	-- Obligatorios
 	IN pidActivo INT,
-    IN pidUsuario INT,
     -- Dejar null los valores que no serán modificados
 	IN pNombreMarca VARCHAR(45),
     IN pNombreUbicacion VARCHAR(45),
@@ -181,8 +180,6 @@ CREATE procedure sp_modificarActivo(
 )
 SALIR:BEGIN
 	-- Actualmente no se realiza ninguna verificación del JSON pAtributosExtra
-    
-    
     
     DECLARE vIdMarca INT;
 	DECLARE vIdUbicacion INT;
@@ -202,26 +199,11 @@ SALIR:BEGIN
 		SIGNAL SQLSTATE '45000'
 			SET MESSAGE_TEXT = 'Debe incluir un activo a modificar';
 	END IF; 
-    -- 
-    IF pidUsuario IS NOT NULL AND NOT EXISTS (
-		SELECT 1
-		FROM Usuarios
-		WHERE idUsuario = pidUsuario
-	) THEN
-		SIGNAL SQLSTATE '45000'
-			SET MESSAGE_TEXT = 'El usuario indicado no existe';
-	END IF; 
-    IF pidUsuario IS NULL
-	THEN
-		SIGNAL SQLSTATE '45000'
-			SET MESSAGE_TEXT = 'Debe incluir el usuario que realiza la modificación';
-	END IF; 
 
 	SELECT idMarca INTO vIdMarca FROM Marcas WHERE nombre LIKE pNombreMarca;
 	SELECT idUbicacion INTO vIdUbicacion FROM Ubicaciones WHERE nombre LIKE pNombreUbicacion;
 	SELECT idTipo INTO vIdTipo FROM Tipos WHERE nombre LIKE pNombreTipo;
 	SELECT idEstado INTO vIdEstado FROM Estados WHERE nombre LIKE pNombreEstado;
-
 	
 	IF pidPersona IS NOT NULL AND NOT EXISTS (
 		SELECT 1

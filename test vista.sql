@@ -29,3 +29,20 @@ CALL sp_nuevoActivo(
     /* pNumeroSerie     */ 'DLPCA001',
     /* pModelo          */ 'OptiPlex 7010'
 );
+
+
+CALL sp_modificarActivo(
+	/* pidActivo */			3,
+        /* pNombreMarca     */ 'Lenovo',
+    /* pNombreUbicacion */ NULL,
+    /* pNombreTipo      */ NULL,
+    /* pNombreEstado    */ NULL,
+    /* pidFactura       */ NULL,
+    /* pidPersona       */ NULL,
+    /* pidCompone       */ NULL,
+    /* pNombre          */ NULL,
+    /* pAtributosExtra  */ NULL,
+    /* pPrecioUnitario  */ NULL,
+    /* pNumeroSerie     */ NULL,
+    /* pModelo          */ 'LenovoPC 7010'
+);
