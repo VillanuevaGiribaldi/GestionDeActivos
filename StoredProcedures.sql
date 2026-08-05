@@ -261,4 +261,25 @@ END//
 
 DELIMITER ;
 
+drop procedure if exists sp_listarTodo;
+delimiter //
+create procedure sp_listarTodo()
+salir:begin
+	SELECT 
+		a.nombre AS 'Nombre Equipo',
+		a.numeroSerie AS 'Nro Serie',
+		t.nombre AS 'Tipo',
+		m.nombre AS 'Marca',
+		a.modelo AS 'Modelo',
+		e.nombre AS 'Estado',
+		CONCAT(p.nombre, ' ', p.apellido) AS 'Asignado a',
+		u.nombre AS 'Ubicación'
+	FROM Activos a
+	INNER JOIN Tipos t ON a.idTipo = t.idTipo
+	INNER JOIN Marcas m ON a.idMarca = m.idMarca
+	INNER JOIN Estados e ON a.idEstado = e.idEstado
+	LEFT JOIN Personas p ON a.idPersona = p.idPersona
+	INNER JOIN Ubicaciones u ON a.idUbicacion = u.idUbicacion;
 
+end//
+DELIMITER ;

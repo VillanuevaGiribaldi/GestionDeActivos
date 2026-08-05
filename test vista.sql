@@ -46,3 +46,24 @@ CALL sp_modificarActivo(
     /* pNumeroSerie     */ NULL,
     /* pModelo          */ 'LenovoPC 7010'
 );
+
+call sp_listarTodo();
+
+
+CALL sp_modificarActivo(
+	/* pidActivo */			3,
+        /* pNombreMarca     */ NULL,
+    /* pNombreUbicacion */ NULL,
+    /* pNombreTipo      */ NULL,
+    /* pNombreEstado    */ NULL,
+    /* pidFactura       */ NULL,
+    /* pidPersona       */ NULL,
+    /* pidCompone       */ NULL,
+    /* pNombre          */ 'PC modificada',
+    /* pAtributosExtra  */ NULL,
+    /* pPrecioUnitario  */ NULL,
+    /* pNumeroSerie     */ NULL,
+    /* pModelo          */ NULL
+);
+
+call sp_listarTodo();
