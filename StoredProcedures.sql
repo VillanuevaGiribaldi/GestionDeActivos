@@ -1,4 +1,7 @@
 
+DROP PROCEDURE IF EXISTS sp_;
+DELIMITER //
+
 DROP PROCEDURE IF EXISTS sp_componerTipos;
 DELIMITER //
 
@@ -282,4 +285,259 @@ salir:begin
 	INNER JOIN Ubicaciones u ON a.idUbicacion = u.idUbicacion;
 
 end//
+DELIMITER ;
+
+-- =====================================================
+-- MARCAS
+-- =====================================================
+
+DROP PROCEDURE IF EXISTS sp_nuevaMarca;
+DELIMITER //
+
+CREATE PROCEDURE sp_nuevaMarca(
+    IN pNombre VARCHAR(100),
+    IN pDescripcion VARCHAR(45),
+    IN pEstado CHAR(1)
+)
+SALIR:BEGIN
+
+    IF pNombre IS NULL OR TRIM(pNombre) = '' THEN
+        SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'El nombre de la marca es obligatorio';
+        LEAVE SALIR;
+    END IF;
+
+    INSERT INTO Marcas(nombre, descripcion, estado)
+    VALUES (pNombre, pDescripcion, pEstado);
+
+END//
+
+DELIMITER ;
+
+
+DROP PROCEDURE IF EXISTS sp_modificarMarca;
+DELIMITER //
+
+CREATE PROCEDURE sp_modificarMarca(
+    -- Obligatorio
+    IN pIdMarca INT,
+    -- Dejar null los valores que no serán modificados
+    IN pNombre VARCHAR(100),
+    IN pDescripcion VARCHAR(45),
+    IN pEstado CHAR(1)
+)
+SALIR:BEGIN
+
+    IF pIdMarca IS NULL THEN
+        SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'Debe incluir una marca a modificar';
+        LEAVE SALIR;
+    END IF;
+
+    IF NOT EXISTS (
+        SELECT 1
+        FROM Marcas
+        WHERE idMarca = pIdMarca
+    ) THEN
+        SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'La marca que desea modificar no existe';
+        LEAVE SALIR;
+    END IF;
+
+    UPDATE Marcas m
+        SET
+            nombre = COALESCE(pNombre, m.nombre),
+            descripcion = COALESCE(pDescripcion, m.descripcion),
+            estado = COALESCE(pEstado, m.estado)
+        WHERE m.idMarca = pIdMarca;
+
+END//
+
+DELIMITER ;
+
+
+-- =====================================================
+-- UBICACIONES
+-- =====================================================
+
+DROP PROCEDURE IF EXISTS sp_nuevaUbicacion;
+DELIMITER //
+
+CREATE PROCEDURE sp_nuevaUbicacion(
+    IN pNombreUbicacionPadre VARCHAR(45),
+    IN pNombre VARCHAR(45),
+    IN pDescripcion VARCHAR(100),
+    IN pEstado CHAR(1)
+)
+SALIR:BEGIN
+    DECLARE vIdUbicacionPadre INT;
+
+    IF pNombre IS NULL OR TRIM(pNombre) = '' THEN
+        SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'El nombre de la ubicacion es obligatorio';
+        LEAVE SALIR;
+    END IF;
+
+    IF pEstado IS NULL THEN
+        SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'El estado de la ubicacion es obligatorio';
+        LEAVE SALIR;
+    END IF;
+
+    IF pNombreUbicacionPadre IS NOT NULL THEN
+        SELECT idUbicacion
+        INTO vIdUbicacionPadre
+        FROM Ubicaciones
+        WHERE nombre LIKE pNombreUbicacionPadre;
+
+        IF vIdUbicacionPadre IS NULL THEN
+            SIGNAL SQLSTATE '45000'
+                SET MESSAGE_TEXT = 'La ubicacion padre no existe';
+            LEAVE SALIR;
+        END IF;
+    END IF;
+
+    INSERT INTO Ubicaciones(idUbicacionPadre, nombre, descripcion, estado)
+    VALUES (vIdUbicacionPadre, pNombre, pDescripcion, pEstado);
+
+END//
+
+DELIMITER ;
+
+
+DROP PROCEDURE IF EXISTS sp_modificarUbicacion;
+DELIMITER //
+
+CREATE PROCEDURE sp_modificarUbicacion(
+    -- Obligatorio
+    IN pIdUbicacion INT,
+    -- Dejar null los valores que no serán modificados
+    IN pNombreUbicacionPadre VARCHAR(45),
+    IN pNombre VARCHAR(45),
+    IN pDescripcion VARCHAR(100),
+    IN pEstado CHAR(1)
+)
+SALIR:BEGIN
+    DECLARE vIdUbicacionPadre INT;
+
+    IF pIdUbicacion IS NULL THEN
+        SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'Debe incluir una ubicacion a modificar';
+        LEAVE SALIR;
+    END IF;
+
+    IF NOT EXISTS (
+        SELECT 1
+        FROM Ubicaciones
+        WHERE idUbicacion = pIdUbicacion
+    ) THEN
+        SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'La ubicacion que desea modificar no existe';
+        LEAVE SALIR;
+    END IF;
+
+    IF pNombreUbicacionPadre IS NOT NULL THEN
+        SELECT idUbicacion
+        INTO vIdUbicacionPadre
+        FROM Ubicaciones
+        WHERE nombre LIKE pNombreUbicacionPadre;
+
+        IF vIdUbicacionPadre IS NULL THEN
+            SIGNAL SQLSTATE '45000'
+                SET MESSAGE_TEXT = 'La ubicacion padre no existe';
+            LEAVE SALIR;
+        END IF;
+
+        IF vIdUbicacionPadre = pIdUbicacion THEN
+            SIGNAL SQLSTATE '45000'
+                SET MESSAGE_TEXT = 'Una ubicacion no puede ser padre de si misma';
+            LEAVE SALIR;
+        END IF;
+    END IF;
+
+    UPDATE Ubicaciones u
+        SET
+            idUbicacionPadre = COALESCE(vIdUbicacionPadre, u.idUbicacionPadre),
+            nombre = COALESCE(pNombre, u.nombre),
+            descripcion = COALESCE(pDescripcion, u.descripcion),
+            estado = COALESCE(pEstado, u.estado)
+        WHERE u.idUbicacion = pIdUbicacion;
+
+END//
+
+DELIMITER ;
+
+
+-- =====================================================
+-- PROVEEDORES
+-- =====================================================
+
+DROP PROCEDURE IF EXISTS sp_nuevoProveedor;
+DELIMITER //
+
+CREATE PROCEDURE sp_nuevoProveedor(
+    IN pNombre VARCHAR(100),
+    IN pDireccion VARCHAR(100),
+    IN pTelefono VARCHAR(45),
+    IN pMail VARCHAR(150),
+    IN pDescripcion VARCHAR(200)
+)
+SALIR:BEGIN
+
+    IF pNombre IS NULL OR TRIM(pNombre) = '' THEN
+        SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'El nombre del proveedor es obligatorio';
+        LEAVE SALIR;
+    END IF;
+
+    INSERT INTO Proveedores(nombre, direccion, telefono, mail, descripcion)
+    VALUES (pNombre, pDireccion, pTelefono, pMail, pDescripcion);
+
+END//
+
+DELIMITER ;
+
+
+DROP PROCEDURE IF EXISTS sp_modificarProveedor;
+DELIMITER //
+
+CREATE PROCEDURE sp_modificarProveedor(
+    -- Obligatorio
+    IN pIdProveedor INT,
+    -- Dejar null los valores que no serán modificados
+    IN pNombre VARCHAR(100),
+    IN pDireccion VARCHAR(100),
+    IN pTelefono VARCHAR(45),
+    IN pMail VARCHAR(150),
+    IN pDescripcion VARCHAR(200)
+)
+SALIR:BEGIN
+
+    IF pIdProveedor IS NULL THEN
+        SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'Debe incluir un proveedor a modificar';
+        LEAVE SALIR;
+    END IF;
+
+    IF NOT EXISTS (
+        SELECT 1
+        FROM Proveedores
+        WHERE idProveedor = pIdProveedor
+    ) THEN
+        SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'El proveedor que desea modificar no existe';
+        LEAVE SALIR;
+    END IF;
+
+    UPDATE Proveedores p
+        SET
+            nombre = COALESCE(pNombre, p.nombre),
+            direccion = COALESCE(pDireccion, p.direccion),
+            telefono = COALESCE(pTelefono, p.telefono),
+            mail = COALESCE(pMail, p.mail),
+            descripcion = COALESCE(pDescripcion, p.descripcion)
+        WHERE p.idProveedor = pIdProveedor;
+
+END//
+
 DELIMITER ;
