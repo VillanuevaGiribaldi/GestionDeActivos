@@ -21,8 +21,8 @@ VALUES ('Juan', 'Perez', '30111222', 'Administrador de Sistemas', 'A'), ('Maria'
 INSERT INTO Usuarios (idPersona, username, password, rol, estado) 
 VALUES (1, 'jperez', '$2a$10$admin123', 'Administrador', 'A'), (2, 'mgomez', '$2a$10$tecnico123', 'Tecnico', 'A');
 
-select * from usuarios;
-select * from personas;
+select * from Usuarios;
+select * from Personas;
 
 INSERT INTO Ubicaciones (idUbicacionPadre, nombre, descripcion, estado) 
 VALUES (NULL, 'Sucursal Centro', 'Casa central', 'A'), (NULL, 'Sucursal Norte', 'Sucursal zona norte', 'A');

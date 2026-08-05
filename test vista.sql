@@ -1,28 +1,31 @@
+select * from Activos;
+select * from Tipos;
+select * from ComposicionTipos;
+select * from Marcas;
+select * from Ubicaciones;
+select * from Estados;
 
-WITH RECURSIVE ArbolUbicaciones AS (
-    SELECT
-        idUbicacion,
-        idUbicacionPadre,
-        nombre,
-        CAST(nombre AS CHAR(200)) AS ruta,
-        0 AS nivel
-    FROM Ubicaciones
-    WHERE idUbicacionPadre IS NULL
 
-    UNION ALL
 
-    SELECT
-        u.idUbicacion,
-        u.idUbicacionPadre,
-        u.nombre,
-        CONCAT(a.ruta, ' > ', u.nombre),
-        a.nivel + 1
-    FROM Ubicaciones u
-    JOIN ArbolUbicaciones a
-        ON u.idUbicacionPadre = a.idUbicacion
-)
-SELECT
-    REPEAT('   ', nivel) AS indentacion,
-    nombre,
-    ruta
-FROM ArbolUbicaciones;
+-- Consulta usada para verificar si hay compocición al insertar un activo
+-- 3 una PC
+-- 8 RAM
+select 1 From  Activos a 
+        inner join ComposicionTipos ct on a.idTipo=ct.idTipoPadre
+		where a.idActivo = 3 and ct.idTipoComponente = 1; 
+        
+-- Probando sp_nuevoActivo
+CALL sp_nuevoActivo(
+    /* pNombreMarca     */ 'Dell',
+    /* pNombreUbicacion */ 'Sede Central',
+    /* pNombreTipo      */ 'PC',
+    /* pNombreEstado    */ 'Operativo',
+    /* pidFactura       */ NULL,
+    /* pidPersona       */ 1,
+    /* pidCompone       */ NULL,
+    /* pNombre          */ 'PC-Administracion-01',
+    /* pAtributosExtra  */ '{"Sistema Operativo":"Windows 11","Direccion IP":"192.168.1.10"}',
+    /* pPrecioUnitario  */ 1250000.00,
+    /* pNumeroSerie     */ 'DLPCA001',
+    /* pModelo          */ 'OptiPlex 7010'
+);
