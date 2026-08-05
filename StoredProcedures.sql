@@ -158,4 +158,125 @@ END//
 
 DELIMITER ;
 
+DROP PROCEDURE IF EXISTS sp_modificarActivo;
+DELIMITER //
+
+CREATE procedure sp_modificarActivo(
+	-- Obligatorios
+	IN pidActivo INT,
+    IN pidUsuario INT,
+    -- Dejar null los valores que no serán modificados
+	IN pNombreMarca VARCHAR(45),
+    IN pNombreUbicacion VARCHAR(45),
+    IN pNombreTipo VARCHAR(45),
+    IN pNombreEstado VARCHAR(45),
+    IN pidFactura INT,
+    IN pidPersona INT,
+    IN pidCompone INT,
+    IN pNombre VARCHAR(45),
+    IN pAtributosExtra JSON,
+    IN pPrecioUnitario DECIMAL(12,2),
+    IN pNumeroSerie VARCHAR(100),
+    IN pModelo VARCHAR(50)
+)
+SALIR:BEGIN
+	-- Actualmente no se realiza ninguna verificación del JSON pAtributosExtra
+    
+    
+    
+    DECLARE vIdMarca INT;
+	DECLARE vIdUbicacion INT;
+	DECLARE vIdTipo INT;
+	DECLARE vIdEstado INT;
+
+	IF pidActivo IS NOT NULL AND NOT EXISTS (
+		SELECT 1
+		FROM Activos
+		WHERE idActivo = pidActivo
+	) THEN
+		SIGNAL SQLSTATE '45000'
+			SET MESSAGE_TEXT = 'El activo que  desea modificar no existe';
+	END IF; 
+    IF pidActivo IS NULL
+	THEN
+		SIGNAL SQLSTATE '45000'
+			SET MESSAGE_TEXT = 'Debe incluir un activo a modificar';
+	END IF; 
+    -- 
+    IF pidUsuario IS NOT NULL AND NOT EXISTS (
+		SELECT 1
+		FROM Usuarios
+		WHERE idUsuario = pidUsuario
+	) THEN
+		SIGNAL SQLSTATE '45000'
+			SET MESSAGE_TEXT = 'El usuario indicado no existe';
+	END IF; 
+    IF pidUsuario IS NULL
+	THEN
+		SIGNAL SQLSTATE '45000'
+			SET MESSAGE_TEXT = 'Debe incluir el usuario que realiza la modificación';
+	END IF; 
+
+	SELECT idMarca INTO vIdMarca FROM Marcas WHERE nombre LIKE pNombreMarca;
+	SELECT idUbicacion INTO vIdUbicacion FROM Ubicaciones WHERE nombre LIKE pNombreUbicacion;
+	SELECT idTipo INTO vIdTipo FROM Tipos WHERE nombre LIKE pNombreTipo;
+	SELECT idEstado INTO vIdEstado FROM Estados WHERE nombre LIKE pNombreEstado;
+
+	
+	IF pidPersona IS NOT NULL AND NOT EXISTS (
+		SELECT 1
+		FROM Personas
+		WHERE idPersona = pidPersona
+	) THEN
+		SIGNAL SQLSTATE '45000'
+			SET MESSAGE_TEXT = 'La persona no existe';
+	END IF;
+
+	IF pidFactura IS NOT NULL AND NOT EXISTS (
+		SELECT 1
+		FROM Facturas
+		WHERE idFactura = pidFactura
+	) THEN
+		SIGNAL SQLSTATE '45000'
+			SET MESSAGE_TEXT = 'La factura no existe';
+	END IF;
+
+	IF pidCompone IS NOT NULL AND NOT EXISTS (
+		SELECT 1
+		FROM Activos
+		WHERE idActivo = pidCompone
+	) THEN
+		SIGNAL SQLSTATE '45000'
+			SET MESSAGE_TEXT = 'El activo padre no existe';
+	END IF;
+    
+    IF pidCompone IS NOT NULL AND NOT EXISTS (
+		SELECT 1
+        FROM Activos a 
+        inner join ComposicionTipos ct on a.idTipo=ct.idTipoPadre
+		where a.idActivo = pidCompone and ct.idTipoComponente = vIdTipo
+	) THEN
+		SIGNAL SQLSTATE '45000'
+			SET MESSAGE_TEXT = 'El tipo del activo a modificar no se corresponde con un componente valido del activo que se indicó';
+	END IF;
+    UPDATE Activos a
+		SET
+			idMarca = COALESCE(vIdMarca, a.idMarca),
+			idUbicacion = COALESCE(vIdUbicacion, a.idUbicacion),
+			idTipo = COALESCE(vIdTipo, a.idTipo),
+			idEstado = COALESCE(vIdEstado, a.idEstado),
+			idFactura = COALESCE(pidFactura, a.idFactura),
+			idPersona = COALESCE(pidPersona, a.idPersona),
+			compone = COALESCE(pidCompone, a.compone),
+			nombre = COALESCE(pNombre, a.nombre),
+			atributosExtra = COALESCE(pAtributosExtra, a.atributosExtra),
+			precioUnitario = COALESCE(pPrecioUnitario, a.precioUnitario),
+			numeroSerie = COALESCE(pNumeroSerie, a.numeroSerie),
+			modelo = COALESCE(pModelo, a.modelo)
+		WHERE a.idActivo = pidActivo;
+
+END//
+
+DELIMITER ;
+
 

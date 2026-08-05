@@ -9,10 +9,10 @@ select * from Estados;
 
 -- Consulta usada para verificar si hay compocición al insertar un activo
 -- 3 una PC
--- 8 RAM
+-- 7 RAM
 select 1 From  Activos a 
         inner join ComposicionTipos ct on a.idTipo=ct.idTipoPadre
-		where a.idActivo = 3 and ct.idTipoComponente = 1; 
+		where a.idActivo = 3 and ct.idTipoComponente = 7; 
         
 -- Probando sp_nuevoActivo
 CALL sp_nuevoActivo(
