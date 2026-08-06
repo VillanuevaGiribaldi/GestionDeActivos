@@ -40,12 +40,12 @@ SALIR:BEGIN
         LEAVE SALIR;
     end if;
     
-    IF (select idTipoPadre from ComposicionTipos ct where ct.idTipoComponente=vIdTipoComponente) THEN
+    IF exists (select 1 from ComposicionTipos ct where ct.idTipoComponente=vIdTipoComponente) THEN
 		SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El tipo ya es componente';
         LEAVE SALIR;
     end if;
     
-    IF (select idTipoComponente from ComposicionTipos ct where ct.idTipoComponente=vIdTipoPadre) THEN
+    IF exists (select 1 from ComposicionTipos ct where ct.idTipoComponente=vIdTipoPadre) THEN
 		SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Un tipo no puede ser componenete de sus componentes';
         LEAVE SALIR;
     end if;
@@ -158,13 +158,14 @@ SALIR:BEGIN
 );
 
 END//
-
+DROP PROCEDURE if EXISTS sp_nuevoActivo;
 DELIMITER ;
 
 -- VERSION 2 DE sp_nuevoActivo()
 DELIMITER //
 
 CREATE PROCEDURE sp_nuevoActivo(
+    IN pIdUsuario INT, -- Para historial
     IN pNombreMarca VARCHAR(45),
     IN pNombreUbicacion VARCHAR(45),
     IN pNombreTipo VARCHAR(45),
@@ -176,8 +177,8 @@ CREATE PROCEDURE sp_nuevoActivo(
     IN pAtributosExtra JSON,
     IN pPrecioUnitario DECIMAL(12,2),
     IN pNumeroSerie VARCHAR(100),
-    IN pModelo VARCHAR(50),
-    IN pIdUsuario INT -- NUEVO: Requerido para asentar el Historial
+    IN pModelo VARCHAR(50)
+
 )
 SALIR:BEGIN
     -- Declaración de variables
@@ -193,6 +194,11 @@ SALIR:BEGIN
         ROLLBACK;
         RESIGNAL; -- Re-lanza el error para que tu backend lo detecte
     END;
+
+    -- Verificar que se ingresa el usuario que hace el nuevo activo
+    IF pIdUsuario IS NULL OR NOT EXISTS (SELECT 1 FROM Usuarios WHERE idUsuario = pIdUsuario) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El usuario no existe o es inválido';
+    END IF;
 
     -- 1. Búsqueda de IDs (Usamos '=' en lugar de 'LIKE' para búsquedas exactas)
     SELECT idMarca INTO vIdMarca FROM Marcas WHERE nombre = pNombreMarca LIMIT 1;
@@ -220,11 +226,6 @@ SALIR:BEGIN
     -- 3. Validaciones de campos obligatorios y de formato
     IF pNombre IS NULL OR TRIM(pNombre) = '' THEN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El nombre del activo es obligatorio';
-    END IF;
-
-    -- NUEVO: Verificación de Usuario para el Historial
-    IF pIdUsuario IS NULL OR NOT EXISTS (SELECT 1 FROM Usuarios WHERE idUsuario = pIdUsuario) THEN
-        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El usuario no existe o es inválido';
     END IF;
 
     -- NUEVO: Verificación de Número de Serie Único
@@ -284,7 +285,20 @@ SALIR:BEGIN
         NOW(), 
         'Alta inicial del activo', 
         'A', 
-        JSON_OBJECT('idEstado', vIdEstado, 'idUbicacion', vIdUbicacion)
+        JSON_OBJECT(
+			'Marca', pNombreMarca,
+			'Ubicacion', pNombreUbicacion,
+			'Tipo', pNombreTipo,
+			'Estado', pNombreEstado,
+			'Factura', pidFactura,
+			'Persona', pidPersona,
+			'Compone', pidCompone,
+			'Nombre', pNombre,
+			'AtributosExtra', pAtributosExtra,
+			'PrecioUnitario', pPrecioUnitario,
+			'NumeroSerie', pNumeroSerie,
+			'Modelo', pModelo
+		)
     );
 
     -- Confirmar los cambios
@@ -299,8 +313,9 @@ DROP PROCEDURE IF EXISTS sp_modificarActivo;
 DELIMITER //
 
 CREATE procedure sp_modificarActivo(
-	-- Obligatorios
+	-- Obligatorios Para historial
 	IN pidActivo INT,
+    IN pIdUsuario INT, -- 
     -- Dejar null los valores que no serán modificados
 	IN pNombreMarca VARCHAR(45),
     IN pNombreUbicacion VARCHAR(45),
@@ -318,10 +333,48 @@ CREATE procedure sp_modificarActivo(
 SALIR:BEGIN
 	-- Actualmente no se realiza ninguna verificación del JSON pAtributosExtra
     
+    -- Variables para el update
     DECLARE vIdMarca INT;
 	DECLARE vIdUbicacion INT;
 	DECLARE vIdTipo INT;
 	DECLARE vIdEstado INT;
+    DECLARE vIdActivo INT;
+
+    -- Variables para el historial
+
+    DECLARE vEstadoViejo JSON;
+    DECLARE vEstadoNuevo JSON;
+
+    DECLARE oldIdMarca INT;
+    DECLARE  oldIdUbicacion INT;
+    DECLARE oldIdTipo INT;
+    DECLARE oldIdEstado INT;
+    DECLARE oldNombreMarca VARCHAR(45);
+    DECLARE oldNombreUbicacion VARCHAR(45);
+    DECLARE oldNombreTipo VARCHAR(45);
+    DECLARE oldNombreEstado VARCHAR(45);
+    DECLARE oldIdFactura INT;
+    DECLARE oldIdPersona INT;
+    DECLARE oldIdCompone INT;
+    DECLARE oldNombre VARCHAR(45);
+    DECLARE oldAtributosExtra JSON;
+    DECLARE oldPrecioUnitario DECIMAL(12,2);
+    DECLARE oldNumeroSerie VARCHAR(100);
+    DECLARE oldModelo VARCHAR(50);
+
+
+
+    -- Manejador de errores: Si algo falla, deshace los cambios (Rollback)
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        RESIGNAL; -- Re-lanza el error para que tu backend lo detecte
+    END;
+
+    -- Verificar que se ingresa el usuario que hace el nuevo activo
+    IF pIdUsuario IS NULL OR NOT EXISTS (SELECT 1 FROM Usuarios WHERE idUsuario = pIdUsuario) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El usuario no existe o es inválido';
+    END IF;
 
 	IF pidActivo IS NOT NULL AND NOT EXISTS (
 		SELECT 1
@@ -337,10 +390,10 @@ SALIR:BEGIN
 			SET MESSAGE_TEXT = 'Debe incluir un activo a modificar';
 	END IF; 
 
-	SELECT idMarca INTO vIdMarca FROM Marcas WHERE nombre LIKE pNombreMarca;
-	SELECT idUbicacion INTO vIdUbicacion FROM Ubicaciones WHERE nombre LIKE pNombreUbicacion;
-	SELECT idTipo INTO vIdTipo FROM Tipos WHERE nombre LIKE pNombreTipo;
-	SELECT idEstado INTO vIdEstado FROM Estados WHERE nombre LIKE pNombreEstado;
+	SELECT idMarca INTO vIdMarca FROM Marcas WHERE nombre = pNombreMarca LIMIT 1;
+	SELECT idUbicacion INTO vIdUbicacion FROM Ubicaciones WHERE nombre = pNombreUbicacion LIMIT 1;
+	SELECT idTipo INTO vIdTipo FROM Tipos WHERE nombre = pNombreTipo LIMIT 1;
+	SELECT idEstado INTO vIdEstado FROM Estados WHERE nombre = pNombreEstado LIMIT 1;
 	
 	IF pidPersona IS NOT NULL AND NOT EXISTS (
 		SELECT 1
@@ -378,6 +431,89 @@ SALIR:BEGIN
 		SIGNAL SQLSTATE '45000'
 			SET MESSAGE_TEXT = 'El tipo del activo a modificar no se corresponde con un componente valido del activo que se indicó';
 	END IF;
+
+    -- =========================================================================
+    -- Armar JSONs
+    -- =========================================================================
+        -- Primero copiamos los valores viejos en las variables old:
+        SELECT   a.idMarca, a.idUbicacion, a.idTipo, a.idEstado,m.nombre, u.nombre, t.nombre, e.nombre, a.idFactura, a.idPersona, a.compone, a.nombre, a.atributosExtra, a.precioUnitario, a.numeroSerie, a.modelo
+        INTO oldIdMarca, oldIdUbicacion, oldIdTipo, oldIdEstado, oldNombreMarca, oldNombreUbicacion, oldNombreTipo, oldNombreEstado, oldIdFactura, oldIdPersona, oldIdCompone, oldNombre, oldAtributosExtra, oldPrecioUnitario, oldNumeroSerie, oldModelo
+        FROM Activos a
+        JOIN Marcas m ON m.idMarca = a.idMarca
+        JOIN Ubicaciones u ON u.idUbicacion = a.idUbicacion
+        JOIN Tipos t ON t.idTipo = a.idTipo
+        JOIN Estados e ON e.idEstado = a.idEstado
+        WHERE a.idActivo = pidActivo;
+
+        -- Depues armamos el JSON para los valores modificados
+
+        SET vEstadoViejo = JSON_OBJECT();
+        SET vEstadoNuevo = JSON_OBJECT();
+        IF vIdMarca IS NOT NULL AND vIdMarca <> oldIdMarca THEN
+            SET vEstadoViejo = JSON_SET(vEstadoViejo, '$.Marca', oldNombreMarca);
+            SET vEstadoNuevo = JSON_SET(vEstadoNuevo, '$.Marca', pNombreMarca);
+        END IF;
+
+        IF vIdUbicacion IS NOT NULL AND vIdUbicacion <> oldIdUbicacion THEN
+            SET vEstadoViejo = JSON_SET(vEstadoViejo, '$.Ubicacion', oldNombreUbicacion);
+            SET vEstadoNuevo = JSON_SET(vEstadoNuevo, '$.Ubicacion', pNombreUbicacion);
+        END IF;
+
+        IF vIdTipo IS NOT NULL AND vIdTipo <> oldIdTipo THEN
+            SET vEstadoViejo = JSON_SET(vEstadoViejo, '$.Tipo', oldNombreTipo);
+            SET vEstadoNuevo = JSON_SET(vEstadoNuevo, '$.Tipo', pNombreTipo);
+        END IF;
+
+        IF vIdEstado IS NOT NULL AND vIdEstado <> oldIdEstado THEN
+            SET vEstadoViejo = JSON_SET(vEstadoViejo, '$.Estado', oldNombreEstado);
+            SET vEstadoNuevo = JSON_SET(vEstadoNuevo, '$.Estado', pNombreEstado);
+        END IF;
+
+        IF pidFactura IS NOT NULL AND pidFactura <> oldIdFactura THEN
+            SET vEstadoViejo = JSON_SET(vEstadoViejo, '$.Factura', oldIdFactura);
+            SET vEstadoNuevo = JSON_SET(vEstadoNuevo, '$.Factura', pidFactura);
+        END IF;
+
+        IF pidPersona IS NOT NULL AND pidPersona <> oldIdPersona THEN
+            SET vEstadoViejo = JSON_SET(vEstadoViejo, '$.Persona', oldIdPersona);
+            SET vEstadoNuevo = JSON_SET(vEstadoNuevo, '$.Persona', pidPersona);
+        END IF;
+
+        IF pidCompone IS NOT NULL AND pidCompone <> oldIdCompone THEN
+            SET vEstadoViejo = JSON_SET(vEstadoViejo, '$.Compone', oldIdCompone);
+            SET vEstadoNuevo = JSON_SET(vEstadoNuevo, '$.Compone', pidCompone);
+        END IF;
+
+        IF pNombre IS NOT NULL AND pNombre <> oldNombre THEN
+            SET vEstadoViejo = JSON_SET(vEstadoViejo, '$.Nombre', oldNombre);
+            SET vEstadoNuevo = JSON_SET(vEstadoNuevo, '$.Nombre', pNombre);
+        END IF;
+
+        IF pAtributosExtra IS NOT NULL AND pAtributosExtra <> oldAtributosExtra THEN
+            SET vEstadoViejo = JSON_SET(vEstadoViejo, '$.AtributosExtra', oldAtributosExtra);
+            SET vEstadoNuevo = JSON_SET(vEstadoNuevo, '$.AtributosExtra', pAtributosExtra);
+        END IF;
+
+        IF pPrecioUnitario IS NOT NULL AND pPrecioUnitario <> oldPrecioUnitario THEN
+            SET vEstadoViejo = JSON_SET(vEstadoViejo, '$.PrecioUnitario', oldPrecioUnitario);
+            SET vEstadoNuevo = JSON_SET(vEstadoNuevo, '$.PrecioUnitario', pPrecioUnitario);
+        END IF;
+
+        IF pNumeroSerie IS NOT NULL AND pNumeroSerie <> oldNumeroSerie THEN
+            SET vEstadoViejo = JSON_SET(vEstadoViejo, '$.NumeroSerie', oldNumeroSerie);
+            SET vEstadoNuevo = JSON_SET(vEstadoNuevo, '$.NumeroSerie', pNumeroSerie);
+        END IF;
+
+        IF pModelo IS NOT NULL AND pModelo <> oldModelo THEN
+            SET vEstadoViejo = JSON_SET(vEstadoViejo, '$.Modelo', oldModelo);
+            SET vEstadoNuevo = JSON_SET(vEstadoNuevo, '$.Modelo', pModelo);
+        END IF;
+
+    -- =========================================================================
+    -- INICIO DE TRANSACCIÓN (Activo + Historial)
+    -- =========================================================================
+    START TRANSACTION;
+
     UPDATE Activos a
 		SET
 			idMarca = COALESCE(vIdMarca, a.idMarca),
@@ -393,6 +529,26 @@ SALIR:BEGIN
 			numeroSerie = COALESCE(pNumeroSerie, a.numeroSerie),
 			modelo = COALESCE(pModelo, a.modelo)
 		WHERE a.idActivo = pidActivo;
+        
+        
+
+
+    -- Insertar el registro de Alta en el Historial
+    INSERT INTO Historial (
+        idUsuario, idActivo, fecha, comentario, tipo, estadoNuevo, estadoAnterior
+    ) VALUES (
+        pIdUsuario, 
+        pIdActivo, 
+        NOW(), 
+        'Modificación del Activo', 
+        'A', 
+        vEstadoViejo,
+        vEstadoNuevo
+        
+    );
+
+    -- Confirmar los cambios
+    COMMIT;
 
 END//
 
