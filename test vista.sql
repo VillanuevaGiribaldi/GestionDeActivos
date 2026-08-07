@@ -44,4 +44,23 @@ CALL sp_modificarActivo(
 call sp_listarTodo();
 select * from `Historial`;
 
+select * from `Ubicaciones`
+
+call `sp_modificarUbicacion`(5,'Oficina IT','NULL',null,null);
+call `sp_modificarUbicacion`(1,'Cajon 1',null,null,null);
+
+
+WITH RECURSIVE Ancestros AS (
+        SELECT idUbicacion, idUbicacionPadre
+        FROM Ubicaciones
+        WHERE idUbicacion = 5
+
+        UNION ALL
+
+        SELECT u.idUbicacion, u.idUbicacionPadre
+        FROM Ubicaciones u
+        INNER JOIN Ancestros a ON u.idUbicacion = a.idUbicacionPadre
+      )
+      SELECT 1 FROM Ancestros WHERE idUbicacion = 1
+
 
