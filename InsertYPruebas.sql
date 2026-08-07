@@ -41,6 +41,10 @@ INSERT INTO `Ubicaciones` (`idUbicacionPadre`, `nombre`, `descripcion`, `estado`
 INSERT INTO `Ubicaciones` (`idUbicacionPadre`, `nombre`, `descripcion`, `estado`) VALUES 
 (1, 'Oficina IT', 'Área de sistemas y servidores', 'A'),
 (1, 'Oficina Ventas', 'Piso 2 - Ventas', 'A');
+INSERT INTO `Ubicaciones` (`idUbicacionPadre`, `nombre`, `descripcion`, `estado`) VALUES 
+(3, 'Caja 1', 'Piso 2 - Ventas', 'A');
+INSERT INTO `Ubicaciones` (`idUbicacionPadre`, `nombre`, `descripcion`, `estado`) VALUES 
+(4, 'Cajon 1', 'Piso 2 - Ventas', 'A');
 
 SELECT * FROM Ubicaciones;
 
