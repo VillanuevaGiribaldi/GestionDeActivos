@@ -195,7 +195,7 @@ CREATE TABLE IF NOT EXISTS `GestionDeActivos`.`Atributos` (
   `idTipo` INT NOT NULL,
   `porDefecto` VARCHAR(100) NULL,
   `nombre` VARCHAR(45) NULL,
-  `obligatorio` TINYINT NULL,
+  `obligatorio` BOOLEAN NULL,
   PRIMARY KEY (`idAtributo`),
   UNIQUE INDEX `UX_tipoNombre` (`idTipo` ASC, `nombre` ASC) VISIBLE,
   CONSTRAINT `fk_Atributos_Tipos1`
@@ -212,7 +212,7 @@ ENGINE = InnoDB;
 CREATE TABLE IF NOT EXISTS `GestionDeActivos`.`ComposicionTipos` (
   `idTipoPadre` INT NOT NULL,
   `idTipoComponente` INT NOT NULL,
-  `Obligatorio` TINYINT NOT NULL,
+  `Obligatorio` BOOLEAN NOT NULL,
   PRIMARY KEY (`idTipoPadre`, `idTipoComponente`),
   INDEX `fk_ComposicionTipos_Tipos1_idx` (`idTipoPadre` ASC) VISIBLE,
   INDEX `fk_ComposicionTipos_Tipos2_idx` (`idTipoComponente` ASC) VISIBLE,

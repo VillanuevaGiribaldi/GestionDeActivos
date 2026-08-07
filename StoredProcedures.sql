@@ -761,6 +761,51 @@ END//
 
 DELIMITER ;
 
+-- nuevaMarca version 2
+
+DROP PROCEDURE IF EXISTS sp_nuevaMarca;
+DELIMITER //
+
+CREATE PROCEDURE sp_nuevaMarca(
+    IN pNombre VARCHAR(100),
+    IN pDescripcion VARCHAR(45),
+    IN pEstado CHAR(1),
+    OUT pIdMarca INT
+)
+BEGIN
+    -- Sanitización de entrada (quitar espacios innecesarios)
+    SET pNombre = TRIM(pNombre);
+    SET pDescripcion = TRIM(pDescripcion);
+
+    -- Validación de campos obligatorios
+    IF pNombre IS NULL OR pNombre = '' THEN
+        SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'El nombre de la marca es obligatorio';
+    END IF;
+
+    -- Validación de duplicados controlada
+    IF EXISTS (SELECT 1 FROM Marcas WHERE nombre = pNombre) THEN
+        SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'La marca ingresada ya existe en el sistema';
+    END IF;
+
+    -- Valor por defecto para el estado si viene nulo
+    IF pEstado IS NULL OR TRIM(pEstado) = '' THEN
+        SET pEstado = 'A'; -- Asumiendo que 'A' significa Activo
+    END IF;
+
+    -- Inserción
+    INSERT INTO Marcas (nombre, descripcion, estado)
+    VALUES (pNombre, pDescripcion, pEstado);
+    
+    -- Capturamos el ID de la marca recién insertada y lo asignamos al parámetro de salida
+    SET pIdMarca = LAST_INSERT_ID();
+
+END//
+
+DELIMITER ;
+
+-- ===================================
 
 DROP PROCEDURE IF EXISTS sp_modificarMarca;
 DELIMITER //
@@ -802,6 +847,64 @@ END//
 
 DELIMITER ;
 
+-- modificarMarca version2
+
+DROP PROCEDURE IF EXISTS sp_modificarMarca;
+DELIMITER //
+
+CREATE PROCEDURE sp_modificarMarca(
+    -- Obligatorio
+    IN pIdMarca INT,
+    -- Dejar null los valores que no serán modificados
+    IN pNombre VARCHAR(100),
+    IN pDescripcion VARCHAR(45),
+    IN pEstado CHAR(1)
+)
+BEGIN
+
+    -- 1. Sanitización de entrada y control de vacíos
+    IF pNombre IS NOT NULL THEN
+        SET pNombre = TRIM(pNombre);
+        IF pNombre = '' THEN
+            SIGNAL SQLSTATE '45000'
+                SET MESSAGE_TEXT = 'El nombre de la marca no puede estar vacío';
+        END IF;
+    END IF;
+
+    IF pDescripcion IS NOT NULL THEN
+        SET pDescripcion = TRIM(pDescripcion);
+    END IF;
+
+    -- 2. Validación de parámetro obligatorio
+    IF pIdMarca IS NULL THEN
+        SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'Debe incluir una marca a modificar';
+    END IF;
+
+    -- 3. Validación de existencia de la marca
+    IF NOT EXISTS (SELECT 1 FROM Marcas WHERE idMarca = pIdMarca) THEN
+        SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'La marca que desea modificar no existe';
+    END IF;
+
+    -- 4. Validación de nombre duplicado (excluyendo la marca actual)
+    IF pNombre IS NOT NULL AND EXISTS (SELECT 1 FROM Marcas WHERE nombre = pNombre AND idMarca != pIdMarca) THEN
+        SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'El nuevo nombre ingresado ya pertenece a otra marca registrada';
+    END IF;
+
+    -- 5. Actualización
+    UPDATE Marcas m
+        SET
+            nombre = COALESCE(pNombre, m.nombre),
+            descripcion = COALESCE(pDescripcion, m.descripcion),
+            estado = COALESCE(pEstado, m.estado)
+        WHERE m.idMarca = pIdMarca;
+
+END//
+
+DELIMITER ;
+-- ==========================================
 
 -- =====================================================
 -- UBICACIONES
@@ -850,8 +953,74 @@ SALIR:BEGIN
 END//
 
 DELIMITER ;
+-- nuevaUbicacion Version 2
+DROP PROCEDURE IF EXISTS sp_nuevaUbicacion;
+DELIMITER //
 
+CREATE PROCEDURE sp_nuevaUbicacion(
+    IN pNombreUbicacionPadre VARCHAR(45),
+    IN pNombre VARCHAR(45),
+    IN pDescripcion VARCHAR(100),
+    IN pEstado CHAR(1),
+    OUT pIdUbicacion INT -- Parámetro de salida para el ID generado
+)
+BEGIN
+    DECLARE vIdUbicacionPadre INT;
 
+    -- 1. Sanitización de entradas (TRIM)
+    SET pNombre = TRIM(pNombre);
+    SET pDescripcion = TRIM(pDescripcion);
+    
+    IF pNombreUbicacionPadre IS NOT NULL THEN
+        SET pNombreUbicacionPadre = TRIM(pNombreUbicacionPadre);
+    END IF;
+    
+    IF pEstado IS NOT NULL THEN
+        SET pEstado = TRIM(pEstado);
+    END IF;
+
+    -- 2. Validaciones de campos obligatorios
+    IF pNombre IS NULL OR pNombre = '' THEN
+        SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'El nombre de la ubicación es obligatorio';
+    END IF;
+
+    IF pEstado IS NULL OR pEstado = '' THEN
+        SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'El estado de la ubicación es obligatorio';
+    END IF;
+
+    -- 3. Validación de duplicados (UNIQUE INDEX en 'nombre')
+    IF EXISTS (SELECT 1 FROM Ubicaciones WHERE nombre = pNombre) THEN
+        SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'La ubicación ingresada ya existe en el sistema';
+    END IF;
+
+    -- 4. Búsqueda y validación de la Ubicación Padre
+    IF pNombreUbicacionPadre IS NOT NULL AND pNombreUbicacionPadre != '' THEN
+        -- Usamos '=' en lugar de 'LIKE' para mayor precisión y rendimiento
+        SELECT idUbicacion INTO vIdUbicacionPadre
+        FROM Ubicaciones
+        WHERE nombre = pNombreUbicacionPadre LIMIT 1;
+
+        IF vIdUbicacionPadre IS NULL THEN
+            SIGNAL SQLSTATE '45000'
+                SET MESSAGE_TEXT = 'La ubicación padre indicada no existe';
+        END IF;
+    END IF;
+
+    -- 5. Inserción de la nueva ubicación
+    INSERT INTO Ubicaciones(idUbicacionPadre, nombre, descripcion, estado)
+    VALUES (vIdUbicacionPadre, pNombre, pDescripcion, pEstado);
+    
+    -- 6. Captura y retorno del ID autogenerado
+    SET pIdUbicacion = LAST_INSERT_ID();
+
+END//
+
+DELIMITER ;
+
+-- =========================================
 DROP PROCEDURE IF EXISTS sp_modificarUbicacion;
 DELIMITER //
 
