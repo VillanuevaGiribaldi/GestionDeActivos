@@ -4,18 +4,11 @@ select * from ComposicionTipos;
 select * from Marcas;
 select * from Ubicaciones;
 select * from Estados;
-
-
-
--- Consulta usada para verificar si hay compocición al insertar un activo
--- 3 una PC
--- 7 RAM
-select 1 From  Activos a 
-        inner join ComposicionTipos ct on a.idTipo=ct.idTipoPadre
-		where a.idActivo = 3 and ct.idTipoComponente = 7; 
-        
+select * from `Usuarios`;
+    
 -- Probando sp_nuevoActivo
 CALL sp_nuevoActivo(
+     /* idUsuario     */ 1,
     /* pNombreMarca     */ 'Dell',
     /* pNombreUbicacion */ 'Sede Central',
     /* pNombreTipo      */ 'PC',
@@ -33,10 +26,11 @@ CALL sp_nuevoActivo(
 
 CALL sp_modificarActivo(
 	/* pidActivo */			3,
-        /* pNombreMarca     */ 'Lenovo',
+    /* pidUsuario */			1,
+    /* pNombreMarca     */ NULL,
     /* pNombreUbicacion */ NULL,
     /* pNombreTipo      */ NULL,
-    /* pNombreEstado    */ NULL,
+    /* pNombreEstado    */ 'Baja',
     /* pidFactura       */ NULL,
     /* pidPersona       */ NULL,
     /* pidCompone       */ NULL,
@@ -44,26 +38,10 @@ CALL sp_modificarActivo(
     /* pAtributosExtra  */ NULL,
     /* pPrecioUnitario  */ NULL,
     /* pNumeroSerie     */ NULL,
-    /* pModelo          */ 'LenovoPC 7010'
-);
-
-call sp_listarTodo();
-
-
-CALL sp_modificarActivo(
-	/* pidActivo */			3,
-        /* pNombreMarca     */ NULL,
-    /* pNombreUbicacion */ NULL,
-    /* pNombreTipo      */ NULL,
-    /* pNombreEstado    */ NULL,
-    /* pidFactura       */ NULL,
-    /* pidPersona       */ NULL,
-    /* pidCompone       */ NULL,
-    /* pNombre          */ 'PC modificada',
-    /* pAtributosExtra  */ NULL,
-    /* pPrecioUnitario  */ NULL,
-    /* pNumeroSerie     */ NULL,
     /* pModelo          */ NULL
 );
 
 call sp_listarTodo();
+select * from `Historial`;
+
+
