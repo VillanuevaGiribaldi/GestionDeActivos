@@ -97,6 +97,7 @@ CREATE TABLE IF NOT EXISTS `GestionDeActivos`.`Proveedores` (
   `telefono` VARCHAR(45) NULL,
   `mail` VARCHAR(150) NULL,
   `descripcion` VARCHAR(200) NULL,
+  `estado` CHAR(1) NOT NULL,
   PRIMARY KEY (`idProveedor`),
   UNIQUE INDEX `nombre_UNIQUE` (`nombre` ASC) VISIBLE)
 ENGINE = InnoDB;
