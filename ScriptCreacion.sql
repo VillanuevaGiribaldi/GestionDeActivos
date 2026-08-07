@@ -11,7 +11,7 @@ SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,N
 -- -----------------------------------------------------
 -- Schema GestionDeActivos
 -- -----------------------------------------------------
-DROP SCHEMA IF EXISTS `GestionDeActivos`;
+DROP SCHEMA if EXISTS GestionDeActivos;
 CREATE SCHEMA IF NOT EXISTS `GestionDeActivos` DEFAULT CHARACTER SET utf8 ;
 USE `GestionDeActivos` ;
 
@@ -26,6 +26,7 @@ CREATE TABLE IF NOT EXISTS `GestionDeActivos`.`Ubicaciones` (
   `estado` CHAR(1) NOT NULL,
   PRIMARY KEY (`idUbicacion`),
   INDEX `fk_Ubicaciones_Ubicaciones1_idx` (`idUbicacionPadre` ASC) VISIBLE,
+  UNIQUE INDEX `nombre_UNIQUE` (`nombre` ASC) VISIBLE,
   CONSTRAINT `fk_Ubicaciones_Ubicaciones1`
     FOREIGN KEY (`idUbicacionPadre`)
     REFERENCES `GestionDeActivos`.`Ubicaciones` (`idUbicacion`)
@@ -42,7 +43,8 @@ CREATE TABLE IF NOT EXISTS `GestionDeActivos`.`Marcas` (
   `nombre` VARCHAR(100) NOT NULL,
   `descripcion` VARCHAR(45) NULL,
   `estado` CHAR(1) NULL,
-  PRIMARY KEY (`idMarca`))
+  PRIMARY KEY (`idMarca`),
+  UNIQUE INDEX `nombre_UNIQUE` (`nombre` ASC) VISIBLE)
 ENGINE = InnoDB;
 
 
@@ -95,7 +97,8 @@ CREATE TABLE IF NOT EXISTS `GestionDeActivos`.`Proveedores` (
   `telefono` VARCHAR(45) NULL,
   `mail` VARCHAR(150) NULL,
   `descripcion` VARCHAR(200) NULL,
-  PRIMARY KEY (`idProveedor`))
+  PRIMARY KEY (`idProveedor`),
+  UNIQUE INDEX `nombre_UNIQUE` (`nombre` ASC) VISIBLE)
 ENGINE = InnoDB;
 
 
@@ -301,7 +304,6 @@ ENGINE = InnoDB;
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `GestionDeActivos`.`Mantenimientos` (
   `idMantenimiento` INT NOT NULL,
-  `Mantenimientoscol` VARCHAR(45) NULL,
   `idActivo` INT NOT NULL,
   `idProveedor` INT NOT NULL,
   `fallaReportada` VARCHAR(200) NULL,
@@ -309,7 +311,6 @@ CREATE TABLE IF NOT EXISTS `GestionDeActivos`.`Mantenimientos` (
   `fechaEnvio` DATE NULL,
   `fechaDevolucion` DATE NULL,
   `costoTotal` DECIMAL(12,2) NULL,
-  `Mantenimientoscol1` VARCHAR(45) NULL,
   PRIMARY KEY (`idMantenimiento`),
   INDEX `fk_Mantenimientos_Activos1_idx` (`idActivo` ASC) VISIBLE,
   INDEX `fk_Mantenimientos_Proveedores1_idx` (`idProveedor` ASC) VISIBLE,
