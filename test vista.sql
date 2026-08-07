@@ -46,7 +46,8 @@ select * from `Historial`;
 
 select * from `Ubicaciones`
 
-call `sp_modificarUbicacion`(5,'Oficina IT','NULL',null,null);
+call `sp_modificarUbicacion`(5,'NULL',null,null,null);
+call `sp_modificarUbicacion`(5,'Caja 1',null,null,null);
 call `sp_modificarUbicacion`(1,'Cajon 1',null,null,null);
 
 

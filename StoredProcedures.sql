@@ -809,7 +809,7 @@ SALIR:BEGIN
 
     UPDATE Ubicaciones u
         SET
-            idUbicacionPadre = COALESCE(vIdUbicacionPadre, u.idUbicacionPadre),
+            idUbicacionPadre = vIdUbicacionPadre,
             nombre = COALESCE(pNombre, u.nombre),
             descripcion = COALESCE(pDescripcion, u.descripcion),
             estado = COALESCE(pEstado, u.estado)
