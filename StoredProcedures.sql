@@ -849,6 +849,49 @@ END//
 
 DELIMITER ;
 
+-- nuevoProveedor version 2
+DROP PROCEDURE IF EXISTS sp_nuevoProveedor;
+DELIMITER //
+
+CREATE PROCEDURE sp_nuevoProveedor(
+    IN pNombre VARCHAR(100),
+    IN pDireccion VARCHAR(100),
+    IN pTelefono VARCHAR(45),
+    IN pMail VARCHAR(150),
+    IN pDescripcion VARCHAR(200),
+    OUT pIdProveedor INT -- MEJORA: Parámetro de salida para el ID
+)
+BEGIN
+    -- 1. Sanitización de entradas (TRIM)
+    IF pNombre IS NOT NULL THEN SET pNombre = TRIM(pNombre); END IF;
+    IF pDireccion IS NOT NULL THEN SET pDireccion = TRIM(pDireccion); END IF;
+    IF pTelefono IS NOT NULL THEN SET pTelefono = TRIM(pTelefono); END IF;
+    IF pMail IS NOT NULL THEN SET pMail = TRIM(pMail); END IF;
+    IF pDescripcion IS NOT NULL THEN SET pDescripcion = TRIM(pDescripcion); END IF;
+
+    -- 2. Validación de campos obligatorios
+    IF pNombre IS NULL OR pNombre = '' THEN
+        SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'El nombre del proveedor es obligatorio';
+    END IF;
+
+    -- 3. Validación de duplicados (UNIQUE INDEX en 'nombre')
+    IF EXISTS (SELECT 1 FROM Proveedores WHERE nombre = pNombre) THEN
+        SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'El proveedor ingresado ya existe en el sistema';
+    END IF;
+
+    -- 4. Inserción
+    INSERT INTO Proveedores(nombre, direccion, telefono, mail, descripcion)
+    VALUES (pNombre, pDireccion, pTelefono, pMail, pDescripcion);
+    
+    -- 5. Captura y retorno del ID autogenerado
+    SET pIdProveedor = LAST_INSERT_ID();
+
+END//
+
+DELIMITER ;
+-- =====================================
 
 DROP PROCEDURE IF EXISTS sp_modificarProveedor;
 DELIMITER //
@@ -889,6 +932,67 @@ SALIR:BEGIN
             mail = COALESCE(pMail, p.mail),
             descripcion = COALESCE(pDescripcion, p.descripcion)
         WHERE p.idProveedor = pIdProveedor;
+
+END//
+
+DELIMITER ;
+
+-- Lo que me sugiere gemini para manejar las modificaciones que pasen a null
+DROP PROCEDURE IF EXISTS sp_modificarProveedor;
+DELIMITER //
+
+CREATE PROCEDURE sp_modificarProveedor(
+    -- Obligatorio
+    IN pIdProveedor INT,
+    IN pNombre VARCHAR(100),
+    
+    -- Opcionales (Si se envía NULL, el campo se vaciará en la base de datos)
+    IN pDireccion VARCHAR(100),
+    IN pTelefono VARCHAR(45),
+    IN pMail VARCHAR(150),
+    IN pDescripcion VARCHAR(200)
+)
+BEGIN
+
+    -- 1. Sanitización de entradas (TRIM)
+    IF pNombre IS NOT NULL THEN SET pNombre = TRIM(pNombre); END IF;
+    IF pDireccion IS NOT NULL THEN SET pDireccion = TRIM(pDireccion); END IF;
+    IF pTelefono IS NOT NULL THEN SET pTelefono = TRIM(pTelefono); END IF;
+    IF pMail IS NOT NULL THEN SET pMail = TRIM(pMail); END IF;
+    IF pDescripcion IS NOT NULL THEN SET pDescripcion = TRIM(pDescripcion); END IF;
+
+    -- 2. Validaciones iniciales
+    IF pIdProveedor IS NULL THEN
+        SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'Debe incluir un proveedor a modificar';
+    END IF;
+
+    IF pNombre IS NULL OR pNombre = '' THEN
+        SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'El nombre del proveedor es obligatorio';
+    END IF;
+
+    -- 3. Validación de existencia del proveedor
+    IF NOT EXISTS (SELECT 1 FROM Proveedores WHERE idProveedor = pIdProveedor) THEN
+        SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'El proveedor que desea modificar no existe';
+    END IF;
+
+    -- 4. Validación de nombre duplicado (UNIQUE INDEX), excluyendo el proveedor actual
+    IF EXISTS (SELECT 1 FROM Proveedores WHERE nombre = pNombre AND idProveedor != pIdProveedor) THEN
+        SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'El nombre ingresado ya pertenece a otro proveedor registrado';
+    END IF;
+
+    -- 5. Actualización con Reemplazo Total (sin COALESCE)
+    UPDATE Proveedores
+        SET
+            nombre = pNombre,
+            direccion = pDireccion,
+            telefono = pTelefono,
+            mail = pMail,
+            descripcion = pDescripcion
+        WHERE idProveedor = pIdProveedor;
 
 END//
 
