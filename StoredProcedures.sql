@@ -605,25 +605,18 @@ DELIMITER //
 CREATE PROCEDURE sp_modificarMarca(
     -- Obligatorio
     IN pIdMarca INT,
-    -- Dejar null los valores que no serán modificados
+
+    -- todos los valores reemplazan a los actuales
     IN pNombre VARCHAR(100),
     IN pDescripcion VARCHAR(45),
     IN pEstado CHAR(1)
 )
 BEGIN
 
-    -- 1. Sanitización de entrada y control de vacíos
-    IF pNombre IS NOT NULL THEN
-        SET pNombre = TRIM(pNombre);
-        IF pNombre = '' THEN
-            SIGNAL SQLSTATE '45000'
-                SET MESSAGE_TEXT = 'El nombre de la marca no puede estar vacío';
-        END IF;
-    END IF;
-
-    IF pDescripcion IS NOT NULL THEN
-        SET pDescripcion = TRIM(pDescripcion);
-    END IF;
+    -- 1. Sanitización de entradas
+    SET pNombre = TRIM(pNombre);
+    SET pDescripcion = TRIM(pDescripcion);
+    SET pEstado = TRIM(pEstado);
 
     -- 2. Validación de parámetro obligatorio
     IF pIdMarca IS NULL THEN
@@ -632,24 +625,46 @@ BEGIN
     END IF;
 
     -- 3. Validación de existencia de la marca
-    IF NOT EXISTS (SELECT 1 FROM Marcas WHERE idMarca = pIdMarca) THEN
+    IF NOT EXISTS (
+        SELECT 1
+        FROM Marcas
+        WHERE idMarca = pIdMarca
+    ) THEN
         SIGNAL SQLSTATE '45000'
             SET MESSAGE_TEXT = 'La marca que desea modificar no existe';
     END IF;
 
-    -- 4. Validación de nombre duplicado (excluyendo la marca actual)
-    IF pNombre IS NOT NULL AND EXISTS (SELECT 1 FROM Marcas WHERE nombre = pNombre AND idMarca != pIdMarca) THEN
+    -- 4. Validación de nombre
+    IF pNombre IS NULL OR pNombre = '' THEN
         SIGNAL SQLSTATE '45000'
-            SET MESSAGE_TEXT = 'El nuevo nombre ingresado ya pertenece a otra marca registrada';
+            SET MESSAGE_TEXT = 'El nombre de la marca no puede estar vacío';
     END IF;
 
-    -- 5. Actualización
-    UPDATE Marcas m
-        SET
-            nombre = COALESCE(pNombre, m.nombre),
-            descripcion = COALESCE(pDescripcion, m.descripcion),
-            estado = COALESCE(pEstado, m.estado)
-        WHERE m.idMarca = pIdMarca;
+    -- 5. Validación de estado
+    IF pEstado IS NULL OR pEstado NOT IN ('A', 'B') THEN
+        SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'El estado ingresado no es valido';
+    END IF;
+
+    -- 6. Validación de nombre duplicado
+    IF EXISTS (
+        SELECT 1
+        FROM Marcas
+        WHERE nombre = pNombre
+          AND idMarca != pIdMarca
+    ) THEN
+        SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT =
+                'El nuevo nombre ingresado ya pertenece a otra marca registrada';
+    END IF;
+
+    -- 7. Actualización mediante PUT
+    UPDATE Marcas
+    SET
+        nombre = pNombre,
+        descripcion = pDescripcion,
+        estado = pEstado
+    WHERE idMarca = pIdMarca;
 
 END//
 
@@ -665,7 +680,8 @@ DROP PROCEDURE IF EXISTS sp_nuevaUbicacion;
 DELIMITER //
 
 CREATE PROCEDURE sp_nuevaUbicacion(
-    IN pNombreUbicacionPadre VARCHAR(45),
+    -- Esto ahora recibe el id (no nombre) de la ubicacion padre ya que podemos tener más de una ubicacion con el mismo nombre (Imaginate dos piso 1 de dos edificios distintos)
+    IN vIdUbicacionPadre INT,
     IN pNombre VARCHAR(45),
     IN pDescripcion VARCHAR(100),
     IN pEstado CHAR(1),
@@ -677,10 +693,8 @@ BEGIN
     -- 1. Sanitización de entradas (TRIM)
     SET pNombre = TRIM(pNombre);
     SET pDescripcion = TRIM(pDescripcion);
-        
-    IF pEstado IS NOT NULL THEN
-        SET pEstado = TRIM(pEstado);
-    END IF;
+    SET pEstado = TRIM(pEstado);
+
 
     -- 2. Validaciones de campos obligatorios
     IF pNombre IS NULL OR pNombre = '' THEN
@@ -695,18 +709,10 @@ BEGIN
     END IF;
 
     -- 4. Búsqueda y validación de la Ubicación Padre
-    IF pNombreUbicacionPadre IS NOT NULL AND pNombreUbicacionPadre != '' THEN
-        -- Usamos '=' en lugar de 'LIKE' para mayor precisión y rendimiento
-        SELECT idUbicacion INTO vIdUbicacionPadre
-        FROM Ubicaciones
-        WHERE nombre = pNombreUbicacionPadre LIMIT 1;
-
-        IF vIdUbicacionPadre IS NULL THEN
-            SIGNAL SQLSTATE '45000'
-                SET MESSAGE_TEXT = 'La ubicación padre indicada no existe';
-        END IF;
+    IF vIdUbicacionPadre IS NOT NULL and not exists (select 1 from `Ubicaciones` where `idUbicacion`=vivIdUbicacionPadred)THEN
+        SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'La ubicación padre indicada no existe';
     END IF;
-
     
     -- 5. Inserción de la nueva ubicación
     INSERT INTO Ubicaciones(idUbicacionPadre, nombre, descripcion, estado)
@@ -722,25 +728,41 @@ DELIMITER ;
 -- =========================================
 DROP PROCEDURE IF EXISTS sp_modificarUbicacion;
 DELIMITER //
-
 CREATE PROCEDURE sp_modificarUbicacion(
     -- Obligatorio
     IN pIdUbicacion INT,
-    -- Dejar null los valores que no serán modificados
-    IN pNombreUbicacionPadre VARCHAR(45),
+
+    -- todos los valores reemplazan a los actuales
+    -- Esto ahora recibe el id (no nombre) de la ubicacion padre ya que podemos tener más de una ubicacion con el mismo nombre (Imaginate dos piso 1 de dos edificios distintos)
+    IN  vIdUbicacionPadre INT,
     IN pNombre VARCHAR(45),
     IN pDescripcion VARCHAR(100),
     IN pEstado CHAR(1)
 )
-SALIR:BEGIN
-    DECLARE vIdUbicacionPadre INT;
+SALIR: BEGIN
 
+
+    -- 1. Sanitización de entradas
+    SET pNombre = TRIM(pNombre);
+    SET pDescripcion = TRIM(pDescripcion);
+    SET pEstado = TRIM(pEstado);
+
+
+    -- 2. Validación de parámetro obligatorio
     IF pIdUbicacion IS NULL THEN
         SIGNAL SQLSTATE '45000'
             SET MESSAGE_TEXT = 'Debe incluir una ubicacion a modificar';
         LEAVE SALIR;
     END IF;
 
+    IF pEstado IS NULL OR pEstado NOT IN ('A', 'B') THEN
+        SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'El estado ingresado no es valido';
+        LEAVE SALIR;
+    END IF;
+
+
+    -- 3. Validación de existencia de la ubicación
     IF NOT EXISTS (
         SELECT 1
         FROM Ubicaciones
@@ -751,27 +773,43 @@ SALIR:BEGIN
         LEAVE SALIR;
     END IF;
 
-    IF pNombreUbicacionPadre IS NOT NULL THEN
-        SELECT idUbicacion
-        INTO vIdUbicacionPadre
-        FROM Ubicaciones
-        WHERE nombre = TRIM(pNombreUbicacionPadre) LIMIT 1;
 
+    -- 4. Validación del nombre
+    IF pNombre IS NULL OR pNombre = '' THEN
+        SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'El nombre de la ubicacion no puede estar vacio';
+        LEAVE SALIR;
+    END IF;
+
+
+    -- 5. Validación del estado
+    IF pEstado IS NOT NULL AND pEstado NOT IN ('A', 'B') THEN
+        SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'El estado ingresado no es valido';
+        LEAVE SALIR;
+    END IF;
+
+
+    -- 6. Obtener la ubicación padre
+    IF vIdUbicacionPadre IS NOT NULL THEN
+        -- 7. Verificar que la ubicación padre exista
         IF vIdUbicacionPadre IS NULL THEN
-            IF pNombreUbicacionPadre <> 'NULL' THEN
-                SIGNAL SQLSTATE '45000'
-                    SET MESSAGE_TEXT = 'La ubicacion padre no existe';
-                LEAVE SALIR;
-            END IF;
-                
-        END IF;
-
-        IF vIdUbicacionPadre = pIdUbicacion THEN
             SIGNAL SQLSTATE '45000'
-                SET MESSAGE_TEXT = 'Una ubicacion no puede ser padre de si misma';
+                SET MESSAGE_TEXT = 'La ubicacion padre no existe';
             LEAVE SALIR;
         END IF;
 
+
+        -- 8. Una ubicación no puede ser padre de sí misma
+        IF vIdUbicacionPadre = pIdUbicacion THEN
+            SIGNAL SQLSTATE '45000'
+                SET MESSAGE_TEXT =
+                    'Una ubicacion no puede ser padre o contenerse a si misma';
+            LEAVE SALIR;
+        END IF;
+
+
+        -- 9. Verificar que no se genere un ciclo
         IF EXISTS (
             WITH RECURSIVE Ancestros AS (
                 SELECT idUbicacion, idUbicacionPadre
@@ -780,27 +818,33 @@ SALIR:BEGIN
 
                 UNION ALL
 
-                SELECT u.idUbicacion, u.idUbicacionPadre
-                FROM Ubicaciones u
-                INNER JOIN Ancestros a ON u.idUbicacion = a.idUbicacionPadre
+                SELECT u.idUbicacion, u.idUbicacionPadre 
+                FROM Ubicaciones u INNER JOIN Ancestros a
+                    ON u.idUbicacion = a.idUbicacionPadre
             )
-            SELECT 1 FROM Ancestros WHERE idUbicacion = pIdUbicacion
-            ) THEN
+            SELECT 1
+            FROM Ancestros
+            WHERE idUbicacion = pIdUbicacion
+        ) THEN
             SIGNAL SQLSTATE '45000'
-                SET MESSAGE_TEXT = 'No puede asignarse a esta ubicacion como padre por que se genereraría un lazo en la jeraquia de ubicaciones';
+                SET MESSAGE_TEXT =
+                    'No puede asignarse esta ubicacion como padre porque se generaria un lazo en la jerarquia de ubicaciones';
+            LEAVE SALIR;
         END IF;
+
     END IF;
 
-    UPDATE Ubicaciones u
-        SET
-            idUbicacionPadre = vIdUbicacionPadre,
-            nombre = TRIM(pNombre),
-            descripcion = TRIM(pDescripcion),
-            estado = TRIM(pEstado)
-        WHERE u.idUbicacion = pIdUbicacion;
+
+    -- 10. Actualización mediante PUT
+    UPDATE Ubicaciones
+    SET
+        idUbicacionPadre = vIdUbicacionPadre,
+        nombre = pNombre,
+        descripcion = pDescripcion,
+        estado = COALESCE(pEstado,'A')
+    WHERE idUbicacion = pIdUbicacion;
 
 END//
-
 DELIMITER ;
 
 

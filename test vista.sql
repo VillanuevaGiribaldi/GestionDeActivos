@@ -31,10 +31,10 @@ CALL sp_modificarActivo(
     /* pNombreUbicacion */ 'Oficina IT',
     /* pNombreTipo      */ 'PC',
     /* pNombreEstado    */ 'Operativo',
-    /* pidFactura       */ NULL,
+    /* pidFactura       */ '1',
     /* pidPersona       */ 2,
     /* pidCompone       */ NULL,
-    /* pNombre          */ 'Modificado 1',
+    /* pNombre          */ 'Modificado 12',
     /* pAtributosExtra  */ NULL,
     /* pPrecioUnitario  */ 100,
     /* pNumeroSerie     */ 'LEN-PC-888',
@@ -46,9 +46,10 @@ select * from `Historial`;
 
 select * from `Ubicaciones`
 
-call `sp_modificarUbicacion`(5,'NULL',null,null,null);
-call `sp_modificarUbicacion`(5,'Caja 1',null,null,null);
-call `sp_modificarUbicacion`(1,'Cajon 1',null,null,null);
+call `sp_modificarUbicacion`(5,NULL,null,null,null);
+call `sp_modificarUbicacion`(5,4,null,null,null);
+call `sp_modificarUbicacion`(5,5,'Cajon 1',null,'A');
+call `sp_modificarUbicacion`(5,null,'Cajon 1',null,'A');
 
 
 WITH RECURSIVE Ancestros AS (
