@@ -209,14 +209,15 @@ DROP PROCEDURE IF EXISTS sp_modificarActivo;
 DELIMITER //
 
 CREATE procedure sp_modificarActivo(
-	-- Obligatorios Para historial
+	-- Obligatorios Para historial y poder modificar
 	IN pidActivo INT,
     IN pIdUsuario INT, -- 
-    -- Dejar null los valores que no serán modificados
+    -- No pueden ser NULL
 	IN pNombreMarca VARCHAR(45),
     IN pNombreUbicacion VARCHAR(45),
     IN pNombreTipo VARCHAR(45),
     IN pNombreEstado VARCHAR(45),
+    -- Pueden ser NULL
     IN pidFactura INT,
     IN pidPersona INT,
     IN pidCompone INT,
@@ -258,13 +259,21 @@ SALIR:BEGIN
     DECLARE oldNumeroSerie VARCHAR(100);
     DECLARE oldModelo VARCHAR(50);
 
+    
     -- Manejador de errores: Si algo falla, deshace los cambios (Rollback)
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
         ROLLBACK;
         RESIGNAL; -- Re-lanza el error para que tu backend lo detecte
     END;
-
+    -- TRIM de los parametros
+    SET pNombreMarca = TRIM(pNombreMarca);
+    SET pNombreUbicacion = TRIM(pNombreUbicacion);
+    SET pNombreTipo = TRIM(pNombreTipo);
+    SET pNombreEstado = TRIM(pNombreEstado);
+    SET pNombre = TRIM(pNombre);
+    SET pNumeroSerie = TRIM(pNumeroSerie);
+    SET pModelo = TRIM(pModelo);
     -- Verificar que se ingresa el usuario que hace el nuevo activo
     IF pIdUsuario IS NULL OR NOT EXISTS (SELECT 1 FROM Usuarios WHERE idUsuario = pIdUsuario) THEN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El usuario no existe o es inválido';
@@ -287,31 +296,46 @@ SALIR:BEGIN
 -- ------------------------------------------------------------------------------ 
 --  verificar que los Nombres de marca, ubicacion, tipo y estado dados se correspondan a uno existente
 -- ------------------------------------------------------------------------------
+        IF pNombreMarca IS NULL  OR pNombreMarca = '' THEN 
+            SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Se debe ingresar una marca';
+        END IF;
+
+        IF pNombreUbicacion IS NULL  OR pNombreMarca = '' THEN 
+            SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Se debe ingresar una ubicación';
+        END IF;
+
+        IF pNombreTipo IS NULL   OR pNombreMarca = '' THEN 
+            SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Se debe ingresar un tipo'; 
+        END IF;
+        IF pNombreEstado IS NULL  OR pNombreMarca = '' THEN
+            SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Se debe ingresar un estado'; 
+        END IF;
+    
     SELECT idMarca INTO vIdMarca FROM Marcas WHERE nombre = pNombreMarca LIMIT 1;
 	SELECT idUbicacion INTO vIdUbicacion FROM Ubicaciones WHERE nombre = pNombreUbicacion LIMIT 1;
 	SELECT idTipo INTO vIdTipo FROM Tipos WHERE nombre = pNombreTipo LIMIT 1;
 	SELECT idEstado INTO vIdEstado FROM Estados WHERE nombre = pNombreEstado LIMIT 1;
 
-        IF pNombreMarca  IS NOT NULL and vIdMarca IS NULL THEN 
+        IF vIdMarca IS NULL THEN 
             SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'La marca no existe';
         END IF;
 
-        IF pNombreUbicacion  IS NOT NULL and vIdUbicacion IS NULL THEN 
+        IF vIdUbicacion IS NULL THEN 
             SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'La ubicación no existe';
         END IF;
 
-        IF pNombreTipo  IS NOT NULL and vIdTipo IS NULL THEN 
+        IF vIdTipo IS NULL THEN 
             SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El tipo no existe'; 
         END IF;
 
-        IF pNombreEstado IS NOT NULL and vIdEstado IS NULL THEN
+        IF vIdEstado IS NULL THEN
             SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El estado no existe'; 
         END IF;
 
 -- ------------------------------------------------------------------------------ 
 --  verificar que los ids de Persona, factura y Activo que compone dados se correspondan a uno existente
 -- ------------------------------------------------------------------------------    
-	IF pidPersona IS NOT NULL AND NOT EXISTS (
+	IF pidPersona IS NULL OR NOT EXISTS (
 		SELECT 1
 		FROM Personas
 		WHERE idPersona = pidPersona
@@ -389,62 +413,64 @@ SALIR:BEGIN
 
         SET vEstadoViejo = JSON_OBJECT();
         SET vEstadoNuevo = JSON_OBJECT();
-        IF vIdMarca IS NOT NULL AND vIdMarca <> oldIdMarca THEN
+        -- Estos no pueden ser NULL
+        IF vIdMarca <> oldIdMarca THEN
             SET vEstadoViejo = JSON_SET(vEstadoViejo, '$.Marca', oldNombreMarca);
             SET vEstadoNuevo = JSON_SET(vEstadoNuevo, '$.Marca', pNombreMarca);
         END IF;
 
-        IF vIdUbicacion IS NOT NULL AND vIdUbicacion <> oldIdUbicacion THEN
+        IF vIdUbicacion <> oldIdUbicacion THEN
             SET vEstadoViejo = JSON_SET(vEstadoViejo, '$.Ubicacion', oldNombreUbicacion);
             SET vEstadoNuevo = JSON_SET(vEstadoNuevo, '$.Ubicacion', pNombreUbicacion);
         END IF;
 
-        IF vIdTipo IS NOT NULL AND vIdTipo <> oldIdTipo THEN
+        IF vIdTipo <> oldIdTipo THEN
             SET vEstadoViejo = JSON_SET(vEstadoViejo, '$.Tipo', oldNombreTipo);
             SET vEstadoNuevo = JSON_SET(vEstadoNuevo, '$.Tipo', pNombreTipo);
         END IF;
 
-        IF vIdEstado IS NOT NULL AND vIdEstado <> oldIdEstado THEN
+        IF vIdEstado <> oldIdEstado THEN
             SET vEstadoViejo = JSON_SET(vEstadoViejo, '$.Estado', oldNombreEstado);
             SET vEstadoNuevo = JSON_SET(vEstadoNuevo, '$.Estado', pNombreEstado);
         END IF;
 
-        IF pidFactura IS NOT NULL AND pidFactura <> oldIdFactura THEN
+        -- Estos pueden ser NULL por lo que se usa <=> 
+        IF NOT pidFactura <=> oldIdFactura THEN
             SET vEstadoViejo = JSON_SET(vEstadoViejo, '$.Factura', oldIdFactura);
             SET vEstadoNuevo = JSON_SET(vEstadoNuevo, '$.Factura', pidFactura);
         END IF;
 
-        IF pidPersona IS NOT NULL AND pidPersona <> oldIdPersona THEN
+        IF NOT pidPersona <=> oldIdPersona THEN
             SET vEstadoViejo = JSON_SET(vEstadoViejo, '$.Persona', oldIdPersona);
             SET vEstadoNuevo = JSON_SET(vEstadoNuevo, '$.Persona', pidPersona);
         END IF;
 
-        IF pidCompone IS NOT NULL AND pidCompone <> oldIdCompone THEN
+        IF NOT pidCompone <=> oldIdCompone THEN
             SET vEstadoViejo = JSON_SET(vEstadoViejo, '$.Compone', oldIdCompone);
             SET vEstadoNuevo = JSON_SET(vEstadoNuevo, '$.Compone', pidCompone);
         END IF;
 
-        IF pNombre IS NOT NULL AND pNombre <> oldNombre THEN
+        IF NOT  pNombre <=> oldNombre THEN
             SET vEstadoViejo = JSON_SET(vEstadoViejo, '$.Nombre', oldNombre);
             SET vEstadoNuevo = JSON_SET(vEstadoNuevo, '$.Nombre', pNombre);
         END IF;
 
-        IF pAtributosExtra IS NOT NULL AND pAtributosExtra <> oldAtributosExtra THEN
+        IF  NOT pAtributosExtra <=> oldAtributosExtra THEN
             SET vEstadoViejo = JSON_SET(vEstadoViejo, '$.AtributosExtra', oldAtributosExtra);
             SET vEstadoNuevo = JSON_SET(vEstadoNuevo, '$.AtributosExtra', pAtributosExtra);
         END IF;
 
-        IF pPrecioUnitario IS NOT NULL AND pPrecioUnitario <> oldPrecioUnitario THEN
+        IF  NOT pPrecioUnitario <=> oldPrecioUnitario THEN
             SET vEstadoViejo = JSON_SET(vEstadoViejo, '$.PrecioUnitario', oldPrecioUnitario);
             SET vEstadoNuevo = JSON_SET(vEstadoNuevo, '$.PrecioUnitario', pPrecioUnitario);
         END IF;
 
-        IF pNumeroSerie IS NOT NULL AND pNumeroSerie <> oldNumeroSerie THEN
+        IF  NOT pNumeroSerie <=> oldNumeroSerie THEN
             SET vEstadoViejo = JSON_SET(vEstadoViejo, '$.NumeroSerie', oldNumeroSerie);
             SET vEstadoNuevo = JSON_SET(vEstadoNuevo, '$.NumeroSerie', pNumeroSerie);
         END IF;
 
-        IF pModelo IS NOT NULL AND pModelo <> oldModelo THEN
+        IF NOT  pModelo <=> oldModelo THEN
             SET vEstadoViejo = JSON_SET(vEstadoViejo, '$.Modelo', oldModelo);
             SET vEstadoNuevo = JSON_SET(vEstadoNuevo, '$.Modelo', pModelo);
         END IF;
@@ -460,20 +486,20 @@ SALIR:BEGIN
     START TRANSACTION;
 
     UPDATE Activos a
-		SET
-			idMarca = COALESCE(vIdMarca, a.idMarca),
-			idUbicacion = COALESCE(vIdUbicacion, a.idUbicacion),
-			idTipo = COALESCE(vIdTipo, a.idTipo),
-			idEstado = COALESCE(vIdEstado, a.idEstado),
-			idFactura = COALESCE(pidFactura, a.idFactura),
-			idPersona = COALESCE(pidPersona, a.idPersona),
-			compone = COALESCE(pidCompone, a.compone),
-			nombre = COALESCE(pNombre, a.nombre),
-			atributosExtra = COALESCE(pAtributosExtra, a.atributosExtra),
-			precioUnitario = COALESCE(pPrecioUnitario, a.precioUnitario),
-			numeroSerie = COALESCE(pNumeroSerie, a.numeroSerie),
-			modelo = COALESCE(pModelo, a.modelo)
-		WHERE a.idActivo = pidActivo;
+    SET
+        idMarca = vIdMarca,
+        idUbicacion = vIdUbicacion,
+        idTipo = vIdTipo,
+        idEstado = vIdEstado,
+        idFactura = pidFactura,
+        idPersona = pidPersona,
+        compone = pidCompone,
+        nombre = pNombre,
+        atributosExtra = pAtributosExtra,
+        precioUnitario = pPrecioUnitario,
+        numeroSerie = pNumeroSerie,
+        modelo = pModelo
+    WHERE a.idActivo = pidActivo;
         
         
 
@@ -634,50 +660,7 @@ DELIMITER ;
 -- UBICACIONES
 -- =====================================================
 
-DROP PROCEDURE IF EXISTS sp_nuevaUbicacion;
-DELIMITER //
-
-CREATE PROCEDURE sp_nuevaUbicacion(
-    IN pNombreUbicacionPadre VARCHAR(45),
-    IN pNombre VARCHAR(45),
-    IN pDescripcion VARCHAR(100),
-    IN pEstado CHAR(1)
-)
-SALIR:BEGIN
-    DECLARE vIdUbicacionPadre INT;
-
-    IF pNombre IS NULL OR TRIM(pNombre) = '' THEN
-        SIGNAL SQLSTATE '45000'
-            SET MESSAGE_TEXT = 'El nombre de la ubicacion es obligatorio';
-        LEAVE SALIR;
-    END IF;
-
-    IF pEstado IS NULL THEN
-        SIGNAL SQLSTATE '45000'
-            SET MESSAGE_TEXT = 'El estado de la ubicacion es obligatorio';
-        LEAVE SALIR;
-    END IF;
-
-    IF pNombreUbicacionPadre IS NOT NULL THEN
-        SELECT idUbicacion
-        INTO vIdUbicacionPadre
-        FROM Ubicaciones
-        WHERE nombre LIKE pNombreUbicacionPadre;
-
-        IF vIdUbicacionPadre IS NULL THEN
-            SIGNAL SQLSTATE '45000'
-                SET MESSAGE_TEXT = 'La ubicacion padre no existe';
-            LEAVE SALIR;
-        END IF;
-    END IF;
-
-    INSERT INTO Ubicaciones(idUbicacionPadre, nombre, descripcion, estado)
-    VALUES (vIdUbicacionPadre, pNombre, pDescripcion, pEstado);
-
-END//
-
-DELIMITER ;
--- nuevaUbicacion Version 2
+-- nuevaUbicacion Version 
 DROP PROCEDURE IF EXISTS sp_nuevaUbicacion;
 DELIMITER //
 
@@ -772,7 +755,7 @@ SALIR:BEGIN
         SELECT idUbicacion
         INTO vIdUbicacionPadre
         FROM Ubicaciones
-        WHERE nombre LIKE pNombreUbicacionPadre;
+        WHERE nombre = TRIM(pNombreUbicacionPadre) LIMIT 1;
 
         IF vIdUbicacionPadre IS NULL THEN
             IF pNombreUbicacionPadre <> 'NULL' THEN
@@ -788,6 +771,7 @@ SALIR:BEGIN
                 SET MESSAGE_TEXT = 'Una ubicacion no puede ser padre de si misma';
             LEAVE SALIR;
         END IF;
+
         IF EXISTS (
             WITH RECURSIVE Ancestros AS (
                 SELECT idUbicacion, idUbicacionPadre
@@ -810,9 +794,9 @@ SALIR:BEGIN
     UPDATE Ubicaciones u
         SET
             idUbicacionPadre = vIdUbicacionPadre,
-            nombre = COALESCE(pNombre, u.nombre),
-            descripcion = COALESCE(pDescripcion, u.descripcion),
-            estado = COALESCE(pEstado, u.estado)
+            nombre = TRIM(pNombre),
+            descripcion = TRIM(pDescripcion),
+            estado = TRIM(pEstado)
         WHERE u.idUbicacion = pIdUbicacion;
 
 END//
@@ -832,34 +816,8 @@ CREATE PROCEDURE sp_nuevoProveedor(
     IN pDireccion VARCHAR(100),
     IN pTelefono VARCHAR(45),
     IN pMail VARCHAR(150),
-    IN pDescripcion VARCHAR(200)
-)
-SALIR:BEGIN
-
-    IF pNombre IS NULL OR TRIM(pNombre) = '' THEN
-        SIGNAL SQLSTATE '45000'
-            SET MESSAGE_TEXT = 'El nombre del proveedor es obligatorio';
-        LEAVE SALIR;
-    END IF;
-
-    INSERT INTO Proveedores(nombre, direccion, telefono, mail, descripcion)
-    VALUES (pNombre, pDireccion, pTelefono, pMail, pDescripcion);
-
-END//
-
-DELIMITER ;
-
--- nuevoProveedor version 2
-DROP PROCEDURE IF EXISTS sp_nuevoProveedor;
-DELIMITER //
-
-CREATE PROCEDURE sp_nuevoProveedor(
-    IN pNombre VARCHAR(100),
-    IN pDireccion VARCHAR(100),
-    IN pTelefono VARCHAR(45),
-    IN pMail VARCHAR(150),
     IN pDescripcion VARCHAR(200),
-    OUT pIdProveedor INT -- MEJORA: Parámetro de salida para el ID
+    OUT pIdProveedor INT 
 )
 BEGIN
     -- 1. Sanitización de entradas (TRIM)
@@ -892,52 +850,6 @@ END//
 
 DELIMITER ;
 -- =====================================
-
-DROP PROCEDURE IF EXISTS sp_modificarProveedor;
-DELIMITER //
-
-CREATE PROCEDURE sp_modificarProveedor(
-    -- Obligatorio
-    IN pIdProveedor INT,
-    -- Dejar null los valores que no serán modificados
-    IN pNombre VARCHAR(100),
-    IN pDireccion VARCHAR(100),
-    IN pTelefono VARCHAR(45),
-    IN pMail VARCHAR(150),
-    IN pDescripcion VARCHAR(200)
-)
-SALIR:BEGIN
-
-    IF pIdProveedor IS NULL THEN
-        SIGNAL SQLSTATE '45000'
-            SET MESSAGE_TEXT = 'Debe incluir un proveedor a modificar';
-        LEAVE SALIR;
-    END IF;
-
-    IF NOT EXISTS (
-        SELECT 1
-        FROM Proveedores
-        WHERE idProveedor = pIdProveedor
-    ) THEN
-        SIGNAL SQLSTATE '45000'
-            SET MESSAGE_TEXT = 'El proveedor que desea modificar no existe';
-        LEAVE SALIR;
-    END IF;
-
-    UPDATE Proveedores p
-        SET
-            nombre = COALESCE(pNombre, p.nombre),
-            direccion = COALESCE(pDireccion, p.direccion),
-            telefono = COALESCE(pTelefono, p.telefono),
-            mail = COALESCE(pMail, p.mail),
-            descripcion = COALESCE(pDescripcion, p.descripcion)
-        WHERE p.idProveedor = pIdProveedor;
-
-END//
-
-DELIMITER ;
-
--- Lo que me sugiere gemini para manejar las modificaciones que pasen a null
 DROP PROCEDURE IF EXISTS sp_modificarProveedor;
 DELIMITER //
 

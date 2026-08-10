@@ -27,18 +27,18 @@ CALL sp_nuevoActivo(
 CALL sp_modificarActivo(
 	/* pidActivo */			3,
     /* pidUsuario */			1,
-    /* pNombreMarca     */ NULL,
-    /* pNombreUbicacion */ NULL,
-    /* pNombreTipo      */ NULL,
-    /* pNombreEstado    */ 'Baja',
+    /* pNombreMarca     */ 'Dell',
+    /* pNombreUbicacion */ 'Oficina IT',
+    /* pNombreTipo      */ 'PC',
+    /* pNombreEstado    */ 'Operativo',
     /* pidFactura       */ NULL,
-    /* pidPersona       */ NULL,
+    /* pidPersona       */ 2,
     /* pidCompone       */ NULL,
-    /* pNombre          */ NULL,
+    /* pNombre          */ 'Modificado 1',
     /* pAtributosExtra  */ NULL,
-    /* pPrecioUnitario  */ NULL,
-    /* pNumeroSerie     */ NULL,
-    /* pModelo          */ NULL
+    /* pPrecioUnitario  */ 100,
+    /* pNumeroSerie     */ 'LEN-PC-888',
+    /* pModelo          */ 'ThinkPad E14'
 );
 
 call sp_listarTodo();
