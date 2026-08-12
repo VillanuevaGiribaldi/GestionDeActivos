@@ -11,6 +11,7 @@ SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,N
 -- -----------------------------------------------------
 -- Schema GestionDeActivos
 -- -----------------------------------------------------
+DROP SCHEMA if EXISTS GestionDeActivos;
 CREATE SCHEMA IF NOT EXISTS `GestionDeActivos` DEFAULT CHARACTER SET utf8 ;
 USE `GestionDeActivos` ;
 
@@ -213,7 +214,7 @@ ENGINE = InnoDB;
 CREATE TABLE IF NOT EXISTS `GestionDeActivos`.`ComposicionTipos` (
   `idTipoPadre` INT NOT NULL,
   `idTipoComponente` INT NOT NULL,
-  `Obligatorio` BOOL NOT NULL,
+  `cantidadComponentesMaxima` INT NULL,
   PRIMARY KEY (`idTipoPadre`, `idTipoComponente`),
   INDEX `fk_ComposicionTipos_Tipos1_idx` (`idTipoPadre` ASC) VISIBLE,
   INDEX `fk_ComposicionTipos_Tipos2_idx` (`idTipoComponente` ASC) VISIBLE,

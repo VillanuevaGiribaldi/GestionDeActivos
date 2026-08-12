@@ -8,7 +8,7 @@ DELIMITER //
 CREATE procedure sp_componerTipos(
 	IN NombreTipoPadre VARCHAR(45),
     IN NombreTipoComponente VARCHAR(45),
-    IN Obligatorio BOOLEAN    
+    IN pMax INT    
 )
 SALIR:BEGIN
 	DECLARE vIdTipoPadre INT;
@@ -50,7 +50,12 @@ SALIR:BEGIN
         LEAVE SALIR;
     end if;
     
-    insert into ComposicionTipos(idTipoPadre,idTipoComponente,Obligatorio) values (vIdTipoPadre,vIdTipoComponente,COALESCE(Obligatorio,false));
+    IF pMax IS NOT NULL AND pMax<1 THEN
+		SIGNAL SQLSTATE '45000'
+			SET MESSAGE_TEXT = 'La cantidad máxima de componentes ingresada no es puede ser menor que 1';
+	END IF;
+
+    insert into ComposicionTipos(idTipoPadre,idTipoComponente,cantidadComponentesMaxima) values (vIdTipoPadre,vIdTipoComponente,pMax);
 
 END//
 
@@ -58,6 +63,7 @@ DELIMITER ;
 
 
 -- =========================================== NUEVO ACTIVO
+DROP PROCEDURE IF EXISTS sp_nuevoActivo;
 DELIMITER //
 
 CREATE PROCEDURE sp_nuevoActivo(
@@ -153,6 +159,19 @@ SALIR:BEGIN
         WHERE a.idActivo = pidCompone AND ct.idTipoComponente = vIdTipo
     ) THEN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El tipo del activo a crear no se corresponde con un componente valido del activo que se indicó';
+    END IF;
+
+
+    IF (
+        SELECT COUNT(*)
+        FROM Activos
+        WHERE compone = pidCompone AND idTipo = vIdTipo 
+        ) >= (SELECT ct.cantidadComponentesMaxima from `ComposicionTipos` ct 
+        inner join `Activos` a on a.`idTipo`=ct.`idTipoPadre`
+        where ct.`idTipoComponente`=vIdTipo and a.`idActivo`= pidCompone limit 1) THEN
+
+            SIGNAL SQLSTATE '45000'
+                SET MESSAGE_TEXT = 'El activo ya tiene demasiados componentes de este tipo';
     END IF;
 
     -- =========================================================================
@@ -1133,6 +1152,26 @@ BEGIN
     UPDATE Usuarios 
     SET estado = 'I' -- Le quita el acceso al sistema
     WHERE idUsuario = pIdUsuario;
+
+END//
+DELIMITER ;
+
+DROP PROCEDURE IF EXISTS sp_verificarAtributos;
+CREATE PROCEDURE sp_verificarAtributos(
+    IN pIdTipo INT,
+    IN OUT pAtributos JSON
+)
+BEGIN
+    
+    -- Verificar que el Tipo exista
+    IF NOT EXISTS (
+        SELECT 1
+        FROM Tipos
+        WHERE idTipo = pIdTipo
+    ) THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'El tipo ingresado no existe';
+    END IF;
 
 END//
 DELIMITER ;

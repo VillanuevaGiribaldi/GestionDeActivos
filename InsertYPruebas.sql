@@ -28,9 +28,9 @@ INSERT INTO `Tipos` (`nombre`, `descripcion`, `estado`) VALUES
 ('SIM', 'Tarjeta SIM', 'A');
 
 -- Componer los tipos
-call sp_componerTipos('PC','CPU',null);
-call sp_componerTipos('PC','ram',null);
-call sp_componerTipos('PC','Fuente',null);
+call sp_componerTipos('PC','CPU',1);
+call sp_componerTipos('PC','ram',2);
+call sp_componerTipos('PC','Fuente',1);
 
 -- 4. Insertar Ubicaciones (Probando la relación Padre-Hijo)
 -- Primero creamos la Sede Principal (No tiene padre, idUbicacionPadre es NULL)
@@ -63,8 +63,8 @@ INSERT INTO `Usuarios` (`idPersona`, `username`, `password`, `rol`, `estado`) VA
 -- ==========================================
 -- FASE 3: Proveedores y Facturas
 -- ==========================================
-INSERT INTO `Proveedores` (`nombre`, `direccion`, `telefono`, `mail`, `descripcion`) VALUES 
-('TechStore Arg', 'Av. Corrientes 1234', '11-4567-8900', 'ventas@techstore.com', 'Proveedor principal de hardware');
+INSERT INTO `Proveedores` (`nombre`, `direccion`, `telefono`, `mail`, `descripcion`, estado) VALUES 
+('TechStore Arg', 'Av. Corrientes 1234', '11-4567-8900', 'ventas@techstore.com', 'Proveedor principal de hardware','A');
 
 -- Simulamos una factura de compra (Asumiendo que el proveedor tomó el ID 1)
 INSERT INTO `Facturas` (`idProveedor`, `fecha`, `monto`, `moneda`, `numero`, `ruta`) VALUES 
@@ -160,3 +160,13 @@ INNER JOIN Proveedores prov ON f.idProveedor = prov.idProveedor
 INNER JOIN Activos a ON f.idFactura = f.idFactura;
 
 
+-- ========================================
+-- ATRIBUTOS DE PC
+-- ========================================
+INSERT INTO Atributos (idTipo, porDefecto, nombre, obligatorio)
+VALUES
+(4, 'Windows 10', 'SO', 1),
+(4, NULL, 'IP', 0),
+(4, NULL, 'MAC', 0),
+(4, NULL, 'Aplicaciones', 0),
+(4, NULL, 'Almacenamiento', 0);
