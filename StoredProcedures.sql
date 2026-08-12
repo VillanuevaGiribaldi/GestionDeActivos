@@ -403,7 +403,19 @@ SALIR:BEGIN
 			SET MESSAGE_TEXT = 'El tipo del activo a modificar no se corresponde con un componente valido del activo que se indicó';
 	END IF;
 
-        
+    -- Verificar que no se supere la cantidad max de componentes de este tipo
+    IF (
+        SELECT COUNT(*)
+        FROM Activos
+        WHERE compone = pidCompone AND idTipo = vIdTipo and idActivo <> pidActivo
+        ) >= (SELECT ct.cantidadComponentesMaxima from `ComposicionTipos` ct 
+        inner join `Activos` a on a.`idTipo`=ct.`idTipoPadre`
+        where ct.`idTipoComponente`=vIdTipo and a.`idActivo`= pidCompone limit 1) THEN
+            SIGNAL SQLSTATE '45000'
+                SET MESSAGE_TEXT = 'El activo ya tiene demasiados componentes de este tipo';
+    END IF;
+
+
     -- Validar formato JSON
     IF pAtributosExtra IS NOT NULL AND NOT JSON_VALID(pAtributosExtra) THEN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Los atributos extra no tienen un formato JSON válido';
@@ -423,6 +435,7 @@ SALIR:BEGIN
     IF pNombre IS NOT NULL AND pPrecioUnitario<0 THEN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El precio ingresado tiene que ser mayor a cero';
     END IF;
+    
     
     -- =========================================================================
     -- Armar JSONs
