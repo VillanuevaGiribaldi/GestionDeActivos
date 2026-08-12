@@ -11,7 +11,6 @@ SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,N
 -- -----------------------------------------------------
 -- Schema GestionDeActivos
 -- -----------------------------------------------------
-DROP SCHEMA if EXISTS GestionDeActivos;
 CREATE SCHEMA IF NOT EXISTS `GestionDeActivos` DEFAULT CHARACTER SET utf8 ;
 USE `GestionDeActivos` ;
 
@@ -41,8 +40,8 @@ ENGINE = InnoDB;
 CREATE TABLE IF NOT EXISTS `GestionDeActivos`.`Marcas` (
   `idMarca` INT NOT NULL AUTO_INCREMENT,
   `nombre` VARCHAR(100) NOT NULL,
+  `estado` CHAR(1) NOT NULL,
   `descripcion` VARCHAR(45) NULL,
-  `estado` CHAR(1) NULL,
   PRIMARY KEY (`idMarca`),
   UNIQUE INDEX `nombre_UNIQUE` (`nombre` ASC) VISIBLE)
 ENGINE = InnoDB;
@@ -93,11 +92,11 @@ ENGINE = InnoDB;
 CREATE TABLE IF NOT EXISTS `GestionDeActivos`.`Proveedores` (
   `idProveedor` INT NOT NULL AUTO_INCREMENT,
   `nombre` VARCHAR(100) NOT NULL,
+  `estado` CHAR(1) NOT NULL,
   `direccion` VARCHAR(100) NULL,
   `telefono` VARCHAR(45) NULL,
   `mail` VARCHAR(150) NULL,
   `descripcion` VARCHAR(200) NULL,
-  `estado` CHAR(1) NOT NULL,
   PRIMARY KEY (`idProveedor`),
   UNIQUE INDEX `nombre_UNIQUE` (`nombre` ASC) VISIBLE)
 ENGINE = InnoDB;
@@ -197,7 +196,7 @@ CREATE TABLE IF NOT EXISTS `GestionDeActivos`.`Atributos` (
   `idTipo` INT NOT NULL,
   `porDefecto` VARCHAR(100) NULL,
   `nombre` VARCHAR(45) NULL,
-  `obligatorio` BOOLEAN NULL,
+  `obligatorio` BOOL NULL,
   PRIMARY KEY (`idAtributo`),
   UNIQUE INDEX `UX_tipoNombre` (`idTipo` ASC, `nombre` ASC) VISIBLE,
   CONSTRAINT `fk_Atributos_Tipos1`
@@ -214,7 +213,7 @@ ENGINE = InnoDB;
 CREATE TABLE IF NOT EXISTS `GestionDeActivos`.`ComposicionTipos` (
   `idTipoPadre` INT NOT NULL,
   `idTipoComponente` INT NOT NULL,
-  `Obligatorio` BOOLEAN NOT NULL,
+  `Obligatorio` BOOL NOT NULL,
   PRIMARY KEY (`idTipoPadre`, `idTipoComponente`),
   INDEX `fk_ComposicionTipos_Tipos1_idx` (`idTipoPadre` ASC) VISIBLE,
   INDEX `fk_ComposicionTipos_Tipos2_idx` (`idTipoComponente` ASC) VISIBLE,

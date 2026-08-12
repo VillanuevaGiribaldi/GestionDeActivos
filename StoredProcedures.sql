@@ -525,8 +525,95 @@ END//
 
 DELIMITER ;
 
--- =======================================================================
+-- =========================================== BAJA ACTIVO
+DROP PROCEDURE IF EXISTS sp_bajaActivo;
+DELIMITER //
 
+CREATE PROCEDURE sp_bajaActivo(
+    IN pIdActivo INT,
+    IN pIdEstadoBaja INT, 
+    IN pIdUsuario INT,
+    IN pComentario VARCHAR(200)
+)
+BEGIN
+    DECLARE vViejoIdEstado INT;
+    DECLARE vViejoIdUbicacion INT;
+
+    -- Manejador de errores para asegurar transacciones ACID
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        RESIGNAL;
+    END;
+
+    -- 1. Validaciones de parámetros obligatorios
+    IF pIdActivo IS NULL THEN 
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Debe indicar el activo a dar de baja'; 
+    END IF;
+    IF pIdEstadoBaja IS NULL THEN 
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Debe indicar el estado de baja (ej. Descartado, Roto, etc.)'; 
+    END IF;
+    IF pIdUsuario IS NULL THEN 
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El usuario es obligatorio para el registro del historial'; 
+    END IF;
+
+    -- 2. Validación de existencia en catálogos (Claves Foráneas)
+    IF NOT EXISTS (SELECT 1 FROM Usuarios WHERE idUsuario = pIdUsuario) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El usuario indicado no existe o es inválido';
+    END IF;
+
+    IF NOT EXISTS (SELECT 1 FROM Estados WHERE idEstado = pIdEstadoBaja) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El estado de baja indicado no existe en el sistema';
+    END IF;
+
+    -- 3. Obtener el estado actual del activo
+    SELECT idEstado, idUbicacion INTO vViejoIdEstado, vViejoIdUbicacion 
+    FROM Activos WHERE idActivo = pIdActivo;
+
+    IF vViejoIdEstado IS NULL THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El activo que desea dar de baja no existe';
+    END IF;
+
+    -- 4. Verificar que no esté ya dado de baja con ese mismo estado
+    IF vViejoIdEstado = pIdEstadoBaja THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El activo ya se encuentra en el estado indicado';
+    END IF;
+
+    -- 5. Control de componentes hijos (NUEVO: Integridad de hardware)
+    IF EXISTS (SELECT 1 FROM Activos WHERE compone = pIdActivo) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El activo posee componentes vinculados. Debe desvincularlos antes de dar de baja el equipo principal.';
+    END IF;
+
+    -- =========================================================================
+    -- INICIO DE TRANSACCIÓN (Activo + Historial)
+    -- =========================================================================
+    START TRANSACTION;
+
+    -- 6. Actualizar el activo (Se cambia el estado y se liberan las asignaciones)
+    UPDATE Activos
+    SET 
+        idEstado = pIdEstadoBaja,
+        idPersona = NULL, -- Al darse de baja, se retira al empleado asignado
+        compone = NULL    -- Se retira de cualquier equipo del que formaba parte
+    WHERE idActivo = pIdActivo;
+
+    -- 7. Registrar la baja en el Historial para la auditoría
+    INSERT INTO Historial (idUsuario, idActivo, fecha, comentario, tipo, estadoAnterior, estadoNuevo)
+    VALUES (
+        pIdUsuario, 
+        pIdActivo, 
+        NOW(), 
+        COALESCE(pComentario, 'Baja del activo en el sistema'), 
+        'B', -- 'B' para Baja
+        JSON_OBJECT('idEstado', vViejoIdEstado, 'idUbicacion', vViejoIdUbicacion),
+        JSON_OBJECT('idEstado', pIdEstadoBaja, 'idUbicacion', vViejoIdUbicacion)
+    );
+
+    COMMIT;
+END//
+DELIMITER ;
+
+-- =============================================
 drop procedure if exists sp_listarTodo;
 delimiter //
 create procedure sp_listarTodo()
@@ -670,6 +757,30 @@ END//
 
 DELIMITER ;
 -- ==========================================
+
+DROP PROCEDURE IF EXISTS sp_bajaMarca;
+DELIMITER //
+
+CREATE PROCEDURE sp_bajaMarca(
+    IN pIdMarca INT
+)
+BEGIN
+    -- 1. Validaciones iniciales
+    IF pIdMarca IS NULL THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Debe indicar la marca a dar de baja';
+    END IF;
+
+    IF NOT EXISTS (SELECT 1 FROM Marcas WHERE idMarca = pIdMarca) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'La marca indicada no existe';
+    END IF;
+
+    -- 2. Baja Lógica
+    UPDATE Marcas 
+    SET estado = 'I' -- 'I' representa Inactivo/Baja
+    WHERE idMarca = pIdMarca;
+
+END//
+DELIMITER ;
 
 -- =====================================================
 -- UBICACIONES
@@ -952,4 +1063,76 @@ BEGIN
 
 END//
 
+DELIMITER ;
+
+-- =====================================================
+-- PERSONAS
+-- =====================================================
+DROP PROCEDURE IF EXISTS sp_bajaPersona;
+DELIMITER //
+
+CREATE PROCEDURE sp_bajaPersona(
+    IN pIdPersona INT
+)
+BEGIN
+    -- Manejador de errores para asegurar la transacción
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        RESIGNAL;
+    END;
+
+    -- 1. Validaciones iniciales
+    IF pIdPersona IS NULL THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Debe indicar la persona a dar de baja';
+    END IF;
+
+    IF NOT EXISTS (SELECT 1 FROM Personas WHERE idPersona = pIdPersona) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'La persona indicada no existe';
+    END IF;
+
+    -- INICIO DE TRANSACCIÓN
+    START TRANSACTION;
+
+    -- 2. Baja Lógica de la Persona
+    UPDATE Personas 
+    SET estado = 'I' -- 'I' representa Inactivo
+    WHERE idPersona = pIdPersona;
+
+    -- 3. Baja Lógica en cascada del Usuario asociado (Seguridad)
+    -- Si la persona no tiene usuario, este UPDATE simplemente no afectará filas, lo cual es seguro.
+    UPDATE Usuarios 
+    SET estado = 'I' 
+    WHERE idPersona = pIdPersona;
+
+    COMMIT;
+END//
+DELIMITER ;
+
+-- =====================================================
+-- USUARIOS
+-- =====================================================
+
+DROP PROCEDURE IF EXISTS sp_bajaUsuario;
+DELIMITER //
+
+CREATE PROCEDURE sp_bajaUsuario(
+    IN pIdUsuario INT
+)
+BEGIN
+    -- 1. Validaciones iniciales
+    IF pIdUsuario IS NULL THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Debe indicar el usuario a dar de baja';
+    END IF;
+
+    IF NOT EXISTS (SELECT 1 FROM Usuarios WHERE idUsuario = pIdUsuario) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El usuario indicado no existe';
+    END IF;
+
+    -- 2. Baja Lógica del Usuario
+    UPDATE Usuarios 
+    SET estado = 'I' -- Le quita el acceso al sistema
+    WHERE idUsuario = pIdUsuario;
+
+END//
 DELIMITER ;
