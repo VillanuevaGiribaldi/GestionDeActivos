@@ -304,7 +304,7 @@ ENGINE = InnoDB;
 -- Table `GestionDeActivos`.`Mantenimientos`
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `GestionDeActivos`.`Mantenimientos` (
-  `idMantenimiento` INT NOT NULL,
+  `idMantenimiento` INT NOT NULL AUTO_INCREMENT,
   `idActivo` INT NOT NULL,
   `idProveedor` INT NOT NULL,
   `fallaReportada` VARCHAR(200) NULL,

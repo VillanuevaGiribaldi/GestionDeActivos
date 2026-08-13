@@ -1097,6 +1097,42 @@ END//
 
 DELIMITER ;
 
+-- ===============================================
+DROP PROCEDURE IF EXISTS sp_bajaProveedor;
+DELIMITER //
+
+CREATE PROCEDURE sp_bajaProveedor(
+    IN pIdProveedor INT
+)
+BEGIN
+    -- 1. Validación de parámetro obligatorio
+    IF pIdProveedor IS NULL THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Debe indicar el proveedor a dar de baja';
+    END IF;
+
+    -- 2. Validación de existencia
+    IF NOT EXISTS (SELECT 1 FROM Proveedores WHERE idProveedor = pIdProveedor) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El proveedor indicado no existe en el sistema';
+    END IF;
+
+    -- 3. CONTROL EXTRA: Mantenimientos en curso
+    -- Verifica si el proveedor tiene equipos sin devolver
+    IF EXISTS (
+        SELECT 1 FROM Mantenimientos 
+        WHERE idProveedor = pIdProveedor 
+        AND fechaDevolucion IS NULL
+    ) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'No se puede dar de baja al proveedor porque actualmente posee activos en reparación (sin fecha de devolución).';
+    END IF;
+
+    -- 4. Ejecución de la Baja Lógica
+    UPDATE Proveedores 
+    SET estado = 'I' -- 'I' representa Inactivo / Dado de baja
+    WHERE idProveedor = pIdProveedor;
+
+END//
+DELIMITER ;
+
 -- =====================================================
 -- PERSONAS
 -- =====================================================
@@ -1169,6 +1205,330 @@ BEGIN
 END//
 DELIMITER ;
 
+-- =====================================================
+-- MANTENIMIENTOS
+-- =====================================================
+-- Alta mantenimiento
+DROP PROCEDURE IF EXISTS sp_altaMantenimiento;
+DELIMITER //
+
+CREATE PROCEDURE sp_altaMantenimiento(
+    -- Datos del Mantenimiento
+    IN pIdActivo INT,
+    IN pIdProveedor INT,
+    IN pFallaReportada VARCHAR(200),
+    IN pFechaEnvio DATE,
+    
+    -- Datos para la automatización del estado del Activo
+    IN pIdEstadoEnReparacion INT, 
+    IN pIdUsuario INT, 
+    
+    -- Parámetro de salida
+    OUT pIdMantenimiento INT
+)
+BEGIN
+    DECLARE vViejoIdEstado INT;
+    DECLARE vViejoIdUbicacion INT;
+    DECLARE vEstadoProveedor CHAR(1);
+
+    -- Manejador de errores (Transacciones ACID)
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        RESIGNAL;
+    END;
+
+    -- 1. Sanitización
+    IF pFallaReportada IS NOT NULL THEN 
+        SET pFallaReportada = TRIM(pFallaReportada); 
+    END IF;
+
+    -- 2. Validaciones de campos obligatorios
+    IF pIdActivo IS NULL OR pIdProveedor IS NULL THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El activo y el proveedor son obligatorios';
+    END IF;
+    
+    IF pIdEstadoEnReparacion IS NULL OR pIdUsuario IS NULL THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Debe indicar el usuario responsable y el nuevo estado del activo (Ej. En Reparación)';
+    END IF;
+
+    -- Si no se envía fecha de envío, se asume el día de hoy
+    IF pFechaEnvio IS NULL THEN
+        SET pFechaEnvio = CURDATE();
+    END IF;
+
+    -- 3. Validar existencia y estado del Proveedor
+    SELECT estado INTO vEstadoProveedor FROM Proveedores WHERE idProveedor = pIdProveedor;
+    
+    IF vEstadoProveedor IS NULL THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El proveedor indicado no existe';
+    ELSEIF vEstadoProveedor = 'I' THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'No se puede derivar un mantenimiento a un proveedor dado de baja';
+    END IF;
+
+    -- 4. Validar el Activo y su disponibilidad
+    SELECT idEstado, idUbicacion INTO vViejoIdEstado, vViejoIdUbicacion 
+    FROM Activos WHERE idActivo = pIdActivo;
+
+    IF vViejoIdEstado IS NULL THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El activo indicado no existe';
+    END IF;
+
+    -- Verificar que el activo no esté ya en reparación
+    IF EXISTS (SELECT 1 FROM Mantenimientos WHERE idActivo = pIdActivo AND fechaDevolucion IS NULL) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El activo indicado ya se encuentra en un mantenimiento en curso';
+    END IF;
+
+    -- Validar Usuario (para el historial)
+    IF NOT EXISTS (SELECT 1 FROM Usuarios WHERE idUsuario = pIdUsuario) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El usuario indicado no existe o es inválido';
+    END IF;
+
+    -- =========================================================================
+    -- INICIO DE TRANSACCIÓN 
+    -- =========================================================================
+    START TRANSACTION;
+
+    -- 5. Insertar el registro base del mantenimiento (sin costo ni reparación realizada aún)
+    INSERT INTO Mantenimientos (idActivo, idProveedor, fallaReportada, fechaEnvio)
+    VALUES (pIdActivo, pIdProveedor, pFallaReportada, pFechaEnvio);
+
+    -- Capturar el ID generado
+    SET pIdMantenimiento = LAST_INSERT_ID();
+
+    -- 6. Actualizar el estado del Activo (Ej. de "En Uso" a "En Reparación")
+    IF vViejoIdEstado != pIdEstadoEnReparacion THEN
+        UPDATE Activos 
+        SET idEstado = pIdEstadoEnReparacion 
+        WHERE idActivo = pIdActivo;
+
+        -- 7. Registrar el movimiento en el Historial del Activo
+        INSERT INTO Historial (idUsuario, idActivo, fecha, comentario, tipo, estadoAnterior, estadoNuevo)
+        VALUES (
+            pIdUsuario, 
+            pIdActivo, 
+            NOW(), 
+            CONCAT('Enviado a soporte técnico. Falla: ', COALESCE(pFallaReportada, 'No especificada')), 
+            'M', -- Modificación de estado
+            JSON_OBJECT('idEstado', vViejoIdEstado, 'idUbicacion', vViejoIdUbicacion),
+            JSON_OBJECT('idEstado', pIdEstadoEnReparacion, 'idUbicacion', vViejoIdUbicacion)
+        );
+    END IF;
+
+    COMMIT;
+
+END//
+DELIMITER ;
+
+-- Fin mantenimiento
+DROP PROCEDURE IF EXISTS sp_finMantenimiento;
+DELIMITER //
+
+CREATE PROCEDURE sp_finMantenimiento(
+    -- Datos para cerrar el Mantenimiento
+    IN pIdMantenimiento INT,
+    IN pReparacionRealizada VARCHAR(200),
+    IN pFechaDevolucion DATE,
+    IN pCostoTotal DECIMAL(12,2),
+    
+    -- Datos para la automatización del Activo y Auditoría
+    IN pIdEstadoPostReparacion INT, -- Ej. ID del estado "En Stock" o "Operativo"
+    IN pIdUsuario INT
+)
+BEGIN
+    -- Variables internas
+    DECLARE vIdActivo INT;
+    DECLARE vViejoIdEstado INT;
+    DECLARE vViejoIdUbicacion INT;
+    DECLARE vFechaEnvio DATE;
+    DECLARE vFechaDevolucionExistente DATE;
+
+    -- Manejador de errores (Transacciones ACID)
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        RESIGNAL;
+    END;
+
+    -- 1. Sanitización de textos
+    IF pReparacionRealizada IS NOT NULL THEN 
+        SET pReparacionRealizada = TRIM(pReparacionRealizada);
+    END IF;
+
+    -- 2. Validaciones de campos obligatorios
+    IF pIdMantenimiento IS NULL THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Debe indicar el ID del mantenimiento a finalizar';
+    END IF;
+
+    IF pIdEstadoPostReparacion IS NULL OR pIdUsuario IS NULL THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Debe indicar el usuario responsable y el nuevo estado del activo post-reparación';
+    END IF;
+
+    -- 3. Obtener datos del mantenimiento y verificar su estado
+    SELECT idActivo, fechaEnvio, fechaDevolucion 
+    INTO vIdActivo, vFechaEnvio, vFechaDevolucionExistente
+    FROM Mantenimientos 
+    WHERE idMantenimiento = pIdMantenimiento;
+
+    IF vIdActivo IS NULL THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El registro de mantenimiento indicado no existe';
+    END IF;
+
+    -- Regla de Negocio: Evitar cerrar un mantenimiento ya cerrado
+    IF vFechaDevolucionExistente IS NOT NULL THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Este mantenimiento ya fue finalizado anteriormente (ya posee fecha de devolución)';
+    END IF;
+
+    -- 4. Validaciones Temporales
+    -- Si no se envía fecha de devolución desde el frontend, se asume el día de hoy
+    IF pFechaDevolucion IS NULL THEN
+        SET pFechaDevolucion = CURDATE();
+    END IF;
+
+    -- Regla de Negocio: La devolución no puede ser antes del envío
+    IF pFechaDevolucion < vFechaEnvio THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'La fecha de devolución no puede ser anterior a la fecha de envío al proveedor';
+    END IF;
+
+    -- 5. Validar Usuario y Estado Nuevo en Catálogos
+    IF NOT EXISTS (SELECT 1 FROM Usuarios WHERE idUsuario = pIdUsuario) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El usuario indicado no existe o es inválido';
+    END IF;
+
+    IF NOT EXISTS (SELECT 1 FROM Estados WHERE idEstado = pIdEstadoPostReparacion) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El estado post-reparación indicado no existe en el sistema';
+    END IF;
+
+    -- Obtener estado y ubicación actual del activo (para guardarlos en el JSON del Historial)
+    SELECT idEstado, idUbicacion INTO vViejoIdEstado, vViejoIdUbicacion 
+    FROM Activos WHERE idActivo = vIdActivo;
+
+    -- =========================================================================
+    -- INICIO DE TRANSACCIÓN 
+    -- =========================================================================
+    START TRANSACTION;
+
+    -- 6. Actualizar el registro del mantenimiento (cerrar el ticket)
+    UPDATE Mantenimientos 
+    SET 
+        reparacionRealizada = pReparacionRealizada,
+        fechaDevolucion = pFechaDevolucion,
+        costoTotal = pCostoTotal
+    WHERE idMantenimiento = pIdMantenimiento;
+
+    -- 7. Actualizar el estado del Activo (Ej. vuelve a "En Stock")
+    IF vViejoIdEstado != pIdEstadoPostReparacion THEN
+        UPDATE Activos 
+        SET idEstado = pIdEstadoPostReparacion 
+        WHERE idActivo = vIdActivo;
+
+        -- 8. Registrar el movimiento en el Historial del Activo
+        INSERT INTO Historial (idUsuario, idActivo, fecha, comentario, tipo, estadoAnterior, estadoNuevo)
+        VALUES (
+            pIdUsuario, 
+            vIdActivo, 
+            NOW(), 
+            CONCAT('Retorno de soporte técnico. Costo: $', COALESCE(pCostoTotal, 0)), 
+            'M', -- 'M' para Modificación
+            JSON_OBJECT('idEstado', vViejoIdEstado, 'idUbicacion', vViejoIdUbicacion),
+            JSON_OBJECT('idEstado', pIdEstadoPostReparacion, 'idUbicacion', vViejoIdUbicacion)
+        );
+    END IF;
+
+    COMMIT;
+
+END//
+DELIMITER ;
+
+-- Modificar Mantenimiento
+DROP PROCEDURE IF EXISTS sp_modificarMantenimiento;
+DELIMITER //
+
+CREATE PROCEDURE sp_modificarMantenimiento(
+    IN pIdMantenimiento INT,
+    
+    -- El idActivo NO se incluye como parámetro porque es inmutable en este contexto.
+    
+    IN pIdProveedor INT,
+    IN pFallaReportada VARCHAR(200),
+    IN pFechaEnvio DATE,
+    
+    -- Campos que pueden ser nulos si el mantenimiento aún está en curso
+    IN pReparacionRealizada VARCHAR(200),
+    IN pFechaDevolucion DATE,
+    IN pCostoTotal DECIMAL(12,2)
+)
+BEGIN
+    DECLARE vIdProveedorActual INT;
+    DECLARE vEstadoProveedor CHAR(1);
+
+    -- Manejador de errores
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        RESIGNAL;
+    END;
+
+    -- 1. Sanitización
+    IF pFallaReportada IS NOT NULL THEN SET pFallaReportada = TRIM(pFallaReportada); END IF;
+    IF pReparacionRealizada IS NOT NULL THEN SET pReparacionRealizada = TRIM(pReparacionRealizada); END IF;
+
+    -- 2. Validaciones iniciales
+    IF pIdMantenimiento IS NULL THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Debe indicar el mantenimiento a modificar';
+    END IF;
+
+    IF pIdProveedor IS NULL THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El proveedor es obligatorio';
+    END IF;
+
+    IF pFechaEnvio IS NULL THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'La fecha de envío es obligatoria';
+    END IF;
+
+    IF NOT EXISTS (SELECT 1 FROM Mantenimientos WHERE idMantenimiento = pIdMantenimiento) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El registro de mantenimiento indicado no existe';
+    END IF;
+
+    -- 3. Validación de Fechas (Coherencia temporal)
+    IF pFechaDevolucion IS NOT NULL AND pFechaDevolucion < pFechaEnvio THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'La fecha de devolución no puede ser anterior a la fecha de envío';
+    END IF;
+
+    -- 4. Validación del Proveedor (Si el usuario decide cambiarlo)
+    SELECT idProveedor INTO vIdProveedorActual FROM Mantenimientos WHERE idMantenimiento = pIdMantenimiento;
+
+    IF vIdProveedorActual != pIdProveedor THEN
+        SELECT estado INTO vEstadoProveedor FROM Proveedores WHERE idProveedor = pIdProveedor;
+        
+        IF vEstadoProveedor IS NULL THEN
+            SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El nuevo proveedor indicado no existe';
+        ELSEIF vEstadoProveedor = 'I' THEN
+            SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'No se puede derivar el mantenimiento a un proveedor dado de baja';
+        END IF;
+    END IF;
+
+    -- =========================================================================
+    -- INICIO DE TRANSACCIÓN 
+    -- =========================================================================
+    START TRANSACTION;
+
+    -- 5. Actualización con Reemplazo Total
+    UPDATE Mantenimientos
+    SET 
+        idProveedor = pIdProveedor,
+        fallaReportada = pFallaReportada,
+        fechaEnvio = pFechaEnvio,
+        reparacionRealizada = pReparacionRealizada,
+        fechaDevolucion = pFechaDevolucion,
+        costoTotal = pCostoTotal
+    WHERE idMantenimiento = pIdMantenimiento;
+
+    COMMIT;
+
+END//
+DELIMITER ;
+-- =====================================================
 DROP PROCEDURE IF EXISTS sp_verificarAtributos;
 CREATE PROCEDURE sp_verificarAtributos(
     IN pIdTipo INT,
