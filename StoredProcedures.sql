@@ -1137,10 +1137,10 @@ DELIMITER ;
 -- PERSONAS
 -- =====================================================
 -- ============================================== Alta Personas
-DROP PROCEDURE IF EXISTS sp_altaPersona;
+DROP PROCEDURE IF EXISTS sp_nuevaPersona;
 DELIMITER //
 
-CREATE PROCEDURE sp_altaPersona(
+CREATE PROCEDURE sp_nuevaPersona(
     IN pNombre VARCHAR(45),
     IN pApellido VARCHAR(45),
     IN pDni VARCHAR(45),
@@ -1362,6 +1362,10 @@ BEGIN
     DECLARE vViejoIdUbicacion INT;
     DECLARE vEstadoProveedor CHAR(1);
 
+    -- PARA EL HISTORIAL
+    DECLARE vNombreEstadoViejo VARCHAR(45);
+    DECLARE vNombreEstadoNuevo VARCHAR(45);
+
     -- Manejador de errores (Transacciones ACID)
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
@@ -1415,6 +1419,13 @@ BEGIN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El usuario indicado no existe o es inválido';
     END IF;
 
+
+    SELECT e.nombre INTO vNombreEstadoViejo FROM `Activos` a
+        INNER JOIN Estados e on e.`idEstado`=a.`idEstado`
+        WHERE  a.`idActivo`=pIdActivo;
+    SELECT nombre INTO vNombreEstadoNuevo FROM `Estados` WHERE `idEstado`= pIdEstadoEnReparacion;
+
+
     -- =========================================================================
     -- INICIO DE TRANSACCIÓN 
     -- =========================================================================
@@ -1426,28 +1437,27 @@ BEGIN
 
     -- Capturar el ID generado
     SET pIdMantenimiento = LAST_INSERT_ID();
-
-    -- 6. Actualizar el estado del Activo (Ej. de "En Uso" a "En Reparación")
+    -- 6. Actualizar el estado del Activo si es que cambia
     IF vViejoIdEstado != pIdEstadoEnReparacion THEN
         UPDATE Activos 
         SET idEstado = pIdEstadoEnReparacion 
-        WHERE idActivo = pIdActivo;
-
-        -- 7. Registrar el movimiento en el Historial del Activo
-        INSERT INTO Historial (idUsuario, idActivo, fecha, comentario, tipo, estadoAnterior, estadoNuevo)
-        VALUES (
-            pIdUsuario, 
-            pIdActivo, 
-            NOW(), 
-            CONCAT('Enviado a soporte técnico. Falla: ', COALESCE(pFallaReportada, 'No especificada')), 
-            'M', -- Modificación de estado
-            JSON_OBJECT('idEstado', vViejoIdEstado, 'idUbicacion', vViejoIdUbicacion),
-            JSON_OBJECT('idEstado', pIdEstadoEnReparacion, 'idUbicacion', vViejoIdUbicacion)
-        );
+        WHERE idActivo = pIdActivo;        
     END IF;
-
+    -- 7. Registrar el movimiento en el Historial del Activo
+    INSERT INTO Historial (idUsuario, idActivo, fecha, comentario, tipo, estadoAnterior, estadoNuevo)
+    VALUES (
+        pIdUsuario, 
+        pIdActivo, 
+        NOW(), 
+        CONCAT('Enviado a soporte técnico. Falla: ', 
+        COALESCE(pFallaReportada, 'No especificada'),
+        ' | id del mantenimiento: ',pIdMantenimiento), 
+        'R', -- Modificación de estado
+        JSON_OBJECT('Estado', vNombreEstadoViejo),
+        JSON_OBJECT('Estado', vNombreEstadoNuevo)
+    );
+    
     COMMIT;
-
 END//
 DELIMITER ;
 
@@ -1473,6 +1483,10 @@ BEGIN
     DECLARE vViejoIdUbicacion INT;
     DECLARE vFechaEnvio DATE;
     DECLARE vFechaDevolucionExistente DATE;
+
+    -- PARA EL HISTORIAL
+    DECLARE vNombreEstadoViejo VARCHAR(45);
+    DECLARE vNombreEstadoNuevo VARCHAR(45);
 
     -- Manejador de errores (Transacciones ACID)
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
@@ -1531,8 +1545,15 @@ BEGIN
     END IF;
 
     -- Obtener estado y ubicación actual del activo (para guardarlos en el JSON del Historial)
+    /*
     SELECT idEstado, idUbicacion INTO vViejoIdEstado, vViejoIdUbicacion 
     FROM Activos WHERE idActivo = vIdActivo;
+    */
+    SELECT e.nombre INTO vNombreEstadoViejo FROM `Activos` a
+        INNER JOIN Estados e on e.`idEstado`=a.`idEstado`
+        WHERE  a.`idActivo`=vIdActivo;
+    SELECT nombre INTO vNombreEstadoNuevo FROM `Estados` WHERE `idEstado`= pIdEstadoPostReparacion;
+
 
     -- =========================================================================
     -- INICIO DE TRANSACCIÓN 
@@ -1552,20 +1573,20 @@ BEGIN
         UPDATE Activos 
         SET idEstado = pIdEstadoPostReparacion 
         WHERE idActivo = vIdActivo;
-
-        -- 8. Registrar el movimiento en el Historial del Activo
+    END IF;
+    -- 8. Registrar el movimiento en el Historial del Activo
         INSERT INTO Historial (idUsuario, idActivo, fecha, comentario, tipo, estadoAnterior, estadoNuevo)
         VALUES (
             pIdUsuario, 
             vIdActivo, 
             NOW(), 
-            CONCAT('Retorno de soporte técnico. Costo: $', COALESCE(pCostoTotal, 0)), 
-            'M', -- 'M' para Modificación
-            JSON_OBJECT('idEstado', vViejoIdEstado, 'idUbicacion', vViejoIdUbicacion),
-            JSON_OBJECT('idEstado', pIdEstadoPostReparacion, 'idUbicacion', vViejoIdUbicacion)
+            CONCAT('Retorno de soporte técnico. Reparacion realizada: ', 
+            COALESCE(pReparacionRealizada, 'No especificada'),
+            ' | id del mantenimiento: ',pIdMantenimiento), 
+            'D', -- 'M' para Modificación
+            JSON_OBJECT('Estado', vNombreEstadoViejo),
+            JSON_OBJECT('Estado', vNombreEstadoNuevo)
         );
-    END IF;
-
     COMMIT;
 
 END//
@@ -1643,7 +1664,6 @@ BEGIN
     -- INICIO DE TRANSACCIÓN 
     -- =========================================================================
     START TRANSACTION;
-
     -- 5. Actualización con Reemplazo Total
     UPDATE Mantenimientos
     SET 

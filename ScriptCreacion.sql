@@ -93,7 +93,7 @@ ENGINE = InnoDB;
 CREATE TABLE IF NOT EXISTS `GestionDeActivos`.`Proveedores` (
   `idProveedor` INT NOT NULL AUTO_INCREMENT,
   `nombre` VARCHAR(100) NOT NULL,
-  `estado` CHAR(1) NOT NULL,
+  `estado` CHAR(1) NOT NULL DEFAULT('A'),
   `direccion` VARCHAR(100) NULL,
   `telefono` VARCHAR(45) NULL,
   `mail` VARCHAR(150) NULL,
