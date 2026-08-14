@@ -17,7 +17,7 @@ SALIR:BEGIN
 	SELECT idTipo
 	INTO vIdTipoPadre
 	FROM Tipos
-	WHERE nombre = NombreTipoPadre;
+	WHERE nombre = NombreTipoPadre and estado='A';
     
     IF vIdTipoPadre IS NULL THEN
 		SIGNAL SQLSTATE '45000'
@@ -30,9 +30,9 @@ SALIR:BEGIN
 	FROM Tipos
 	WHERE nombre = NombreTipoComponente;
     
-    IF vIdTipoComponente IS NULL THEN
+    IF vIdTipoComponente  IS NULL or vIdTipoPadre IS NULL THEN
 		SIGNAL SQLSTATE '45000'
-			SET MESSAGE_TEXT = 'El tipo componente no existe';
+			SET MESSAGE_TEXT = 'Uno de los tipos especificados no existe';
 	END IF;
 
 	IF vIdTipoPadre = vIdTipoComponente THEN
@@ -40,12 +40,12 @@ SALIR:BEGIN
         LEAVE SALIR;
     end if;
     
-    IF exists (select 1 from ComposicionTipos ct where ct.idTipoComponente=vIdTipoComponente) THEN
-		SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El tipo ya es componente';
+    IF exists (select 1 from ComposicionTipos ct where ct.idTipoComponente=vIdTipoComponente and ct.`idTipoPadre`=vIdTipoPadre) THEN
+		SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'La composicion ya existe';
         LEAVE SALIR;
     end if;
     
-    IF exists (select 1 from ComposicionTipos ct where ct.idTipoComponente=vIdTipoPadre) THEN
+    IF exists (select 1 from ComposicionTipos ct where ct.idTipoComponente=vIdTipoPadre and ct.`idTipoPadre`=vIdTipoComponente) THEN
 		SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Un tipo no puede ser componenete de sus componentes';
         LEAVE SALIR;
     end if;
@@ -54,7 +54,26 @@ SALIR:BEGIN
 		SIGNAL SQLSTATE '45000'
 			SET MESSAGE_TEXT = 'La cantidad máxima de componentes ingresada no es puede ser menor que 1';
 	END IF;
+    
+    IF EXISTS (
+            WITH RECURSIVE Descendientes AS (
+                SELECT `idTipoComponente`,`idTipoPadre` 
+                FROM`ComposicionTipos`
+                WHERE `idTipoPadre` = vIdTipoComponente
+                
+                UNION ALL
 
+                SELECT ct.`idTipoComponente`,ct.`idTipoPadre`
+                FROM `ComposicionTipos` ct
+                INNER JOIN Descendientes d ON ct.`idTipoPadre`=d.`idTipoComponente`
+                ) SELECT 1 FROM Descendientes WHERE `idTipoComponente`=vIdTipoPadre
+        ) THEN
+            SIGNAL SQLSTATE '45000'
+                SET MESSAGE_TEXT =
+                    'No puede asignarse esta ubicacion como padre porque se generaria un lazo en la jerarquia de coponenetes';
+            LEAVE SALIR;
+    END IF;
+    
     insert into ComposicionTipos(idTipoPadre,idTipoComponente,cantidadComponentesMaxima) values (vIdTipoPadre,vIdTipoComponente,pMax);
 
 END//
@@ -963,7 +982,7 @@ SALIR: BEGIN
 
                 SELECT u.idUbicacion, u.idUbicacionPadre 
                 FROM Ubicaciones u INNER JOIN Ancestros a
-                    ON u.idUbicacion = a.idUbicacionPadre
+                ON u.idUbicacion = a.idUbicacionPadre
             )
             SELECT 1
             FROM Ancestros

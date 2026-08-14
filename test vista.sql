@@ -63,7 +63,7 @@ WITH RECURSIVE Ancestros AS (
         FROM Ubicaciones u
         INNER JOIN Ancestros a ON u.idUbicacion = a.idUbicacionPadre
       )
-      SELECT 1 FROM Ancestros WHERE idUbicacion = 1
+      SELECT * FROM Ancestros
 
 
 
@@ -156,3 +156,54 @@ SELECT ct.cantidadComponentesMaxima from `ComposicionTipos` ct
 
 DELETE FROM Activos
     WHERE idActivo IN (4, 5, 6, 7);
+
+SET @idMantenimiento = NULL;
+
+CALL sp_altaMantenimiento(
+    1,
+    1,
+    'El equipo no enciende',
+    CURDATE(),
+    3,
+    1,
+    @idMantenimiento
+);
+CALL `sp_finMantenimiento`(
+    @idMantenimiento,
+    'Se enchufo el equipo otra vez',
+    CURRENT_DATE(),
+    5.00,
+    3,
+    1
+);
+
+SELECT @idMantenimiento;
+select * from `Mantenimientos`;
+SELECt * FROM `Historial`;
+select * from `Activos`;
+TRUNCATE Mantenimientos;
+WITH RECURSIVE Descendientes AS (
+    SELECT `idTipoComponente`,`idTipoPadre` 
+    FROM`ComposicionTipos`
+    WHERE `idTipoPadre` = 5
+    
+    UNION ALL
+
+    SELECT ct.`idTipoComponente`,ct.`idTipoPadre`
+    FROM `ComposicionTipos` ct
+    INNER JOIN Descendientes d ON ct.`idTipoPadre`=d.`idTipoComponente`
+) 
+SELECT 1 FROM Descendientes d
+WHERE d.`idTipoComponente`=12;
+
+SELECT * FROM `ComposicionTipos`; 
+SELECT * FROM `Tipos`; 
+INSERT INTO `Tipos`(nombre, estado, descripcion) VALUES ('Microchip','A','Chip de memoria'),('Compuerta','A','Copuerta logica'),('Transistor','A','transistor tipo mosfet');
+
+CALL `sp_componerTipos`('RAM','Microchip',null);
+CALL `sp_componerTipos`('Microchip','Compuerta',null);
+CALL `sp_componerTipos`('Compuerta','Transistor',null);
+
+CALL `sp_componerTipos`('Compuerta','RAM',null);
+
+DELETE from `ComposicionTipos`where `idTipoPadre`=5;

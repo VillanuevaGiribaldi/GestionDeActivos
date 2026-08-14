@@ -67,8 +67,8 @@ INSERT INTO `Proveedores` (`nombre`, `direccion`, `telefono`, `mail`, `descripci
 ('TechStore Arg', 'Av. Corrientes 1234', '11-4567-8900', 'ventas@techstore.com', 'Proveedor principal de hardware','A');
 
 -- Simulamos una factura de compra (Asumiendo que el proveedor tomó el ID 1)
-INSERT INTO `Facturas` (`idProveedor`, `fecha`, `monto`, `moneda`, `numero`, `ruta`) VALUES 
-(1, '2026-08-01 10:30:00', 1500000.00, 'ARS', 'FC-A-0001-00001234', '/docs/facturas/fc-1234.pdf');
+INSERT INTO `Facturas` (`idProveedor`, `fecha`, `monto`, `moneda`, `numero`, `ruta`, estado) VALUES 
+(1, '2026-08-01 10:30:00', 1500000.00, 'ARS', 'FC-A-0001-00001234', '/docs/facturas/fc-1234.pdf','A');
 
 -- ==========================================
 -- FASE 4: ¡Creamos los Activos! (El núcleo del sistema)
