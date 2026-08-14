@@ -237,7 +237,6 @@ CREATE procedure sp_modificarActivo(
     IN pNombreTipo VARCHAR(45),
     IN pNombreEstado VARCHAR(45),
     -- Pueden ser NULL
-    IN pComentarioModificacion VARCHAR(200),
     IN pidFactura INT,
     IN pidPersona INT,
     IN pidCompone INT,
@@ -507,15 +506,12 @@ SALIR:BEGIN
             SET vEstadoViejo = JSON_SET(vEstadoViejo, '$.Modelo', oldModelo);
             SET vEstadoNuevo = JSON_SET(vEstadoNuevo, '$.Modelo', pModelo);
         END IF;
-
-    /*
     -- =========================================================================
-    -- Verificar que haya algún cambio   --  No se si dejar esto, da problemas al hacer un mantenimiento si el estado ya era en reparacion 
+    -- Verificar que haya algún cambio
     -- ========================================================================
     IF JSON_LENGTH(vEstadoNuevo) = 0 THEN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'No se realizaron cambios en el activo';
     END IF;
-    */
     -- =========================================================================
     -- INICIO DE TRANSACCIÓN (Activo + Historial)
     -- =========================================================================
@@ -547,10 +543,10 @@ SALIR:BEGIN
         pIdUsuario, 
         pIdActivo, 
         NOW(), 
-        COALESCE(pComentarioModificacion,'Modificación del Activo'), 
+        'Modificación del Activo', 
         'M', 
         vEstadoNuevo,
-        vEstadoViejo
+         vEstadoViejo
         
     );
 
@@ -574,7 +570,6 @@ CREATE PROCEDURE sp_bajaActivo(
 BEGIN
     DECLARE vViejoIdEstado INT;
     DECLARE vViejoIdUbicacion INT;
-    -- Para llamar a sp_modificar activo
 
     -- Manejador de errores para asegurar transacciones ACID
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
@@ -627,7 +622,6 @@ BEGIN
     START TRANSACTION;
 
     -- 6. Actualizar el activo (Se cambia el estado y se liberan las asignaciones)
-    
     UPDATE Activos
     SET 
         idEstado = pIdEstadoBaja,
@@ -646,7 +640,6 @@ BEGIN
         JSON_OBJECT('idEstado', vViejoIdEstado, 'idUbicacion', vViejoIdUbicacion),
         JSON_OBJECT('idEstado', pIdEstadoBaja, 'idUbicacion', vViejoIdUbicacion)
     );
-    
 
     COMMIT;
 END//
@@ -1237,20 +1230,6 @@ BEGIN
     DECLARE vViejoIdEstado INT;
     DECLARE vViejoIdUbicacion INT;
     DECLARE vEstadoProveedor CHAR(1);
-    -- para la llamada de sp_modificarActivo
-    DECLARE vNombreMarca VARCHAR(45);
-    DECLARE vNombreUbicacion VARCHAR(45);
-    DECLARE vNombreTipo VARCHAR(45);
-    DECLARE vNombreEstado VARCHAR(45);
-    DECLARE vNombreEstadoEnReparacion VARCHAR(45);
-    DECLARE vNombre VARCHAR(45);
-    DECLARE vAtributosExtra JSON;
-    DECLARE vPrecioUnitario DECIMAL(12,2);
-    DECLARE vNumeroSerie VARCHAR(100);
-    DECLARE vModelo VARCHAR(50);
-    DECLARE vIdFactura INT;
-    DECLARE vIdPersona INT;
-    DECLARE vIdCompone INT;
 
     -- Manejador de errores (Transacciones ACID)
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
@@ -1305,10 +1284,6 @@ BEGIN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El usuario indicado no existe o es inválido';
     END IF;
 
-    IF NOT EXISTS (SELECT 1 FROM Estados WHERE idEstado = pIdEstadoEnReparacion) THEN
-        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El estado indicado no existe';
-    END IF;
-
     -- =========================================================================
     -- INICIO DE TRANSACCIÓN 
     -- =========================================================================
@@ -1317,71 +1292,11 @@ BEGIN
     -- 5. Insertar el registro base del mantenimiento (sin costo ni reparación realizada aún)
     INSERT INTO Mantenimientos (idActivo, idProveedor, fallaReportada, fechaEnvio)
     VALUES (pIdActivo, pIdProveedor, pFallaReportada, pFechaEnvio);
+
     -- Capturar el ID generado
     SET pIdMantenimiento = LAST_INSERT_ID();
-    -- Obtener el nombre del estado en reparación
-    SELECT nombre
-    INTO vNombreEstadoEnReparacion
-    FROM Estados
-    WHERE idEstado = pIdEstadoEnReparacion;
-    -- Obtener todos los datos actuales del activo
-    SELECT 
-        m.nombre,
-        u.nombre,
-        t.nombre,
-        e.nombre,
-        a.nombre,
-        a.atributosExtra,
-        a.precioUnitario,
-        a.numeroSerie,
-        a.modelo,
-        a.idFactura,
-        a.idPersona,
-        a.Compone
-    INTO
-        vNombreMarca,
-        vNombreUbicacion,
-        vNombreTipo,
-        vNombreEstado,
-        vNombre,
-        vAtributosExtra,
-        vPrecioUnitario,
-        vNumeroSerie,
-        vModelo,
-        vIdFactura,
-        vIdPersona,
-        vIdCompone
-    FROM Activos a
-    JOIN Marcas m ON a.idMarca = m.idMarca
-    JOIN Ubicaciones u ON a.idUbicacion = u.idUbicacion
-    JOIN Tipos t ON a.idTipo = t.idTipo
-    JOIN Estados e ON a.idEstado = e.idEstado
-    WHERE a.idActivo = pIdActivo;
+
     -- 6. Actualizar el estado del Activo (Ej. de "En Uso" a "En Reparación")
-    -- IF vViejoIdEstado != pIdEstadoEnReparacion THEN
-        CALL sp_modificarActivo(
-            pIdActivo,
-            pIdUsuario,
-            vNombreMarca,
-            vNombreUbicacion,
-            vNombreTipo,
-            vNombreEstadoEnReparacion,
-            CONCAT('El activo fue enviado al mantenimiento de id: ',
-                    pIdMantenimiento,
-                    '. Falla: ',
-                    COALESCE(pFallaReportada, 'No especificada')
-                    ),
-            vIdFactura,
-            vIdPersona,
-            vIdCompone,
-            vNombre,
-            vAtributosExtra,
-            vPrecioUnitario,
-            vNumeroSerie,
-            vModelo
-            );
-    -- END IF;
-    /*
     IF vViejoIdEstado != pIdEstadoEnReparacion THEN
         UPDATE Activos 
         SET idEstado = pIdEstadoEnReparacion 
@@ -1399,7 +1314,6 @@ BEGIN
             JSON_OBJECT('idEstado', pIdEstadoEnReparacion, 'idUbicacion', vViejoIdUbicacion)
         );
     END IF;
-    */
 
     COMMIT;
 
@@ -1428,20 +1342,7 @@ BEGIN
     DECLARE vViejoIdUbicacion INT;
     DECLARE vFechaEnvio DATE;
     DECLARE vFechaDevolucionExistente DATE;
-    -- Para llamar a sp_modificarActivo
-    DECLARE vNombreMarca VARCHAR(45);
-    DECLARE vNombreUbicacion VARCHAR(45);
-    DECLARE vNombreTipo VARCHAR(45);
-    -- DECLARE vNombreEstadoActual VARCHAR(45);
-    DECLARE vNombreEstadoPostReparacion VARCHAR(45);
-    DECLARE vNombre VARCHAR(45);
-    DECLARE vAtributosExtra JSON;
-    DECLARE vPrecioUnitario DECIMAL(12,2);
-    DECLARE vNumeroSerie VARCHAR(100);
-    DECLARE vModelo VARCHAR(50);
-    DECLARE vIdFactura INT;
-    DECLARE vIdPersona INT;
-    DECLARE vIdCompone INT;
+
     -- Manejador de errores (Transacciones ACID)
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
@@ -1494,48 +1395,13 @@ BEGIN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El usuario indicado no existe o es inválido';
     END IF;
 
-    SELECT nombre INTO vNombreEstadoPostReparacion FROM `Estados` WHERE `idEstado`= pIdEstadoPostReparacion;
-
-    IF NOT EXISTS (SELECT nombre FROM Estados WHERE idEstado = pIdEstadoPostReparacion) THEN
+    IF NOT EXISTS (SELECT 1 FROM Estados WHERE idEstado = pIdEstadoPostReparacion) THEN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El estado post-reparación indicado no existe en el sistema';
     END IF;
 
     -- Obtener estado y ubicación actual del activo (para guardarlos en el JSON del Historial)
     SELECT idEstado, idUbicacion INTO vViejoIdEstado, vViejoIdUbicacion 
-        FROM Activos WHERE idActivo = vIdActivo;
-
-    SELECT 
-        m.nombre,
-        u.nombre,
-        t.nombre,
-    --    e.nombre,
-        a.nombre,
-        a.atributosExtra,
-        a.precioUnitario,
-        a.numeroSerie,
-        a.modelo,
-        a.idFactura,
-        a.idPersona,
-        a.Compone
-    INTO
-        vNombreMarca,
-        vNombreUbicacion,
-        vNombreTipo,
-    --    vNombreEstadoActual,
-        vNombre,
-        vAtributosExtra,
-        vPrecioUnitario,
-        vNumeroSerie,
-        vModelo,
-        vIdFactura,
-        vIdPersona,
-        vIdCompone
-    FROM Activos a
-    JOIN Marcas m ON a.idMarca = m.idMarca
-    JOIN Ubicaciones u ON a.idUbicacion = u.idUbicacion
-    JOIN Tipos t ON a.idTipo = t.idTipo
-    JOIN Estados e ON a.idEstado = e.idEstado
-    WHERE a.idActivo = vIdActivo;
+    FROM Activos WHERE idActivo = vIdActivo;
 
     -- =========================================================================
     -- INICIO DE TRANSACCIÓN 
@@ -1551,30 +1417,24 @@ BEGIN
     WHERE idMantenimiento = pIdMantenimiento;
 
     -- 7. Actualizar el estado del Activo (Ej. vuelve a "En Stock")
-    -- IF vViejoIdEstado != pIdEstadoPostReparacion THEN
-        CALL sp_modificarActivo(
-            vIdActivo,
-            pIdUsuario,
-            vNombreMarca,
-            vNombreUbicacion,
-            vNombreTipo,
-            vNombreEstadoPostReparacion,
-            CONCAT(
-                'Finalización del mantenimiento de id: ',
-                pIdMantenimiento,
-                '. Costo: $',
-                COALESCE(pCostoTotal, 0)
-            ),
-            vIdFactura,
-            vIdPersona,
-            vIdCompone,
-            vNombre,
-            vAtributosExtra,
-            vPrecioUnitario,
-            vNumeroSerie,
-            vModelo
+    IF vViejoIdEstado != pIdEstadoPostReparacion THEN
+        UPDATE Activos 
+        SET idEstado = pIdEstadoPostReparacion 
+        WHERE idActivo = vIdActivo;
+
+        -- 8. Registrar el movimiento en el Historial del Activo
+        INSERT INTO Historial (idUsuario, idActivo, fecha, comentario, tipo, estadoAnterior, estadoNuevo)
+        VALUES (
+            pIdUsuario, 
+            vIdActivo, 
+            NOW(), 
+            CONCAT('Retorno de soporte técnico. Costo: $', COALESCE(pCostoTotal, 0)), 
+            'M', -- 'M' para Modificación
+            JSON_OBJECT('idEstado', vViejoIdEstado, 'idUbicacion', vViejoIdUbicacion),
+            JSON_OBJECT('idEstado', pIdEstadoPostReparacion, 'idUbicacion', vViejoIdUbicacion)
         );
-    -- END IF;
+    END IF;
+
     COMMIT;
 
 END//

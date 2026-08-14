@@ -4,7 +4,6 @@ select * from ComposicionTipos;
 select * from Marcas;
 select * from Ubicaciones;
 select * from Estados;
-select * from `Proveedores`;
 select * from `Usuarios`;
     
 -- Probando sp_nuevoActivo
@@ -132,7 +131,7 @@ VALUES
 );
 CALL sp_nuevoActivo(1, 'Dell', 'Sede Central', 'RAM', 'Operativo', NULL, 1, 3, 'RAM2', '{"Tamaño":"(8 GB)"}', 200000.00, 'RAM002', 'RAMDDR4');
 CALL sp_nuevoActivo(1, 'Dell', 'Sede Central', 'RAM', 'Operativo', NULL, 1, 3, 'RAM3', '{"Tamaño":"(8 GB)"}', 200000.00, 'RAM0003', 'RAMDDR4');
-CALL sp_modificarActivo(2,1, 'Dell', 'Sede Central', 'RAM', 'Baja', NULL, NULL, 1, null, 'RAM3', '{"Tamaño":"(8 GB)"}', 200000.00, 'RAM003', 'RAMDDR4');
+CALL sp_modificarActivo(5,1, 'Dell', 'Sede Central', 'RAM', 'Operativo', NULL, 1, null, 'RAM3', '{"Tamaño":"(8 GB)"}', 200000.00, 'RAM003', 'RAMDDR4');
     -- idTipo = 5
     -- idCompone = 3
 select count(`idTipo`) from Activos a 
@@ -155,29 +154,5 @@ SELECT ct.cantidadComponentesMaxima from `ComposicionTipos` ct
     inner join `Activos` a on a.`idTipo`=ct.`idTipoPadre`
     where ct.`idTipoComponente`=5 and a.`idActivo`= 3 limit 1;
 
-
-SET @idMantenimiento = NULL;
-
-CALL sp_altaMantenimiento(
-    1,
-    1,
-    'El equipo no enciende',
-    CURDATE(),
-    3,
-    1,
-    @idMantenimiento
-);
-CALL `sp_finMantenimiento`(
-    @idMantenimiento,
-    'Se enchufo el equipo',
-    CURRENT_DATE(),
-    5.00,
-    3,
-    1
-)
-
-SELECT @idMantenimiento;
-select * from `Mantenimientos`;
-SELECt * FROM `Historial`;
-select * from `Activos`;
-TRUNCATE Mantenimientos;
+DELETE FROM Activos
+    WHERE idActivo IN (4, 5, 6, 7);
