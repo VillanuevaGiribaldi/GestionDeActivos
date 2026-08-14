@@ -182,19 +182,7 @@ select * from `Mantenimientos`;
 SELECt * FROM `Historial`;
 select * from `Activos`;
 TRUNCATE Mantenimientos;
-WITH RECURSIVE Descendientes AS (
-    SELECT `idTipoComponente`,`idTipoPadre` 
-    FROM`ComposicionTipos`
-    WHERE `idTipoPadre` = 5
-    
-    UNION ALL
 
-    SELECT ct.`idTipoComponente`,ct.`idTipoPadre`
-    FROM `ComposicionTipos` ct
-    INNER JOIN Descendientes d ON ct.`idTipoPadre`=d.`idTipoComponente`
-) 
-SELECT 1 FROM Descendientes d
-WHERE d.`idTipoComponente`=12;
 
 SELECT * FROM `ComposicionTipos`; 
 SELECT * FROM `Tipos`; 
