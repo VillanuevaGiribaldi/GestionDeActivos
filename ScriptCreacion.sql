@@ -114,6 +114,7 @@ CREATE TABLE IF NOT EXISTS `GestionDeActivos`.`Facturas` (
   `moneda` VARCHAR(3) NOT NULL,
   `numero` VARCHAR(45) NOT NULL,
   `ruta` VARCHAR(255) NOT NULL,
+  `estado` CHAR(1) NOT NULL,
   PRIMARY KEY (`idFactura`),
   INDEX `fk_Facturas_Proveedores1_idx` (`idProveedor` ASC) VISIBLE,
   CONSTRAINT `fk_Facturas_Proveedores1`
