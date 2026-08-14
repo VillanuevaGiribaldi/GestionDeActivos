@@ -1136,6 +1136,137 @@ DELIMITER ;
 -- =====================================================
 -- PERSONAS
 -- =====================================================
+-- ============================================== Alta Personas
+DROP PROCEDURE IF EXISTS sp_altaPersona;
+DELIMITER //
+
+CREATE PROCEDURE sp_altaPersona(
+    IN pNombre VARCHAR(45),
+    IN pApellido VARCHAR(45),
+    IN pDni VARCHAR(45),
+    IN pCargo VARCHAR(100),
+    IN pEstado CHAR(1),
+    OUT pIdPersona INT
+)
+BEGIN
+    -- 1. Sanitización de entradas
+    SET pNombre = TRIM(pNombre);
+    SET pApellido = TRIM(pApellido);
+    IF pDni IS NOT NULL THEN SET pDni = TRIM(pDni); END IF;
+    SET pCargo = TRIM(pCargo);
+
+    -- 2. Validación de campos obligatorios
+    IF pNombre IS NULL OR pNombre = '' THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El nombre de la persona es obligatorio';
+    END IF;
+    
+    IF pApellido IS NULL OR pApellido = '' THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El apellido de la persona es obligatorio';
+    END IF;
+    
+    IF pCargo IS NULL OR pCargo = '' THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El cargo de la persona es obligatorio';
+    END IF;
+
+    -- 3. Validación de DNI duplicado (UNIQUE INDEX)
+    IF pDni IS NOT NULL AND pDni != '' AND EXISTS (SELECT 1 FROM Personas WHERE dni = pDni) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El DNI ingresado ya pertenece a otra persona registrada';
+    END IF;
+
+    -- 4. Estado por defecto
+    IF pEstado IS NULL OR TRIM(pEstado) = '' THEN
+        SET pEstado = 'A'; -- 'A' para Activo
+    END IF;
+
+    -- 5. Inserción del registro
+    INSERT INTO Personas (nombre, apellido, dni, cargo, estado)
+    VALUES (pNombre, pApellido, pDni, pCargo, pEstado);
+
+    -- 6. Retorno del ID autogenerado
+    SET pIdPersona = LAST_INSERT_ID();
+
+END//
+DELIMITER ;
+
+-- ============================================== Modificar Persona
+DROP PROCEDURE IF EXISTS sp_modificarPersona;
+DELIMITER //
+
+CREATE PROCEDURE sp_modificarPersona(
+    IN pIdPersona INT,
+    IN pNombre VARCHAR(45),
+    IN pApellido VARCHAR(45),
+    IN pDni VARCHAR(45),
+    IN pCargo VARCHAR(100),
+    IN pEstado CHAR(1)
+)
+BEGIN
+    -- Manejador de errores (Transacciones ACID)
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        RESIGNAL;
+    END;
+
+    -- 1. Sanitización de entradas
+    IF pNombre IS NOT NULL THEN SET pNombre = TRIM(pNombre); END IF;
+    IF pApellido IS NOT NULL THEN SET pApellido = TRIM(pApellido); END IF;
+    IF pDni IS NOT NULL THEN SET pDni = TRIM(pDni); END IF;
+    IF pCargo IS NOT NULL THEN SET pCargo = TRIM(pCargo); END IF;
+    IF pEstado IS NOT NULL THEN SET pEstado = TRIM(pEstado); END IF;
+
+    -- 2. Validaciones iniciales
+    IF pIdPersona IS NULL THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Debe indicar la persona a modificar';
+    END IF;
+
+    IF NOT EXISTS (SELECT 1 FROM Personas WHERE idPersona = pIdPersona) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'La persona indicada no existe en el sistema';
+    END IF;
+
+    -- 3. Validación de campos obligatorios
+    IF pNombre IS NULL OR pNombre = '' THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El nombre de la persona es obligatorio';
+    END IF;
+    
+    IF pApellido IS NULL OR pApellido = '' THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El apellido de la persona es obligatorio';
+    END IF;
+    
+    IF pCargo IS NULL OR pCargo = '' THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El cargo de la persona es obligatorio';
+    END IF;
+
+    IF pEstado IS NULL OR pEstado = '' THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El estado de la persona es obligatorio';
+    END IF;
+
+    -- 4. Validación de DNI duplicado (Excluyendo a la persona actual)
+    IF pDni IS NOT NULL AND pDni != '' AND EXISTS (SELECT 1 FROM Personas WHERE dni = pDni AND idPersona != pIdPersona) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El DNI ingresado ya pertenece a otra persona registrada';
+    END IF;
+
+    -- =========================================================================
+    -- INICIO DE TRANSACCIÓN 
+    -- =========================================================================
+    START TRANSACTION;
+
+    -- 5. Actualización con Reemplazo Total
+    UPDATE Personas 
+    SET 
+        nombre = pNombre,
+        apellido = pApellido,
+        dni = pDni,
+        cargo = pCargo,
+        estado = pEstado
+    WHERE idPersona = pIdPersona;
+
+    COMMIT;
+
+END//
+DELIMITER ;
+
+-- ============================================== Baja Persona
 DROP PROCEDURE IF EXISTS sp_bajaPersona;
 DELIMITER //
 
@@ -1523,6 +1654,227 @@ BEGIN
         fechaDevolucion = pFechaDevolucion,
         costoTotal = pCostoTotal
     WHERE idMantenimiento = pIdMantenimiento;
+
+    COMMIT;
+
+END//
+DELIMITER ;
+-- =====================================================
+-- FACTURAS
+-- =====================================================
+-- ======================================== Alta Factura
+DROP PROCEDURE IF EXISTS sp_altaFactura;
+DELIMITER //
+
+CREATE PROCEDURE sp_altaFactura(
+    IN pIdProveedor INT,
+    IN pFecha DATETIME,
+    IN pMonto DECIMAL(12,2),
+    IN pMoneda VARCHAR(3),
+    IN pNumero VARCHAR(45),
+    IN pRuta VARCHAR(255),
+    OUT pIdFactura INT
+)
+BEGIN
+    DECLARE vEstadoProveedor CHAR(1);
+
+    -- 1. Sanitización y Estandarización
+    IF pMoneda IS NOT NULL THEN 
+        SET pMoneda = TRIM(UPPER(pMoneda)); -- Fuerza mayúsculas (ej. 'ars' -> 'ARS')
+    END IF;
+    IF pNumero IS NOT NULL THEN SET pNumero = TRIM(pNumero); END IF;
+    IF pRuta IS NOT NULL THEN SET pRuta = TRIM(pRuta); END IF;
+
+    -- 2. Validaciones de campos obligatorios (basadas en los NOT NULL del esquema)
+    IF pFecha IS NULL THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'La fecha de la factura es obligatoria';
+    END IF;
+
+    IF pMonto IS NULL OR pMonto <= 0 THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El monto de la factura debe ser mayor a cero';
+    END IF;
+
+    IF pMoneda IS NULL OR pMoneda = '' THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'La moneda de la factura es obligatoria (Ej. ARS, USD)';
+    END IF;
+
+    IF pNumero IS NULL OR pNumero = '' THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El número de comprobante es obligatorio';
+    END IF;
+
+    IF pRuta IS NULL OR pRuta = '' THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'La ruta del archivo físico/digital de la factura es obligatoria';
+    END IF;
+
+    -- 3. Validación de Reglas de Negocio asociadas al Proveedor
+    -- Nota: idProveedor=NULL para compras anónimas o menores
+    IF pIdProveedor IS NOT NULL THEN
+        -- A. Validar existencia y estado del proveedor
+        SELECT estado INTO vEstadoProveedor FROM Proveedores WHERE idProveedor = pIdProveedor;
+        
+        IF vEstadoProveedor IS NULL THEN
+            SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El proveedor indicado no existe en el sistema';
+        ELSEIF vEstadoProveedor = 'I' THEN
+            SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'No se puede registrar una factura de un proveedor dado de baja';
+        END IF;
+
+        -- B. Prevención de facturas duplicadas para el mismo proveedor
+        IF EXISTS (SELECT 1 FROM Facturas WHERE idProveedor = pIdProveedor AND numero = pNumero) THEN
+            SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Ya existe una factura registrada con ese número para este proveedor';
+        END IF;
+    END IF;
+
+    -- 4. Inserción del registro
+    INSERT INTO Facturas (idProveedor, fecha, monto, moneda, numero, ruta)
+    VALUES (pIdProveedor, pFecha, pMonto, pMoneda, pNumero, pRuta);
+
+    -- 5. Retorno del ID autogenerado
+    SET pIdFactura = LAST_INSERT_ID();
+
+END//
+DELIMITER ;
+
+-- ======================================== Modificar Factura
+DROP PROCEDURE IF EXISTS sp_modificarFactura;
+DELIMITER //
+
+CREATE PROCEDURE sp_modificarFactura(
+    IN pIdFactura INT,
+    IN pIdProveedor INT,
+    IN pFecha DATETIME,
+    IN pMonto DECIMAL(12,2),
+    IN pMoneda VARCHAR(3),
+    IN pNumero VARCHAR(45),
+    IN pRuta VARCHAR(255)
+)
+BEGIN
+    DECLARE vEstadoProveedor CHAR(1);
+
+    -- Manejador de errores (Transacciones ACID)
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        RESIGNAL;
+    END;
+
+    -- 1. Sanitización y Estandarización
+    IF pMoneda IS NOT NULL THEN 
+        SET pMoneda = TRIM(UPPER(pMoneda)); -- Fuerza mayúsculas (ej. 'usd' -> 'USD')
+    END IF;
+    IF pNumero IS NOT NULL THEN SET pNumero = TRIM(pNumero); END IF;
+    IF pRuta IS NOT NULL THEN SET pRuta = TRIM(pRuta); END IF;
+
+    -- 2. Validaciones iniciales
+    IF pIdFactura IS NULL THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Debe indicar la factura a modificar';
+    END IF;
+
+    IF NOT EXISTS (SELECT 1 FROM Facturas WHERE idFactura = pIdFactura) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'La factura indicada no existe';
+    END IF;
+
+    -- 3. Validación de campos obligatorios
+    IF pFecha IS NULL THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'La fecha de la factura es obligatoria';
+    END IF;
+
+    IF pMonto IS NULL OR pMonto <= 0 THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El monto de la factura debe ser mayor a cero';
+    END IF;
+
+    IF pMoneda IS NULL OR pMoneda = '' THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'La moneda de la factura es obligatoria (Ej. ARS, USD)';
+    END IF;
+
+    IF pNumero IS NULL OR pNumero = '' THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El número de comprobante es obligatorio';
+    END IF;
+
+    IF pRuta IS NULL OR pRuta = '' THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'La ruta del archivo físico/digital de la factura es obligatoria';
+    END IF;
+
+    -- 4. Validación de Reglas de Negocio (Proveedor y Duplicados)
+    IF pIdProveedor IS NOT NULL THEN
+        -- A. Validar existencia y estado del proveedor
+        SELECT estado INTO vEstadoProveedor FROM Proveedores WHERE idProveedor = pIdProveedor;
+        
+        IF vEstadoProveedor IS NULL THEN
+            SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El proveedor indicado no existe en el sistema';
+        ELSEIF vEstadoProveedor = 'I' THEN
+            SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'No se puede asignar la factura a un proveedor dado de baja';
+        END IF;
+
+        -- B. Prevención de facturas duplicadas para el mismo proveedor (Excluyendo la factura que estamos editando)
+        IF EXISTS (SELECT 1 FROM Facturas WHERE idProveedor = pIdProveedor AND numero = pNumero AND idFactura != pIdFactura) THEN
+            SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Ya existe otra factura registrada con ese número para este proveedor';
+        END IF;
+    ELSE
+        -- Si la factura no tiene proveedor (compra menor/anónima), verificamos que no haya duplicados sin proveedor
+        IF EXISTS (SELECT 1 FROM Facturas WHERE idProveedor IS NULL AND numero = pNumero AND idFactura != pIdFactura) THEN
+            SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Ya existe otra factura sin proveedor registrada con este número';
+        END IF;
+    END IF;
+
+    -- =========================================================================
+    -- INICIO DE TRANSACCIÓN 
+    -- =========================================================================
+    START TRANSACTION;
+
+    -- 5. Actualización con Reemplazo Total
+    UPDATE Facturas
+    SET 
+        idProveedor = pIdProveedor,
+        fecha = pFecha,
+        monto = pMonto,
+        moneda = pMoneda,
+        numero = pNumero,
+        ruta = pRuta
+    WHERE idFactura = pIdFactura;
+
+    COMMIT;
+
+END//
+DELIMITER ;
+-- ======================================== Baja Factura
+DROP PROCEDURE IF EXISTS sp_bajaFactura;
+DELIMITER //
+
+CREATE PROCEDURE sp_bajaFactura(
+    IN pIdFactura INT
+)
+BEGIN
+    -- Manejador de errores (Transacciones ACID)
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        RESIGNAL;
+    END;
+
+    -- 1. Validaciones iniciales
+    IF pIdFactura IS NULL THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Debe indicar el ID de la factura a dar de baja';
+    END IF;
+
+    IF NOT EXISTS (SELECT 1 FROM Facturas WHERE idFactura = pIdFactura) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'La factura indicada no existe en el sistema';
+    END IF;
+
+    -- 2. REGLA CRÍTICA: Control de activos vinculados
+    -- Aunque sea borrado lógico, no podemos ocultar una factura si hay equipos que dependen de ella financieramente
+    IF EXISTS (SELECT 1 FROM Activos WHERE idFactura = pIdFactura) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'No se puede dar de baja la factura porque existen activos vinculados a ella. Desvincule los activos antes de proceder.';
+    END IF;
+
+    -- =========================================================================
+    -- INICIO DE TRANSACCIÓN 
+    -- =========================================================================
+    START TRANSACTION;
+
+    -- 3. Baja Lógica (Soft Delete) del registro erróneo
+    UPDATE Facturas 
+    SET estado = 'B' -- 'B' representa Inactiva / Anulada
+    WHERE idFactura = pIdFactura;
 
     COMMIT;
 
