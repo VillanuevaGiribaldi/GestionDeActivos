@@ -196,7 +196,7 @@ BEGIN
     END IF;
 
     -- 4. Validación de Duplicados en la misma plantilla (UX_tipoNombre)
-    IF EXISTS (SELECT 1 FROM Atributos WHERE idTipo = pIdTipo AND nombre = pNombre) THEN
+    IF EXISTS (SELECT 1 FROM Atributos WHERE idTipo = pIdTipo AND nombre LIKE pNombre) THEN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Este tipo de activo ya posee un atributo registrado con ese mismo nombre';
     END IF;
 
@@ -373,7 +373,6 @@ SALIR:BEGIN
 		SIGNAL SQLSTATE '45000'
 			SET MESSAGE_TEXT = 'El tipo padre no existe';
 	END IF;
-
 
 	SELECT idTipo
 	INTO vIdTipoComponente
@@ -560,14 +559,14 @@ SALIR:BEGIN
     -- Obtener el ID que se le acaba de asignar al Activo
     SET vIdActivo = LAST_INSERT_ID();
 
-    -- Insertar el registro de Alta en el Historial
+    -- Insertar el registro de Creacion en el Historial
     INSERT INTO Historial (
         idUsuario, idActivo, fecha, comentario, tipo, estadoNuevo
     ) VALUES (
         pIdUsuario, 
         vIdActivo, 
         NOW(), 
-        'Alta inicial del activo', 
+        'Creacion del activo', 
         'A', 
         JSON_OBJECT(
 			'Marca', pNombreMarca,
@@ -905,7 +904,7 @@ SALIR:BEGIN
         
 
 
-    -- Insertar el registro de Alta en el Historial
+    -- Insertar el registro de Creacion en el Historial
     INSERT INTO Historial (
         idUsuario, idActivo, fecha, comentario, tipo, estadoNuevo, estadoAnterior
     ) VALUES (
@@ -1187,7 +1186,6 @@ DELIMITER ;
 -- UBICACIONES
 -- =====================================================
 
--- nuevaUbicacion Version 
 DROP PROCEDURE IF EXISTS sp_nuevaUbicacion;
 DELIMITER //
 
@@ -1505,7 +1503,7 @@ DELIMITER ;
 -- =====================================================
 -- PERSONAS
 -- =====================================================
--- ============================================== Alta Personas
+-- ============================================== Nueva Personas
 DROP PROCEDURE IF EXISTS sp_nuevaPersona;
 DELIMITER //
 
@@ -1708,11 +1706,11 @@ DELIMITER ;
 -- =====================================================
 -- MANTENIMIENTOS
 -- =====================================================
--- Alta mantenimiento
-DROP PROCEDURE IF EXISTS sp_altaMantenimiento;
+-- Nuevo mantenimiento
+DROP PROCEDURE IF EXISTS sp_nuevoMantenimiento;
 DELIMITER //
 
-CREATE PROCEDURE sp_altaMantenimiento(
+CREATE PROCEDURE sp_nuevoMantenimiento(
     -- Datos del Mantenimiento
     IN pIdActivo INT,
     IN pIdProveedor INT,
@@ -2051,11 +2049,11 @@ DELIMITER ;
 -- =====================================================
 -- FACTURAS
 -- =====================================================
--- ======================================== Alta Factura
-DROP PROCEDURE IF EXISTS sp_altaFactura;
+-- ======================================== Nueva Factura
+DROP PROCEDURE IF EXISTS sp_nuevaFactura;
 DELIMITER //
 
-CREATE PROCEDURE sp_altaFactura(
+CREATE PROCEDURE sp_nuevaFactura(
     IN pIdProveedor INT,
     IN pFecha DATETIME,
     IN pMonto DECIMAL(12,2),
