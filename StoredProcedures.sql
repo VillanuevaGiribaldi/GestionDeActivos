@@ -2,6 +2,356 @@
 DROP PROCEDURE IF EXISTS sp_;
 DELIMITER //
 
+-- =====================================================
+-- TIPOS
+-- =====================================================
+-- ======================================== Nuevo Tipos
+DROP PROCEDURE IF EXISTS sp_nuevoTipo;
+DELIMITER //
+
+CREATE PROCEDURE sp_nuevoTipo(
+    IN pNombre VARCHAR(45),
+    IN pDescripcion VARCHAR(100),
+    IN pEstado CHAR(1),
+    OUT pIdTipo INT
+)
+BEGIN
+    -- 1. Sanitización de entradas
+    IF pNombre IS NOT NULL THEN SET pNombre = TRIM(pNombre); END IF;
+    IF pDescripcion IS NOT NULL THEN SET pDescripcion = TRIM(pDescripcion); END IF;
+    IF pEstado IS NOT NULL THEN SET pEstado = TRIM(pEstado); END IF;
+
+    -- 2. Validación de campos obligatorios
+    IF pNombre IS NULL OR pNombre = '' THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El nombre del tipo de activo es obligatorio';
+    END IF;
+
+    -- 3. Validación de duplicados (UNIQUE INDEX en 'nombre')
+    IF EXISTS (SELECT 1 FROM Tipos WHERE nombre = pNombre) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El nombre del tipo ingresado ya existe en el sistema';
+    END IF;
+
+    -- 4. Estado por defecto
+    IF pEstado IS NULL OR pEstado = '' THEN
+        SET pEstado = 'A'; -- 'A' representa Activo
+    END IF;
+
+    -- 5. Inserción del registro
+    INSERT INTO Tipos (nombre, descripcion, estado)
+    VALUES (pNombre, pDescripcion, pEstado);
+
+    -- 6. Retorno del ID autogenerado (Fundamental para insertar luego sus atributos)
+    SET pIdTipo = LAST_INSERT_ID();
+
+END//
+DELIMITER ;
+
+-- ======================================== Modificar Tipos
+DROP PROCEDURE IF EXISTS sp_modificarTipo;
+DELIMITER //
+
+CREATE PROCEDURE sp_modificarTipo(
+    IN pIdTipo INT,
+    IN pNombre VARCHAR(45),
+    IN pDescripcion VARCHAR(100),
+    IN pEstado CHAR(1)
+)
+BEGIN
+    -- Manejador de errores (Transacciones ACID)
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        RESIGNAL;
+    END;
+
+    -- 1. Sanitización de entradas
+    IF pNombre IS NOT NULL THEN SET pNombre = TRIM(pNombre); END IF;
+    IF pDescripcion IS NOT NULL THEN SET pDescripcion = TRIM(pDescripcion); END IF;
+    IF pEstado IS NOT NULL THEN SET pEstado = TRIM(pEstado); END IF;
+
+    -- 2. Validaciones iniciales
+    IF pIdTipo IS NULL THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Debe indicar el tipo de activo a modificar';
+    END IF;
+
+    IF NOT EXISTS (SELECT 1 FROM Tipos WHERE idTipo = pIdTipo) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El tipo de activo indicado no existe en el sistema';
+    END IF;
+
+    -- 3. Validación de campos obligatorios
+    IF pNombre IS NULL OR pNombre = '' THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El nombre del tipo de activo es obligatorio';
+    END IF;
+
+    IF pEstado IS NULL OR pEstado = '' THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El estado del tipo de activo es obligatorio';
+    END IF;
+
+    -- 4. Validación de Nombre duplicado (Excluyendo el tipo actual)
+    IF EXISTS (SELECT 1 FROM Tipos WHERE nombre = pNombre AND idTipo != pIdTipo) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El nombre ingresado ya pertenece a otro tipo de activo registrado';
+    END IF;
+
+    -- =========================================================================
+    -- INICIO DE TRANSACCIÓN 
+    -- =========================================================================
+    START TRANSACTION;
+
+    -- 5. Actualización con Reemplazo Total
+    UPDATE Tipos 
+    SET 
+        nombre = pNombre,
+        descripcion = pDescripcion,
+        estado = pEstado
+    WHERE idTipo = pIdTipo;
+
+    COMMIT;
+
+END//
+DELIMITER ;
+-- ======================================== Baja Tipos
+DROP PROCEDURE IF EXISTS sp_bajaTipo;
+DELIMITER //
+
+CREATE PROCEDURE sp_bajaTipo(
+    IN pIdTipo INT
+)
+BEGIN
+    -- Manejador de errores (Transacciones ACID)
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        RESIGNAL;
+    END;
+
+    -- 1. Validaciones iniciales
+    IF pIdTipo IS NULL THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Debe indicar el tipo a dar de baja';
+    END IF;
+
+    IF NOT EXISTS (SELECT 1 FROM Tipos WHERE idTipo = pIdTipo) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El tipo indicado no existe en el sistema';
+    END IF;
+
+    -- 2. REGLA CRÍTICA: Control de activos asociados
+    -- Validamos si existen activos en el sistema que usen este tipo
+    IF EXISTS (SELECT 1 FROM Activos WHERE idTipo = pIdTipo) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'No se puede dar de baja el tipo porque existen activos vinculados a él. Debe reclasificarlos primero.';
+    END IF;
+
+    -- =========================================================================
+    -- INICIO DE TRANSACCIÓN 
+    -- =========================================================================
+    START TRANSACTION;
+
+    -- 3. Baja Lógica
+    UPDATE Tipos 
+    SET estado = 'I' -- 'I' representa Inactivo/Baja
+    WHERE idTipo = pIdTipo;
+
+    COMMIT;
+
+END//
+DELIMITER ;
+
+
+-- =====================================================
+-- ATRIBUTOS
+-- =====================================================
+-- ======================================== Nuevo Atributo
+DROP PROCEDURE IF EXISTS sp_nuevoAtributo;
+DELIMITER //
+
+CREATE PROCEDURE sp_nuevoAtributo(
+    IN pIdTipo INT,
+    IN pNombre VARCHAR(45),
+    IN pPorDefecto VARCHAR(100),
+    IN pObligatorio BOOLEAN,
+    OUT pIdAtributo INT
+)
+BEGIN
+    DECLARE vEstadoTipo CHAR(1);
+
+    -- 1. Sanitización de entradas
+    IF pNombre IS NOT NULL THEN SET pNombre = TRIM(pNombre); END IF;
+    IF pPorDefecto IS NOT NULL THEN SET pPorDefecto = TRIM(pPorDefecto); END IF;
+
+    -- 2. Validaciones de campos obligatorios
+    IF pIdTipo IS NULL THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Debe indicar a qué tipo de activo pertenece el atributo';
+    END IF;
+
+    -- Aunque en la BD permite NULL, por regla de negocio un atributo debe tener nombre
+    IF pNombre IS NULL OR pNombre = '' THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El nombre del atributo es obligatorio';
+    END IF;
+
+    -- 3. Validación de integridad del Tipo (Padre)
+    SELECT estado INTO vEstadoTipo FROM Tipos WHERE idTipo = pIdTipo;
+    
+    IF vEstadoTipo IS NULL THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El tipo de activo indicado no existe en el sistema';
+    ELSEIF vEstadoTipo = 'I' THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'No se pueden agregar atributos a un tipo de activo que se encuentra dado de baja';
+    END IF;
+
+    -- 4. Validación de Duplicados en la misma plantilla (UX_tipoNombre)
+    IF EXISTS (SELECT 1 FROM Atributos WHERE idTipo = pIdTipo AND nombre = pNombre) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Este tipo de activo ya posee un atributo registrado con ese mismo nombre';
+    END IF;
+
+    -- 5. Manejo de valores por defecto lógicos
+    IF pObligatorio IS NULL THEN
+        SET pObligatorio = FALSE; -- 0 en MySQL
+    END IF;
+
+    -- 6. Inserción del registro
+    INSERT INTO Atributos (idTipo, nombre, porDefecto, obligatorio)
+    VALUES (pIdTipo, pNombre, pPorDefecto, pObligatorio);
+
+    -- 7. Retorno del ID autogenerado
+    SET pIdAtributo = LAST_INSERT_ID();
+
+END//
+DELIMITER ;
+
+-- ======================================== Modificar Atributos
+DROP PROCEDURE IF EXISTS sp_modificarAtributo;
+DELIMITER //
+
+CREATE PROCEDURE sp_modificarAtributo(
+    IN pIdAtributo INT,
+    IN pIdTipo INT,
+    IN pNombre VARCHAR(45),
+    IN pPorDefecto VARCHAR(100),
+    IN pObligatorio BOOLEAN
+)
+BEGIN
+    DECLARE vEstadoTipo CHAR(1);
+
+    -- Manejador de errores (Transacciones ACID)
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        RESIGNAL;
+    END;
+
+    -- 1. Sanitización de entradas
+    IF pNombre IS NOT NULL THEN SET pNombre = TRIM(pNombre); END IF;
+    IF pPorDefecto IS NOT NULL THEN SET pPorDefecto = TRIM(pPorDefecto); END IF;
+
+    -- 2. Validaciones iniciales de existencia
+    IF pIdAtributo IS NULL THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Debe indicar el ID del atributo a modificar';
+    END IF;
+
+    IF NOT EXISTS (SELECT 1 FROM Atributos WHERE idAtributo = pIdAtributo) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El atributo indicado no existe en el sistema';
+    END IF;
+
+    -- 3. Validaciones de campos obligatorios
+    IF pIdTipo IS NULL THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Debe indicar a qué tipo de activo pertenece el atributo';
+    END IF;
+
+    IF pNombre IS NULL OR pNombre = '' THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El nombre del atributo es obligatorio';
+    END IF;
+
+    -- 4. Validación de integridad del Tipo Padre
+    SELECT estado INTO vEstadoTipo FROM Tipos WHERE idTipo = pIdTipo;
+    
+    IF vEstadoTipo IS NULL THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El tipo de activo asignado no existe en el sistema';
+    ELSEIF vEstadoTipo = 'I' THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'No se puede asignar el atributo a un tipo de activo que se encuentra dado de baja';
+    END IF;
+
+    -- 5. Validación de Duplicados en la plantilla (UX_tipoNombre) excluyendo a sí mismo
+    IF EXISTS (
+        SELECT 1 FROM Atributos 
+        WHERE idTipo = pIdTipo 
+        AND nombre = pNombre 
+        AND idAtributo != pIdAtributo
+    ) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Este tipo de activo ya posee otro atributo registrado con ese mismo nombre';
+    END IF;
+
+    -- 6. Manejo seguro del valor lógico
+    IF pObligatorio IS NULL THEN
+        SET pObligatorio = FALSE; -- 0 en MySQL
+    END IF;
+
+    -- =========================================================================
+    -- INICIO DE TRANSACCIÓN 
+    -- =========================================================================
+    START TRANSACTION;
+
+    -- 7. Actualización con Reemplazo Total
+    UPDATE Atributos
+    SET 
+        idTipo = pIdTipo,
+        nombre = pNombre,
+        porDefecto = pPorDefecto,
+        obligatorio = pObligatorio
+    WHERE idAtributo = pIdAtributo;
+
+    COMMIT;
+
+END//
+DELIMITER ;
+
+-- ======================================== Eliminar Atributos
+DROP PROCEDURE IF EXISTS sp_eliminarAtributo;
+DELIMITER //
+
+CREATE PROCEDURE sp_eliminarAtributo(
+    IN pIdAtributo INT
+)
+BEGIN
+    DECLARE vIdTipo INT;
+
+    -- Manejador de errores (Transacciones ACID)
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        RESIGNAL;
+    END;
+
+    -- 1. Validaciones iniciales
+    IF pIdAtributo IS NULL THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Debe indicar el atributo a eliminar';
+    END IF;
+
+    -- Obtener el Tipo Padre para validaciones posteriores
+    SELECT idTipo INTO vIdTipo 
+    FROM Atributos 
+    WHERE idAtributo = pIdAtributo;
+
+    IF vIdTipo IS NULL THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El atributo indicado no existe en el sistema';
+    END IF;
+
+    -- 2. REGLA CRÍTICA: Proteger la integridad de los JSON en los Activos
+    -- Si ya hay equipos de este Tipo registrados, no podemos alterar su plantilla base
+    IF EXISTS (SELECT 1 FROM Activos WHERE idTipo = vIdTipo) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'No se puede eliminar el atributo porque ya existen activos físicos registrados bajo este tipo. Eliminarlo corrompería sus datos.';
+    END IF;
+
+    -- =========================================================================
+    -- INICIO DE TRANSACCIÓN 
+    -- =========================================================================
+    START TRANSACTION;
+
+    -- 3. Borrado físico (Hard Delete)
+    DELETE FROM Atributos 
+    WHERE idAtributo = pIdAtributo;
+
+    COMMIT;
+
+END//
+DELIMITER ;
+-- ===================================================
 DROP PROCEDURE IF EXISTS sp_componerTipos;
 DELIMITER //
 
