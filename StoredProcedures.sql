@@ -470,6 +470,9 @@ SALIR:BEGIN
     DECLARE vIdEstado INT;
     DECLARE vIdActivo INT; -- NUEVO: Para guardar el ID del Activo creado
 
+    -- Variables para el resultado de la validacion de JSON
+    DECLARE vResultadoJSON BOOLEAN;
+
     -- Manejador de errores: Si algo falla, deshace los cambios (Rollback)
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
@@ -515,10 +518,7 @@ SALIR:BEGIN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El número de serie ingresado ya se encuentra registrado';
     END IF;
 
-    -- NUEVO: Validación del formato JSON
-    IF pAtributosExtra IS NOT NULL AND NOT JSON_VALID(pAtributosExtra) THEN
-        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Los atributos extra no tienen un formato JSON válido';
-    END IF;
+   
 
     -- 4. Validaciones de Claves Foráneas
     IF pidPersona IS NOT NULL AND NOT EXISTS (SELECT 1 FROM Personas WHERE idPersona = pidPersona) THEN
@@ -552,6 +552,14 @@ SALIR:BEGIN
 
             SIGNAL SQLSTATE '45000'
                 SET MESSAGE_TEXT = 'El activo ya tiene demasiados componentes de este tipo';
+    END IF;
+
+     -- Validación del formato JSON
+    SET vResultadoJSON = FALSE;
+    CALL sp_verificarAtributos(vIdTipo,pAtributosExtra,vResultadoJSON);
+
+    IF NOT vResultadoJSON THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Los atributos extra no tienen un formato JSON válido';
     END IF;
 
     -- =========================================================================
@@ -657,6 +665,8 @@ SALIR:BEGIN
     DECLARE oldPrecioUnitario DECIMAL(12,2);
     DECLARE oldNumeroSerie VARCHAR(100);
     DECLARE oldModelo VARCHAR(50);
+
+    DECLARE vResultadoJSON BOOLEAN;
 
     
     -- Manejador de errores: Si algo falla, deshace los cambios (Rollback)
@@ -795,12 +805,6 @@ SALIR:BEGIN
                 SET MESSAGE_TEXT = 'El activo ya tiene demasiados componentes de este tipo';
     END IF;
 
-
-    -- Validar formato JSON
-    IF pAtributosExtra IS NOT NULL AND NOT JSON_VALID(pAtributosExtra) THEN
-        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Los atributos extra no tienen un formato JSON válido';
-    END IF;
-
     -- Validar número de serie único excluyendo el activo actual
     IF pNumeroSerie IS NOT NULL AND EXISTS (SELECT 1 FROM Activos WHERE numeroSerie = pNumeroSerie AND idActivo != pidActivo) THEN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El número de serie ingresado ya pertenece a otro activo';
@@ -815,7 +819,14 @@ SALIR:BEGIN
     IF pNombre IS NOT NULL AND pPrecioUnitario<0 THEN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El precio ingresado tiene que ser mayor a cero';
     END IF;
-    
+
+     -- Validación del formato JSON
+    SET vResultadoJSON = FALSE;
+    CALL sp_verificarAtributos(vIdTipo,pAtributosExtra,vResultadoJSON);
+
+    IF NOT vResultadoJSON THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Los atributos extra no tienen un formato JSON válido';
+    END IF;
     
     -- =========================================================================
     -- Armar JSONs

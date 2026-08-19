@@ -67,7 +67,7 @@ VALUES
 
 select * from Activos;
 
-    CALL sp_nuevoActivo(
+CALL sp_nuevoActivo(
      /* idUsuario     */ 1,
     /* pNombreMarca     */ 'Dell',
     /* pNombreUbicacion */ 'Sede Central',
@@ -140,3 +140,85 @@ set @JSONtest = '{"SO":"Windows 11","IP":"192.168.1.10","MAC":null}';
 CALL `sp_verificarAtributos`(4,@JSONtest,@resultado);
 
 select @JSONtest;
+CALL sp_nuevoActivo(
+     /* idUsuario     */ 1,
+    /* pNombreMarca     */ 'Dell',
+    /* pNombreUbicacion */ 'Sede Central',
+    /* pNombreTipo      */ 'PC',
+    /* pNombreEstado    */ 'Operativo',
+    /* pidFactura       */ NULL,
+    /* pidPersona       */ 1,
+    /* pidCompone       */ NULL,
+    /* pNombre          */ 'RAM1',
+    /* pAtributosExtra  */ '{"Tamaño":"(8 GB)"}',
+    /* pPrecioUnitario  */ 200000.00,
+    /* pNumeroSerie     */ 'PCJSON001',
+    /* pModelo          */ 'PCJSON'
+);
+CALL sp_nuevoActivo(
+     /* idUsuario     */ 1,
+    /* pNombreMarca     */ 'Dell',
+    /* pNombreUbicacion */ 'Sede Central',
+    /* pNombreTipo      */ 'PC',
+    /* pNombreEstado    */ 'Operativo',
+    /* pidFactura       */ NULL,
+    /* pidPersona       */ 1,
+    /* pidCompone       */ NULL,
+    /* pNombre          */ 'RAM1',
+    /* pAtributosExtra  */ '{"SO":" ","IP":"192.168.1.10","MAC":null}',
+    /* pPrecioUnitario  */ 200000.00,
+    /* pNumeroSerie     */ 'PCJSON001',
+    /* pModelo          */ 'PCJSON'
+);
+CALL sp_nuevoActivo(
+     /* idUsuario     */ 1,
+    /* pNombreMarca     */ 'Dell',
+    /* pNombreUbicacion */ 'Sede Central',
+    /* pNombreTipo      */ 'PC',
+    /* pNombreEstado    */ 'Operativo',
+    /* pidFactura       */ NULL,
+    /* pidPersona       */ 1,
+    /* pidCompone       */ NULL,
+    /* pNombre          */ 'RAM1',
+    /* pAtributosExtra  */ '{"SO":"Windows 11","IP":"192.168.1.10","MAC":null}',
+    /* pPrecioUnitario  */ 200000.00,
+    /* pNumeroSerie     */ 'PCJSON001',
+    /* pModelo          */ 'PCJSON'
+);
+select * from `Activos`;
+
+CALL sp_modificarActivo(
+    /* idActivo */ 4,
+     /* idUsuario     */ 1,
+    /* pNombreMarca     */ 'Dell',
+    /* pNombreUbicacion */ 'Sede Central',
+    /* pNombreTipo      */ 'PC',
+    /* pNombreEstado    */ 'Operativo',
+    /* pidFactura       */ NULL,
+    /* pidPersona       */ 1,
+    /* pidCompone       */ NULL,
+    /* pNombre          */ 'PCJSON001',
+    /* pAtributosExtra  */ '{"SO":" ","IP":"192.168.1.10","MAC":null}',
+    /* pPrecioUnitario  */ 200000.00,
+    /* pNumeroSerie     */ 'PCJSON001',
+    /* pModelo          */ 'PCJSON'
+);
+CALL sp_modificarActivo(
+    /* idActivo         */  4,
+     /* idUsuario       */  1,
+    /* pNombreMarca     */ 'Dell',
+    /* pNombreUbicacion */ 'Sede Central',
+    /* pNombreTipo      */ 'PC',
+    /* pNombreEstado    */ 'Operativo',
+    /* pidFactura       */ NULL,
+    /* pidPersona       */ 1,
+    /* pidCompone       */ NULL,
+    /* pNombre          */ 'PCJSON001',
+    /* pAtributosExtra  */ '{"SO":"Windows 10","IP":"192.168.1.10","MAC":null}',
+    /* pPrecioUnitario  */ 200000.00,
+    /* pNumeroSerie     */ 'PCJSON001',
+    /* pModelo          */ 'PCJSON'
+);
+
+select * from `Activos`;
+SELECT * FROM `Historial`;
