@@ -1356,7 +1356,56 @@ SALIR: BEGIN
 
 END//
 DELIMITER ;
+-- ========================================= Baja Ubicacion
+DROP PROCEDURE IF EXISTS sp_bajaUbicacion;
+DELIMITER //
 
+CREATE PROCEDURE sp_bajaUbicacion(
+    IN pIdUbicacion INT
+)
+BEGIN
+    -- Manejador de errores (Transacciones ACID)
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        RESIGNAL;
+    END;
+
+    -- 1. Validaciones iniciales
+    IF pIdUbicacion IS NULL THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Debe indicar la ubicación a dar de baja';
+    END IF;
+
+    IF NOT EXISTS (SELECT 1 FROM Ubicaciones WHERE idUbicacion = pIdUbicacion) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'La ubicación indicada no existe en el sistema';
+    END IF;
+
+    -- 2. REGLA CRÍTICA 1: Control de activos asociados
+    -- Validamos si existen equipos físicos actualmente en esta ubicación
+    IF EXISTS (SELECT 1 FROM Activos WHERE idUbicacion = pIdUbicacion) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'No se puede dar de baja la ubicación porque existen activos registrados en ella. Debe reubicarlos primero.';
+    END IF;
+
+    -- 3. REGLA CRÍTICA 2: Control de jerarquía (Sub-ubicaciones)
+    -- Validamos si esta ubicación es "padre" de otras ubicaciones que sigan activas
+    IF EXISTS (SELECT 1 FROM Ubicaciones WHERE idUbicacionPadre = pIdUbicacion AND estado != 'I') THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'No se puede dar de baja porque contiene sub-ubicaciones activas dependientes de ella. Reasigne las ubicaciones hijas primero.';
+    END IF;
+
+    -- =========================================================================
+    -- INICIO DE TRANSACCIÓN 
+    -- =========================================================================
+    START TRANSACTION;
+
+    -- 4. Baja Lógica
+    UPDATE Ubicaciones 
+    SET estado = 'I' -- 'I' representa Inactivo
+    WHERE idUbicacion = pIdUbicacion;
+
+    COMMIT;
+
+END//
+DELIMITER ;
 
 -- =====================================================
 -- PROVEEDORES
@@ -2262,6 +2311,157 @@ BEGIN
     UPDATE Facturas 
     SET estado = 'B' -- 'B' representa Inactiva / Anulada
     WHERE idFactura = pIdFactura;
+
+    COMMIT;
+
+END//
+DELIMITER ;
+
+-- =====================================================
+-- ESTADOS	
+-- =====================================================
+-- ======================================== Nuevo Estado
+DROP PROCEDURE IF EXISTS sp_nuevoEstado;
+DELIMITER //
+
+CREATE PROCEDURE sp_nuevoEstado(
+    IN pNombre VARCHAR(45),
+    IN pDescripcion VARCHAR(200),
+    IN pEstado CHAR(1),
+    OUT pIdEstado INT
+)
+BEGIN
+    -- 1. Sanitización de entradas
+    IF pNombre IS NOT NULL THEN SET pNombre = TRIM(pNombre); END IF;
+    IF pDescripcion IS NOT NULL THEN SET pDescripcion = TRIM(pDescripcion); END IF;
+    IF pEstado IS NOT NULL THEN SET pEstado = TRIM(pEstado); END IF;
+
+    -- 2. Validación de campos obligatorios
+    IF pNombre IS NULL OR pNombre = '' THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El nombre del estado es obligatorio';
+    END IF;
+
+    -- 3. Validación de duplicados (Aprovechando el UNIQUE INDEX)
+    IF EXISTS (SELECT 1 FROM Estados WHERE nombre = pNombre) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El nombre del estado ingresado ya existe en el sistema';
+    END IF;
+
+    -- 4. Estado por defecto
+    IF pEstado IS NULL OR pEstado = '' THEN
+        SET pEstado = 'A'; -- 'A' representa Activo
+    END IF;
+
+    -- 5. Inserción del registro
+    INSERT INTO Estados (nombre, descripcion, estado)
+    VALUES (pNombre, pDescripcion, pEstado);
+
+    -- 6. Retorno del ID autogenerado
+    SET pIdEstado = LAST_INSERT_ID();
+
+END//
+DELIMITER ;
+-- ======================================== Modificar Estado
+DROP PROCEDURE IF EXISTS sp_modificarEstado;
+DELIMITER //
+
+CREATE PROCEDURE sp_modificarEstado(
+    IN pIdEstado INT,
+    IN pNombre VARCHAR(45),
+    IN pDescripcion VARCHAR(200),
+    IN pEstado CHAR(1)
+)
+BEGIN
+    -- Manejador de errores (Transacciones ACID)
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        RESIGNAL;
+    END;
+
+    -- 1. Sanitización de entradas
+    IF pNombre IS NOT NULL THEN SET pNombre = TRIM(pNombre); END IF;
+    IF pDescripcion IS NOT NULL THEN SET pDescripcion = TRIM(pDescripcion); END IF;
+    IF pEstado IS NOT NULL THEN SET pEstado = TRIM(pEstado); END IF;
+
+    -- 2. Validaciones iniciales
+    IF pIdEstado IS NULL THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Debe indicar el estado a modificar';
+    END IF;
+
+    IF NOT EXISTS (SELECT 1 FROM Estados WHERE idEstado = pIdEstado) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El estado indicado no existe en el sistema';
+    END IF;
+
+    -- 3. Validación de campos obligatorios
+    IF pNombre IS NULL OR pNombre = '' THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El nombre del estado es obligatorio';
+    END IF;
+
+    IF pEstado IS NULL OR pEstado = '' THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El estado (Activo/Inactivo) es obligatorio';
+    END IF;
+
+    -- 4. Validación de Nombre duplicado (Excluyendo el estado actual)
+    IF EXISTS (SELECT 1 FROM Estados WHERE nombre = pNombre AND idEstado != pIdEstado) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El nombre ingresado ya pertenece a otro estado registrado';
+    END IF;
+
+    -- =========================================================================
+    -- INICIO DE TRANSACCIÓN 
+    -- =========================================================================
+    START TRANSACTION;
+
+    -- 5. Actualización con Reemplazo Total
+    UPDATE Estados 
+    SET 
+        nombre = pNombre,
+        descripcion = pDescripcion,
+        estado = pEstado
+    WHERE idEstado = pIdEstado;
+
+    COMMIT;
+
+END//
+DELIMITER ;
+-- ======================================== Baja Estado
+DROP PROCEDURE IF EXISTS sp_bajaEstado;
+DELIMITER //
+
+CREATE PROCEDURE sp_bajaEstado(
+    IN pIdEstado INT
+)
+BEGIN
+    -- Manejador de errores (Transacciones ACID)
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        RESIGNAL;
+    END;
+
+    -- 1. Validaciones iniciales
+    IF pIdEstado IS NULL THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Debe indicar el estado a dar de baja';
+    END IF;
+
+    IF NOT EXISTS (SELECT 1 FROM Estados WHERE idEstado = pIdEstado) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El estado indicado no existe en el sistema';
+    END IF;
+
+    -- 2. REGLA CRÍTICA: Control de activos asociados
+    -- Evitamos dar de baja un estado si actualmente hay equipos físicos catalogados bajo el mismo
+    IF EXISTS (SELECT 1 FROM Activos WHERE idEstado = pIdEstado) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'No se puede dar de baja este estado porque existen activos físicos que lo poseen actualmente. Reclasifíquelos primero.';
+    END IF;
+
+    -- =========================================================================
+    -- INICIO DE TRANSACCIÓN 
+    -- =========================================================================
+    START TRANSACTION;
+
+    -- 3. Baja Lógica
+    UPDATE Estados 
+    SET estado = 'I' -- 'I' representa Inactivo/Baja
+    WHERE idEstado = pIdEstado;
 
     COMMIT;
 
