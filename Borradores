@@ -1,3 +1,26 @@
+
+select count(`idTipo`) from Activos a 
+    where a.compone=3 and a.`idTipo`=5
+    GROUP BY `idTipo`;
+SELECT ct.cantidadComponentesMaxima from `ComposicionTipos` ct 
+    inner join `Activos` a on a.`idTipo`=ct.`idTipoPadre`
+    where ct.`idTipoComponente`=5 and a.`idActivo`= 3 limit 1;
+
+
+WITH RECURSIVE Ancestros AS (
+        SELECT idUbicacion, idUbicacionPadre
+        FROM Ubicaciones
+        WHERE idUbicacion = 5
+
+        UNION ALL
+
+        SELECT u.idUbicacion, u.idUbicacionPadre
+        FROM Ubicaciones u
+        INNER JOIN Ancestros a ON u.idUbicacion = a.idUbicacionPadre
+      )
+      SELECT * FROM Ancestros
+
+
 WITH RECURSIVE Descendientes AS (
     SELECT `idTipoComponente`,`idTipoPadre` 
     FROM`ComposicionTipos`
@@ -11,3 +34,92 @@ WITH RECURSIVE Descendientes AS (
 ) 
 SELECT 1 FROM Descendientes d
 WHERE d.`idTipoComponente`=12;
+
+IF (
+    SELECT COUNT(*)
+    FROM Activos
+    WHERE compone = 3 AND idTipo = 5 
+    GROUP BY `idTipo`
+) > 2 THEN
+
+    SIGNAL SQLSTATE '45000'
+    SET MESSAGE_TEXT = 'El activo ya tiene 2 RAM'
+
+END IF;
+
+select * from 
+JSON_TABLE(JSON_KEYS('{"SO":"Windows 11","Direccion IP":"192.168.1.10"}'),
+'$[*]' COLUMNS
+(
+                nombre VARCHAR(45) PATH '$'
+            )
+            ) as j;
+
+select * from 
+JSON_TABLE('{"SO":"Windows 11","Direccion IP":"192.168.1.10"}',
+'$[*]' COLUMNS
+(
+                nombre VARCHAR(45) PATH '$'
+            )
+            ) as j;
+
+SELECT * FROM `Atributos`;
+SET @Resultado = null;
+SELECT *
+        FROM JSON_TABLE(
+            JSON_KEYS('{"SO":"win","IP":"192.168.1.10","MAC":null}'),
+            '$[*]' COLUMNS (
+                nombre VARCHAR(45) PATH '$'
+            )
+        ) AS j
+        WHERE EXISTS (
+            SELECT 1
+            FROM Atributos a
+            WHERE a.idTipo = 4
+              AND a.nombre = j.nombre
+              AND a.obligatorio = 1
+        );
+
+SELECT * FROM `Atributos` a 
+LEFT JOIN JSON_TABLE(
+            JSON_KEYS('{"SO":null,"IP":"192.168.1.10","MAC":null}'),
+            '$[*]' COLUMNS (
+                nombre VARCHAR(45) PATH '$'
+            )
+        ) as j ON j.nombre=a.nombre
+WHERE j.nombre is null and a.obligatorio=1;
+SELECT JSON_VALUE('{"SO":null}','$.SO');
+set @pAtributos = '{"IP":"192.168.1.10","MAC":null}';
+SELECT *
+    FROM Atributos a
+    WHERE a.idTipo = 4
+      AND a.obligatorio = 1
+      AND (
+        JSON_EXTRACT(@pAtributos, CONCAT('$."', a.nombre, '"')) IS NULL
+        OR JSON_TYPE(JSON_EXTRACT(@pAtributos, CONCAT('$."', a.nombre, '"'))) = 'NULL'
+        OR TRIM(JSON_UNQUOTE(JSON_EXTRACT(@pAtributos, CONCAT('$."', a.nombre, '"')))) = ''
+      );
+
+SET @faltantes = (
+    SELECT JSON_OBJECTAGG(a.nombre, NULL)
+    FROM Atributos a
+    WHERE a.idTipo = 4
+      -- AND a.obligatorio = 1   -- si querés filtrar solo obligatorios, si no dejalo comentado
+      AND NOT JSON_CONTAINS_PATH(
+              @pAtributos,
+              'one',
+              CONCAT('$."', a.nombre, '"')
+          )
+);
+SELECT @faltantes;
+-- 2) Fusionar: si no hay faltantes, @faltantes es NULL, por eso el COALESCE
+SET @pAtributos = JSON_MERGE_PRESERVE(
+    @pAtributos,
+    COALESCE(@faltantes, JSON_OBJECT())
+);
+SELECT @pAtributos;
+
+
+
+
+
