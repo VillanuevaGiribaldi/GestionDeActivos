@@ -129,3 +129,14 @@ SELECT * FROM `Atributos` where `idTipo`=4;
 
 set @idAtributo = NULL;
 CALL `sp_nuevoAtributo`(4,'ip','0:0:0:0',0,@idAtributo)
+
+set @JSONtest = '{"SO":"windows 11","IP":"192.168.1.10","MAC":null,"Brazos":5}';
+set @resultado = NULL;
+CALL `sp_verificarAtributos`(4,@JSONtest,@resultado);
+set @JSONtest = '{"SO":"","IP":"192.168.1.10","MAC":null}';
+CALL `sp_verificarAtributos`(4,@JSONtest,@resultado);
+
+set @JSONtest = '{"SO":"Windows 11","IP":"192.168.1.10","MAC":null}';
+CALL `sp_verificarAtributos`(4,@JSONtest,@resultado);
+
+select @JSONtest;

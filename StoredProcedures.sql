@@ -2469,6 +2469,7 @@ END//
 DELIMITER ;
 -- =====================================================
 DROP PROCEDURE IF EXISTS sp_verificarAtributos;
+DELIMITER //
 CREATE PROCEDURE sp_verificarAtributos(
     IN pIdTipo INT,
     INOUT pAtributos JSON,
@@ -2476,7 +2477,7 @@ CREATE PROCEDURE sp_verificarAtributos(
 )
 BEGIN
     DECLARE vFaltantes JSON;
-
+    set pAtributos=COALESCE(pAtributos,JSON_OBJECT());
     -- Verificar que el Tipo exista
     IF NOT EXISTS (SELECT 1 FROM Tipos WHERE idTipo = pIdTipo) THEN
         SET pResultado = FALSE;
@@ -2523,7 +2524,7 @@ BEGIN
         SELECT JSON_OBJECTAGG(a.nombre, NULL)
         FROM Atributos a
         WHERE a.idTipo = pIdTipo
-          AND NOT JSON_CONTAINS_PATH(pAtributos, 'one', CONCAT('$."', a.nombre, '"'))
+        AND NOT JSON_CONTAINS_PATH(pAtributos, 'one', CONCAT('$."', a.nombre, '"'))
     );
 
     SET pAtributos = JSON_MERGE_PRESERVE(pAtributos, COALESCE(vFaltantes, JSON_OBJECT()));

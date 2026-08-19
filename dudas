@@ -1,0 +1,7 @@
+- eliminar vs baja: Cuando usar cada uno. ¿es necesario tener ambos para todo?
+- eliminar atributos: Eliminamos los atributos o composicionTipos al darle de baja a un tipo? 
+
+- Historial: Actualmente tenemos la tabla historial que es actualizada en los procedimientos relevantes. 
+Es la forma correcta de hacerlo? o conviene usar triggers y tablas de auditoria?
+
+- Atributos JSON: Actualmente completamos los atributos faltantantes con NULL en el JSON para que los JSON sean todos iguales, está bien? o es mejor no hacerlo?
