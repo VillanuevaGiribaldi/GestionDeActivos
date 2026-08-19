@@ -7,6 +7,7 @@ SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,N
 -- -----------------------------------------------------
 -- Schema GestionDeActivos
 -- -----------------------------------------------------
+DROP SCHEMA IF EXISTS `GestionDeActivos` ;
 
 -- -----------------------------------------------------
 -- Schema GestionDeActivos
@@ -195,6 +196,7 @@ ENGINE = InnoDB;
 CREATE TABLE IF NOT EXISTS `GestionDeActivos`.`Atributos` (
   `idAtributo` INT NOT NULL AUTO_INCREMENT,
   `idTipo` INT NOT NULL,
+  `nombre` VARCHAR(45) NOT NULL,
   `porDefecto` VARCHAR(100) NULL,
   `obligatorio` TINYINT NULL,
   PRIMARY KEY (`idAtributo`),
