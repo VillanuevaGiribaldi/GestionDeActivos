@@ -11,7 +11,6 @@ SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,N
 -- -----------------------------------------------------
 -- Schema GestionDeActivos
 -- -----------------------------------------------------
-DROP SCHEMA if EXISTS GestionDeActivos;
 CREATE SCHEMA IF NOT EXISTS `GestionDeActivos` DEFAULT CHARACTER SET utf8 ;
 USE `GestionDeActivos` ;
 
@@ -93,7 +92,7 @@ ENGINE = InnoDB;
 CREATE TABLE IF NOT EXISTS `GestionDeActivos`.`Proveedores` (
   `idProveedor` INT NOT NULL AUTO_INCREMENT,
   `nombre` VARCHAR(100) NOT NULL,
-  `estado` CHAR(1) NOT NULL DEFAULT('A'),
+  `estado` CHAR(1) NOT NULL DEFAULT 'A',
   `direccion` VARCHAR(100) NULL,
   `telefono` VARCHAR(45) NULL,
   `mail` VARCHAR(150) NULL,
@@ -197,8 +196,7 @@ CREATE TABLE IF NOT EXISTS `GestionDeActivos`.`Atributos` (
   `idAtributo` INT NOT NULL AUTO_INCREMENT,
   `idTipo` INT NOT NULL,
   `porDefecto` VARCHAR(100) NULL,
-  `nombre` VARCHAR(45) NULL,
-  `obligatorio` BOOL NULL,
+  `obligatorio` TINYINT NULL,
   PRIMARY KEY (`idAtributo`),
   UNIQUE INDEX `UX_tipoNombre` (`idTipo` ASC, `nombre` ASC) VISIBLE,
   CONSTRAINT `fk_Atributos_Tipos1`
