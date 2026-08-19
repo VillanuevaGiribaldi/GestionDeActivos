@@ -351,85 +351,97 @@ BEGIN
 
 END//
 DELIMITER ;
--- ===================================================
-DROP PROCEDURE IF EXISTS sp_componerTipos;
+
+-- =========================================== COMPONER TIPOS 
+DROP PROCEDURE IF EXISTS sp_nuevaComposicionTipo;
 DELIMITER //
 
-CREATE procedure sp_componerTipos(
-	IN NombreTipoPadre VARCHAR(45),
-    IN NombreTipoComponente VARCHAR(45),
-    IN pMax INT    
+CREATE PROCEDURE sp_nuevaComposicionTipo(
+    IN pNombreTipoPadre VARCHAR(45),
+    IN pNombreTipoComponente VARCHAR(45),
+    IN pMax INT
 )
-SALIR:BEGIN
-	DECLARE vIdTipoPadre INT;
-	DECLARE vIdTipoComponente INT;
-    
-	SELECT idTipo
-	INTO vIdTipoPadre
-	FROM Tipos
-	WHERE nombre = NombreTipoPadre and estado='A';
-    
-    IF vIdTipoPadre IS NULL THEN
-		SIGNAL SQLSTATE '45000'
-			SET MESSAGE_TEXT = 'El tipo padre no existe';
-	END IF;
+BEGIN
+    DECLARE vIdTipoPadre INT;
+    DECLARE vIdTipoComponente INT;
 
-	SELECT idTipo
-	INTO vIdTipoComponente
-	FROM Tipos
-	WHERE nombre = NombreTipoComponente;
-    
-    IF vIdTipoComponente  IS NULL or vIdTipoPadre IS NULL THEN
-		SIGNAL SQLSTATE '45000'
-			SET MESSAGE_TEXT = 'Uno de los tipos especificados no existe';
-	END IF;
+    -- Manejador de errores (Transacciones ACID)
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        RESIGNAL;
+    END;
 
-	IF vIdTipoPadre = vIdTipoComponente THEN
-		SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Un tipo de activo no puede componerse a si mismo';
-        LEAVE SALIR;
-    end if;
-    
-    IF exists (select 1 from ComposicionTipos ct where ct.idTipoComponente=vIdTipoComponente and ct.`idTipoPadre`=vIdTipoPadre) THEN
-		SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'La composicion ya existe';
-        LEAVE SALIR;
-    end if;
-    
-    IF exists (select 1 from ComposicionTipos ct where ct.idTipoComponente=vIdTipoPadre and ct.`idTipoPadre`=vIdTipoComponente) THEN
-		SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Un tipo no puede ser componenete de sus componentes';
-        LEAVE SALIR;
-    end if;
-    
-    IF pMax IS NOT NULL AND pMax<1 THEN
-		SIGNAL SQLSTATE '45000'
-			SET MESSAGE_TEXT = 'La cantidad máxima de componentes ingresada no es puede ser menor que 1';
-	END IF;
-    
-    IF EXISTS (
-            WITH RECURSIVE Descendientes AS (
-                SELECT `idTipoComponente`,`idTipoPadre` 
-                FROM`ComposicionTipos`
-                WHERE `idTipoPadre` = vIdTipoComponente
-                
-                UNION ALL
+    -- 1. Sanitización de entradas
+    IF pNombreTipoPadre IS NOT NULL THEN SET pNombreTipoPadre = TRIM(pNombreTipoPadre); END IF;
+    IF pNombreTipoComponente IS NOT NULL THEN SET pNombreTipoComponente = TRIM(pNombreTipoComponente); END IF;
 
-                SELECT ct.`idTipoComponente`,ct.`idTipoPadre`
-                FROM `ComposicionTipos` ct
-                INNER JOIN Descendientes d ON ct.`idTipoPadre`=d.`idTipoComponente`
-                ) SELECT 1 FROM Descendientes WHERE `idTipoComponente`=vIdTipoPadre
-        ) THEN
-            SIGNAL SQLSTATE '45000'
-                SET MESSAGE_TEXT =
-                    'No puede asignarse esta ubicacion como padre porque se generaria un lazo en la jerarquia de coponenetes';
-            LEAVE SALIR;
+    -- 2. Validaciones iniciales
+    IF pNombreTipoPadre IS NULL OR pNombreTipoPadre = '' THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Debe indicar el nombre del tipo padre';
     END IF;
-    
-    insert into ComposicionTipos(idTipoPadre,idTipoComponente,cantidadComponentesMaxima) values (vIdTipoPadre,vIdTipoComponente,pMax);
 
+    IF pNombreTipoComponente IS NULL OR pNombreTipoComponente = '' THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Debe indicar el nombre del tipo componente';
+    END IF;
+
+    -- 3. Obtener IDs y validar existencia/estado de ambos Tipos
+    SELECT idTipo INTO vIdTipoPadre FROM Tipos WHERE nombre = pNombreTipoPadre AND estado = 'A';
+    IF vIdTipoPadre IS NULL THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El tipo padre indicado no existe o se encuentra dado de baja';
+    END IF;
+
+    SELECT idTipo INTO vIdTipoComponente FROM Tipos WHERE nombre = pNombreTipoComponente AND estado = 'A';
+    IF vIdTipoComponente IS NULL THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El tipo componente indicado no existe o se encuentra dado de baja';
+    END IF;
+
+    -- 4. Validar Reglas de Negocio Básicas
+    IF vIdTipoPadre = vIdTipoComponente THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Un tipo de activo no puede componerse a si mismo';
+    END IF;
+
+    IF pMax IS NOT NULL AND pMax < 1 THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'La cantidad máxima de componentes no puede ser menor a 1';
+    END IF;
+
+    IF EXISTS (SELECT 1 FROM ComposicionTipos WHERE idTipoPadre = vIdTipoPadre AND idTipoComponente = vIdTipoComponente) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Esta composición ya existe en el sistema';
+    END IF;
+
+    -- 5. Validación de lazos de jerarquía (CTE Recursiva)
+    IF EXISTS (
+        WITH RECURSIVE Descendientes AS (
+            SELECT idTipoComponente, idTipoPadre 
+            FROM ComposicionTipos
+            WHERE idTipoPadre = vIdTipoComponente
+            
+            UNION ALL
+
+            SELECT ct.idTipoComponente, ct.idTipoPadre
+            FROM ComposicionTipos ct
+            INNER JOIN Descendientes d ON ct.idTipoPadre = d.idTipoComponente
+        ) 
+        SELECT 1 FROM Descendientes WHERE idTipoComponente = vIdTipoPadre
+    ) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'No puede asignarse este componente porque generaría un lazo infinito en la jerarquía de hardware';
+    END IF;
+
+    -- =========================================================================
+    -- INICIO DE TRANSACCIÓN 
+    -- =========================================================================
+    START TRANSACTION;
+
+    -- 6. Inserción
+    INSERT INTO ComposicionTipos (idTipoPadre, idTipoComponente, cantidadComponentesMaxima) 
+    VALUES (vIdTipoPadre, vIdTipoComponente, pMax);
+
+    COMMIT;
 END//
-
 DELIMITER ;
-
-
+-- =====================================================
+-- ACTIVOS
+-- =====================================================
 -- =========================================== NUEVO ACTIVO
 DROP PROCEDURE IF EXISTS sp_nuevoActivo;
 DELIMITER //
@@ -2467,7 +2479,171 @@ BEGIN
 
 END//
 DELIMITER ;
+
 -- =====================================================
+-- IMAGENES
+-- =====================================================
+-- ======================================== Nueva Imagen
+DROP PROCEDURE IF EXISTS sp_nuevaImagen;
+DELIMITER //
+
+CREATE PROCEDURE sp_nuevaImagen(
+    IN pIdActivo INT,
+    IN pRuta VARCHAR(255),
+    IN pDescripcion VARCHAR(100),
+    IN pEstado CHAR(1),
+    IN pFecha DATETIME,
+    OUT pIdImagen INT
+)
+BEGIN
+    -- 1. Sanitización de entradas
+    IF pRuta IS NOT NULL THEN SET pRuta = TRIM(pRuta); END IF;
+    IF pDescripcion IS NOT NULL THEN SET pDescripcion = TRIM(pDescripcion); END IF;
+    IF pEstado IS NOT NULL THEN SET pEstado = TRIM(pEstado); END IF;
+
+    -- 2. Validación de campos obligatorios
+    IF pIdActivo IS NULL THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Debe indicar a qué activo pertenece la imagen';
+    END IF;
+
+    IF pRuta IS NULL OR pRuta = '' THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'La ruta de la imagen es obligatoria';
+    END IF;
+
+    -- 3. Validación de Integridad (Existencia del Activo Padre)
+    IF NOT EXISTS (SELECT 1 FROM Activos WHERE idActivo = pIdActivo) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El activo indicado no existe en el sistema';
+    END IF;
+
+    -- 4. Manejo de valores por defecto lógicos
+    IF pEstado IS NULL OR pEstado = '' THEN
+        SET pEstado = 'A'; -- 'A' representa Activa
+    END IF;
+
+    IF pFecha IS NULL THEN
+        SET pFecha = NOW(); -- Si no mandan fecha, registramos el momento exacto de la subida
+    END IF;
+
+    -- 5. Inserción del registro
+    INSERT INTO Imagenes (idActivo, ruta, estado, fecha, descripcion)
+    VALUES (pIdActivo, pRuta, pEstado, pFecha, pDescripcion);
+
+    -- 6. Retorno del ID autogenerado
+    SET pIdImagen = LAST_INSERT_ID();
+
+END//
+DELIMITER ;
+
+-- ======================================== Modificar Imagen
+DROP PROCEDURE IF EXISTS sp_modificarImagen;
+DELIMITER //
+
+CREATE PROCEDURE sp_modificarImagen(
+    IN pIdImagen INT,
+    IN pIdActivo INT,
+    IN pRuta VARCHAR(255),
+    IN pDescripcion VARCHAR(100),
+    IN pEstado CHAR(1),
+    IN pFecha DATETIME
+)
+BEGIN
+    -- Manejador de errores (Transacciones ACID)
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        RESIGNAL;
+    END;
+
+    -- 1. Sanitización de entradas
+    IF pRuta IS NOT NULL THEN SET pRuta = TRIM(pRuta); END IF;
+    IF pDescripcion IS NOT NULL THEN SET pDescripcion = TRIM(pDescripcion); END IF;
+    IF pEstado IS NOT NULL THEN SET pEstado = TRIM(pEstado); END IF;
+
+    -- 2. Validaciones iniciales de existencia de la imagen
+    IF pIdImagen IS NULL THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Debe indicar el ID de la imagen a modificar';
+    END IF;
+
+    IF NOT EXISTS (SELECT 1 FROM Imagenes WHERE idImagen = pIdImagen) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'La imagen indicada no existe en el sistema';
+    END IF;
+
+    -- 3. Validaciones de campos obligatorios
+    IF pIdActivo IS NULL THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Debe indicar a qué activo pertenece la imagen';
+    END IF;
+
+    IF pRuta IS NULL OR pRuta = '' THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'La ruta de la imagen es obligatoria';
+    END IF;
+
+    IF pEstado IS NULL OR pEstado = '' THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El estado de la imagen es obligatorio';
+    END IF;
+
+    -- 4. Validación de Integridad (Existencia del Activo asignado)
+    IF NOT EXISTS (SELECT 1 FROM Activos WHERE idActivo = pIdActivo) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El activo asignado no existe en el sistema';
+    END IF;
+
+    -- =========================================================================
+    -- INICIO DE TRANSACCIÓN 
+    -- =========================================================================
+    START TRANSACTION;
+
+    -- 5. Actualización con Reemplazo Total
+    UPDATE Imagenes 
+    SET 
+        idActivo = pIdActivo,
+        ruta = pRuta,
+        descripcion = pDescripcion,
+        estado = pEstado,
+        fecha = pFecha
+    WHERE idImagen = pIdImagen;
+
+    COMMIT;
+
+END//
+DELIMITER ;
+-- ======================================== Baja Imagen
+DROP PROCEDURE IF EXISTS sp_bajaImagen;
+DELIMITER //
+
+CREATE PROCEDURE sp_bajaImagen(
+    IN pIdImagen INT
+)
+BEGIN
+    -- Manejador de errores (Transacciones ACID)
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        RESIGNAL;
+    END;
+
+    -- 1. Validaciones iniciales
+    IF pIdImagen IS NULL THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Debe indicar la imagen a dar de baja';
+    END IF;
+
+    IF NOT EXISTS (SELECT 1 FROM Imagenes WHERE idImagen = pIdImagen) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'La imagen indicada no existe en el sistema';
+    END IF;
+
+    -- =========================================================================
+    -- INICIO DE TRANSACCIÓN 
+    -- =========================================================================
+    START TRANSACTION;
+
+    -- 2. Baja Lógica (Soft Delete)
+    UPDATE Imagenes 
+    SET estado = 'I' -- 'I' representa Inactiva / Baja
+    WHERE idImagen = pIdImagen;
+
+    COMMIT;
+
+END//
+DELIMITER ;
+-- =========================================== VERIFICAR ATRIBUTOS
 DROP PROCEDURE IF EXISTS sp_verificarAtributos;
 DELIMITER //
 CREATE PROCEDURE sp_verificarAtributos(
