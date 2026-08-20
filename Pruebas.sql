@@ -213,7 +213,7 @@ CALL sp_modificarActivo(
     /* pidFactura       */ NULL,
     /* pidPersona       */ 1,
     /* pidCompone       */ NULL,
-    /* pNombre          */ 'PCJSON001',
+    /* pNombre          */ 'PCJSON002',
     /* pAtributosExtra  */ '{"SO":"Windows 10","IP":"192.168.1.10","MAC":null}',
     /* pPrecioUnitario  */ 200000.00,
     /* pNumeroSerie     */ 'PCJSON001',
@@ -222,3 +222,4 @@ CALL sp_modificarActivo(
 
 select * from `Activos`;
 SELECT * FROM `Historial`;
+CALL sp_modificarHistorial(4,'modificacion del historial')

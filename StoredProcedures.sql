@@ -1036,10 +1036,10 @@ END//
 DELIMITER ;
 
 -- ======================================== Modificar Comentario de Historial
-DROP PROCEDURE IF EXISTS sp_modificarComentarioHistorial;
+DROP PROCEDURE IF EXISTS sp_modificarHistorial;
 DELIMITER //
 
-CREATE PROCEDURE sp_modificarComentarioHistorial(
+CREATE PROCEDURE sp_modificarHistorial(
     IN pIdHistorial INT,
     IN pComentario VARCHAR(200)
 )
@@ -1304,7 +1304,7 @@ BEGIN
     END IF;
 
     -- 4. Búsqueda y validación de la Ubicación Padre
-    IF vIdUbicacionPadre IS NOT NULL and not exists (select 1 from `Ubicaciones` where `idUbicacion`=vIdUbicacionPadred)THEN
+    IF vIdUbicacionPadre IS NOT NULL and not exists (select 1 from `Ubicaciones` where `idUbicacion`=vIdUbicacionPadre)THEN
         SIGNAL SQLSTATE '45000'
             SET MESSAGE_TEXT = 'La ubicación padre indicada no existe';
     END IF;
@@ -1388,7 +1388,7 @@ SALIR: BEGIN
     -- 6. Obtener la ubicación padre
     IF vIdUbicacionPadre IS NOT NULL THEN
         -- 7. Verificar que la ubicación padre exista
-        IF NOT EXISTS (SELECT 1 FROM `Ubicaciones` WHERE `idUbicacion`=vIdUbicacionPadre)
+        IF NOT EXISTS (SELECT 1 FROM `Ubicaciones` WHERE `idUbicacion`=vIdUbicacionPadre) THEN
             SIGNAL SQLSTATE '45000'
                 SET MESSAGE_TEXT = 'La ubicacion padre no existe';
             LEAVE SALIR;
@@ -1813,6 +1813,190 @@ DELIMITER ;
 -- USUARIOS
 -- =====================================================
 
+-- ============================================== Nuevo Usuario
+DROP PROCEDURE IF EXISTS sp_nuevoUsuario;
+DELIMITER //
+
+CREATE PROCEDURE sp_nuevoUsuario(
+    IN pIdPersona INT,
+    IN pUsername VARCHAR(45),
+    IN pPassword VARCHAR(255),
+    IN pRol VARCHAR(45),
+    IN pEstado CHAR(1),
+    OUT pIdUsuario INT
+)
+BEGIN
+    DECLARE vEstadoPersona CHAR(1);
+
+    -- Manejador de errores (Transacciones ACID)
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        RESIGNAL;
+    END;
+
+    -- 1. Sanitización de entradas
+    IF pUsername IS NOT NULL THEN SET pUsername = TRIM(pUsername); END IF;
+    IF pRol IS NOT NULL THEN SET pRol = TRIM(pRol); END IF;
+    IF pEstado IS NOT NULL THEN SET pEstado = TRIM(pEstado); END IF;
+
+    -- 2. Validación de campos obligatorios
+    IF pIdPersona IS NULL THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Debe indicar la persona a la que pertenece el usuario';
+    END IF;
+
+    IF pUsername IS NULL OR pUsername = '' THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El nombre de usuario es obligatorio';
+    END IF;
+
+    IF pPassword IS NULL OR pPassword = '' THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'La contraseña es obligatoria';
+    END IF;
+
+    IF pRol IS NULL OR pRol = '' THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El rol del usuario es obligatorio';
+    END IF;
+
+    -- 3. Validación de integridad de la Persona (debe existir y estar activa)
+    SELECT estado INTO vEstadoPersona FROM Personas WHERE idPersona = pIdPersona;
+
+    IF vEstadoPersona IS NULL THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'La persona indicada no existe en el sistema';
+    ELSEIF vEstadoPersona = 'I' THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'No se puede crear un usuario para una persona dada de baja';
+    END IF;
+
+    -- 4. Validación de duplicados (UNIQUE INDEX en 'username')
+    IF EXISTS (SELECT 1 FROM Usuarios WHERE username = pUsername) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El nombre de usuario ingresado ya existe en el sistema';
+    END IF;
+
+    -- 5. REGLA DE NEGOCIO: Evitar que una misma persona tenga más de un usuario activo
+    IF EXISTS (SELECT 1 FROM Usuarios WHERE idPersona = pIdPersona AND estado = 'A') THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'La persona indicada ya posee un usuario activo en el sistema';
+    END IF;
+
+    -- 6. Estado por defecto
+    IF pEstado IS NULL OR pEstado = '' THEN
+        SET pEstado = 'A'; -- 'A' representa Activo
+    END IF;
+
+    -- =========================================================================
+    -- INICIO DE TRANSACCIÓN 
+    -- =========================================================================
+    START TRANSACTION;
+
+    -- 7. Inserción del registro
+    INSERT INTO Usuarios (idPersona, username, password, rol, estado)
+    VALUES (pIdPersona, pUsername, pPassword, pRol, pEstado);
+
+    -- 8. Retorno del ID autogenerado
+    SET pIdUsuario = LAST_INSERT_ID();
+
+    COMMIT;
+
+END//
+DELIMITER ;
+
+-- ============================================== Modificar Usuario
+DROP PROCEDURE IF EXISTS sp_modificarUsuario;
+DELIMITER //
+
+CREATE PROCEDURE sp_modificarUsuario(
+    IN pIdUsuario INT,
+    IN pIdPersona INT,
+    IN pUsername VARCHAR(45),
+    IN pPassword VARCHAR(255),
+    IN pRol VARCHAR(45),
+    IN pEstado CHAR(1)
+)
+BEGIN
+    DECLARE vEstadoPersona CHAR(1);
+
+    -- Manejador de errores (Transacciones ACID)
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        RESIGNAL;
+    END;
+
+    -- 1. Sanitización de entradas
+    IF pUsername IS NOT NULL THEN SET pUsername = TRIM(pUsername); END IF;
+    IF pRol IS NOT NULL THEN SET pRol = TRIM(pRol); END IF;
+    IF pEstado IS NOT NULL THEN SET pEstado = TRIM(pEstado); END IF;
+
+    -- 2. Validaciones iniciales de existencia del Usuario
+    IF pIdUsuario IS NULL THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Debe indicar el usuario a modificar';
+    END IF;
+
+    IF NOT EXISTS (SELECT 1 FROM Usuarios WHERE idUsuario = pIdUsuario) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El usuario indicado no existe en el sistema';
+    END IF;
+
+    -- 3. Validación de campos obligatorios
+    IF pIdPersona IS NULL THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Debe indicar la persona a la que pertenece el usuario';
+    END IF;
+
+    IF pUsername IS NULL OR pUsername = '' THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El nombre de usuario es obligatorio';
+    END IF;
+
+    IF pPassword IS NULL OR pPassword = '' THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'La contraseña es obligatoria';
+    END IF;
+
+    IF pRol IS NULL OR pRol = '' THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El rol del usuario es obligatorio';
+    END IF;
+
+    IF pEstado IS NULL OR pEstado NOT IN ('A', 'I') THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El estado ingresado no es válido';
+    END IF;
+
+    -- 4. Validación de integridad de la Persona (debe existir y estar activa)
+    SELECT estado INTO vEstadoPersona FROM Personas WHERE idPersona = pIdPersona;
+
+    IF vEstadoPersona IS NULL THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'La persona indicada no existe en el sistema';
+    ELSEIF vEstadoPersona = 'I' THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'No se puede asignar el usuario a una persona dada de baja';
+    END IF;
+
+    -- 5. Validación de nombre de usuario duplicado (Excluyendo el usuario actual)
+    IF EXISTS (SELECT 1 FROM Usuarios WHERE username = pUsername AND idUsuario != pIdUsuario) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El nombre de usuario ingresado ya pertenece a otro usuario registrado';
+    END IF;
+
+    -- 6. REGLA DE NEGOCIO: Evitar que una misma persona tenga más de un usuario activo
+    IF pEstado = 'A' AND EXISTS (
+        SELECT 1 FROM Usuarios 
+        WHERE idPersona = pIdPersona AND estado = 'A' AND idUsuario != pIdUsuario
+    ) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'La persona indicada ya posee otro usuario activo en el sistema';
+    END IF;
+
+    -- =========================================================================
+    -- INICIO DE TRANSACCIÓN 
+    -- =========================================================================
+    START TRANSACTION;
+
+    -- 7. Actualización con Reemplazo Total
+    UPDATE Usuarios
+    SET 
+        idPersona = pIdPersona,
+        username = pUsername,
+        password = pPassword,
+        rol = pRol,
+        estado = pEstado
+    WHERE idUsuario = pIdUsuario;
+
+    COMMIT;
+
+END//
+DELIMITER ;
+
 DROP PROCEDURE IF EXISTS sp_bajaUsuario;
 DELIMITER //
 
@@ -2191,6 +2375,7 @@ CREATE PROCEDURE sp_nuevaFactura(
     IN pMoneda VARCHAR(3),
     IN pNumero VARCHAR(45),
     IN pRuta VARCHAR(255),
+    IN pEstado  CHAR(1),
     OUT pIdFactura INT
 )
 BEGIN
@@ -2223,6 +2408,9 @@ BEGIN
     IF pRuta IS NULL OR pRuta = '' THEN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'La ruta del archivo físico/digital de la factura es obligatoria';
     END IF;
+    IF pEstado IS NULL OR pEstado NOT IN ('A', 'I') THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El estado indicado no es valido';
+    END IF;
 
     -- 3. Validación de Reglas de Negocio asociadas al Proveedor
     -- Nota: idProveedor=NULL para compras anónimas o menores
@@ -2243,8 +2431,8 @@ BEGIN
     END IF;
 
     -- 4. Inserción del registro
-    INSERT INTO Facturas (idProveedor, fecha, monto, moneda, numero, ruta)
-    VALUES (pIdProveedor, pFecha, pMonto, pMoneda, pNumero, pRuta);
+    INSERT INTO Facturas (idProveedor, fecha, monto, moneda, numero, ruta, estado)
+    VALUES (pIdProveedor, pFecha, pMonto, pMoneda, pNumero, pRuta, pEstado);
 
     -- 5. Retorno del ID autogenerado
     SET pIdFactura = LAST_INSERT_ID();
