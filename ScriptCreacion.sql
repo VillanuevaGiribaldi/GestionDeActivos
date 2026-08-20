@@ -55,9 +55,8 @@ CREATE TABLE IF NOT EXISTS `GestionDeActivos`.`Estados` (
   `idEstado` INT NOT NULL AUTO_INCREMENT,
   `nombre` VARCHAR(45) NOT NULL,
   `descripcion` VARCHAR(200) NULL,
-  `estado` CHAR(1) NOT NULL DEFAULT 'A',
   PRIMARY KEY (`idEstado`),
-  UNIQUE INDEX `nombre_UNIQUE` (`nombre` ASC) VISIBLE) -- ÍNDICE ÚNICO AGREGADO
+  UNIQUE INDEX `nombre_UNIQUE` (`nombre` ASC) VISIBLE)
 ENGINE = InnoDB;
 
 

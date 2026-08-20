@@ -196,7 +196,7 @@ BEGIN
     END IF;
 
     -- 4. Validación de Duplicados en la misma plantilla (UX_tipoNombre)
-    IF EXISTS (SELECT 1 FROM Atributos WHERE idTipo = pIdTipo AND nombre LIKE pNombre) THEN
+    IF EXISTS (SELECT 1 FROM Atributos WHERE idTipo = pIdTipo AND nombre = pNombre) THEN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Este tipo de activo ya posee un atributo registrado con ese mismo nombre';
     END IF;
 
@@ -635,7 +635,6 @@ CREATE procedure sp_modificarActivo(
     IN pModelo VARCHAR(50)
 )
 SALIR:BEGIN
-	-- Actualmente no se realiza ninguna verificación del JSON pAtributosExtra
     
     -- Variables para el update
     DECLARE vIdMarca INT;
@@ -709,14 +708,14 @@ SALIR:BEGIN
             SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Se debe ingresar una marca';
         END IF;
 
-        IF pNombreUbicacion IS NULL  OR pNombreMarca = '' THEN 
+        IF pNombreUbicacion IS NULL  OR pNombreUbicacion = '' THEN 
             SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Se debe ingresar una ubicación';
         END IF;
 
-        IF pNombreTipo IS NULL   OR pNombreMarca = '' THEN 
+        IF pNombreTipo IS NULL   OR pNombreTipo = '' THEN 
             SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Se debe ingresar un tipo'; 
         END IF;
-        IF pNombreEstado IS NULL  OR pNombreMarca = '' THEN
+        IF pNombreEstado IS NULL  OR pNombreEstado = '' THEN
             SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Se debe ingresar un estado'; 
         END IF;
     
@@ -744,13 +743,13 @@ SALIR:BEGIN
 -- ------------------------------------------------------------------------------ 
 --  verificar que los ids de Persona, factura y Activo que compone dados se correspondan a uno existente
 -- ------------------------------------------------------------------------------    
-	IF pidPersona IS NULL OR NOT EXISTS (
+	IF pidPersona IS NOT NULL AND NOT EXISTS (
 		SELECT 1
 		FROM Personas
 		WHERE idPersona = pidPersona
 	) THEN
 		SIGNAL SQLSTATE '45000'
-			SET MESSAGE_TEXT = 'La persona no existe';
+			SET MESSAGE_TEXT = 'La persona indicada no existe';
 	END IF;
 
 	IF pidFactura IS NOT NULL AND NOT EXISTS (
@@ -816,7 +815,7 @@ SALIR:BEGIN
     END IF;
 
      -- Verificar que el precio unitario sea mayor a cero
-    IF pNombre IS NOT NULL AND pPrecioUnitario<0 THEN
+    IF pPrecioUnitario IS NOT NULL AND pPrecioUnitario<0 THEN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El precio ingresado tiene que ser mayor a cero';
     END IF;
 
@@ -1085,7 +1084,7 @@ BEGIN
     END IF;
 
     -- Validación de duplicados controlada
-    IF EXISTS (SELECT 1 FROM Marcas WHERE nombre LIKE pNombre) THEN
+    IF EXISTS (SELECT 1 FROM Marcas WHERE nombre = pNombre) THEN
         SIGNAL SQLSTATE '45000'
             SET MESSAGE_TEXT = 'La marca ingresada ya existe en el sistema';
     END IF;
@@ -1151,7 +1150,7 @@ BEGIN
     END IF;
 
     -- 5. Validación de estado
-    IF pEstado IS NULL OR pEstado NOT IN ('A', 'B') THEN
+    IF pEstado IS NULL OR pEstado NOT IN ('A', 'I') THEN
         SIGNAL SQLSTATE '45000'
             SET MESSAGE_TEXT = 'El estado ingresado no es valido';
     END IF;
@@ -1221,7 +1220,7 @@ CREATE PROCEDURE sp_nuevaUbicacion(
     OUT pIdUbicacion INT -- Parámetro de salida para el ID generado
 )
 BEGIN
-    DECLARE vIdUbicacionPadre INT;
+    -- DECLARE vIdUbicacionPadre INT;
 
     -- 1. Sanitización de entradas (TRIM)
     SET pNombre = TRIM(pNombre);
@@ -1242,7 +1241,7 @@ BEGIN
     END IF;
 
     -- 4. Búsqueda y validación de la Ubicación Padre
-    IF vIdUbicacionPadre IS NOT NULL and not exists (select 1 from `Ubicaciones` where `idUbicacion`=vivIdUbicacionPadred)THEN
+    IF vIdUbicacionPadre IS NOT NULL and not exists (select 1 from `Ubicaciones` where `idUbicacion`=vIdUbicacionPadred)THEN
         SIGNAL SQLSTATE '45000'
             SET MESSAGE_TEXT = 'La ubicación padre indicada no existe';
     END IF;
@@ -1288,7 +1287,7 @@ SALIR: BEGIN
         LEAVE SALIR;
     END IF;
 
-    IF pEstado IS NULL OR pEstado NOT IN ('A', 'B') THEN
+    IF pEstado IS NULL OR pEstado NOT IN ('A', 'I') THEN
         SIGNAL SQLSTATE '45000'
             SET MESSAGE_TEXT = 'El estado ingresado no es valido';
         LEAVE SALIR;
@@ -1316,7 +1315,7 @@ SALIR: BEGIN
 
 
     -- 5. Validación del estado
-    IF pEstado IS NOT NULL AND pEstado NOT IN ('A', 'B') THEN
+    IF pEstado IS NOT NULL AND pEstado NOT IN ('A', 'I') THEN
         SIGNAL SQLSTATE '45000'
             SET MESSAGE_TEXT = 'El estado ingresado no es valido';
         LEAVE SALIR;
@@ -1326,7 +1325,7 @@ SALIR: BEGIN
     -- 6. Obtener la ubicación padre
     IF vIdUbicacionPadre IS NOT NULL THEN
         -- 7. Verificar que la ubicación padre exista
-        IF vIdUbicacionPadre IS NULL THEN
+        IF NOT EXISTS (SELECT 1 FROM `Ubicaciones` WHERE `idUbicacion`=vIdUbicacionPadre)
             SIGNAL SQLSTATE '45000'
                 SET MESSAGE_TEXT = 'La ubicacion padre no existe';
             LEAVE SALIR;
@@ -1984,11 +1983,8 @@ BEGIN
     END IF;
 
     -- Obtener estado y ubicación actual del activo (para guardarlos en el JSON del Historial)
-    /*
-    SELECT idEstado, idUbicacion INTO vViejoIdEstado, vViejoIdUbicacion 
-    FROM Activos WHERE idActivo = vIdActivo;
-    */
-    SELECT e.nombre INTO vNombreEstadoViejo FROM `Activos` a
+    
+    SELECT e.nombre,a.`idEstado` INTO vNombreEstadoViejo, vViejoIdEstado FROM `Activos` a
         INNER JOIN Estados e on e.`idEstado`=a.`idEstado`
         WHERE  a.`idActivo`=vIdActivo;
     SELECT nombre INTO vNombreEstadoNuevo FROM `Estados` WHERE `idEstado`= pIdEstadoPostReparacion;
@@ -2332,7 +2328,7 @@ BEGIN
 
     -- 3. Baja Lógica (Soft Delete) del registro erróneo
     UPDATE Facturas 
-    SET estado = 'B' -- 'B' representa Inactiva / Anulada
+    SET estado = 'I' -- 'I' representa Inactiva / Anulada
     WHERE idFactura = pIdFactura;
 
     COMMIT;
