@@ -1035,6 +1035,69 @@ BEGIN
 END//
 DELIMITER ;
 
+-- ======================================== Modificar Comentario de Historial
+DROP PROCEDURE IF EXISTS sp_modificarComentarioHistorial;
+DELIMITER //
+
+CREATE PROCEDURE sp_modificarComentarioHistorial(
+    IN pIdHistorial INT,
+    IN pComentario VARCHAR(200)
+)
+BEGIN
+    DECLARE vFechaCreacion DATETIME;
+
+    -- Manejador de errores (Transacciones ACID)
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        RESIGNAL;
+    END;
+
+    -- 1. Sanitización de entradas
+    IF pComentario IS NOT NULL THEN SET pComentario = TRIM(pComentario); END IF;
+
+    -- 2. Validaciones iniciales
+    IF pIdHistorial IS NULL THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Debe indicar el registro de historial a modificar';
+    END IF;
+
+    IF NOT EXISTS (SELECT 1 FROM `Historial` where `idHistorial`=pIdHistorial) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'No existe ninguna entrada del historial con ese id';
+    END IF;
+
+    -- 3. Obtener la fecha de creación del registro
+    SELECT fecha INTO vFechaCreacion 
+    FROM Historial 
+    WHERE idHistorial = pIdHistorial;
+
+    IF vFechaCreacion IS NULL THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El registro de historial indicado no existe';
+    END IF;
+
+    -- 4. Ventana de tiempo de edición
+    IF vFechaCreacion < (NOW() - INTERVAL 1 HOUR) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'No se puede modificar el comentario: ya pasó más de 1 hora desde la creación del registro';
+    END IF;
+
+    -- 5. El comentario puede ser NULL (según el esquema), pero si viene vacío lo normalizamos a NULL
+    IF pComentario = '' THEN
+        SET pComentario = NULL;
+    END IF;
+
+    -- =========================================================================
+    -- INICIO DE TRANSACCIÓN 
+    -- =========================================================================
+    START TRANSACTION;
+
+    -- 6. Actualización exclusiva del comentario
+    UPDATE Historial
+    SET comentario = pComentario
+    WHERE idHistorial = pIdHistorial;
+
+    COMMIT;
+
+END//
+DELIMITER ;
 -- =============================================
 drop procedure if exists sp_listarTodo;
 delimiter //
