@@ -439,6 +439,76 @@ BEGIN
     COMMIT;
 END//
 DELIMITER ;
+
+-- =========================================== ELIMINAR COMPOSICION TIPO
+DROP PROCEDURE IF EXISTS sp_eliminarComposicionTipo;
+DELIMITER //
+
+CREATE PROCEDURE sp_eliminarComposicionTipo(
+    IN pIdTipoPadre INT,
+    IN pIdTipoComponente INT
+)
+BEGIN
+    -- Manejador de errores (Transacciones ACID)
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        RESIGNAL;
+    END;
+
+    -- 1. Validaciones de parámetros obligatorios
+    IF pIdTipoPadre IS NULL THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Debe indicar el tipo padre de la composición';
+    END IF;
+
+    IF pIdTipoComponente IS NULL THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Debe indicar el tipo componente de la composición';
+    END IF;
+
+    -- 2. Validación de existencia de ambos Tipos
+    IF NOT EXISTS (SELECT 1 FROM Tipos WHERE idTipo = pIdTipoPadre) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El tipo padre indicado no existe en el sistema';
+    END IF;
+
+    IF NOT EXISTS (SELECT 1 FROM Tipos WHERE idTipo = pIdTipoComponente) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El tipo componente indicado no existe en el sistema';
+    END IF;
+
+    -- 3. Validación de existencia de la composición
+    IF NOT EXISTS (
+        SELECT 1 FROM ComposicionTipos 
+        WHERE idTipoPadre = pIdTipoPadre AND idTipoComponente = pIdTipoComponente
+    ) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'La composición indicada no existe en el sistema';
+    END IF;
+
+    -- 4. REGLA CRÍTICA: Control de activos que actualmente usan esta composición
+    -- Verificamos si existe algún activo del Tipo componente que esté vinculado (compone)
+    -- a un activo cuyo Tipo sea el Tipo padre de la composición
+    IF EXISTS (
+        SELECT 1
+        FROM Activos hijo
+        INNER JOIN Activos padre ON hijo.compone = padre.idActivo
+        WHERE hijo.idTipo = pIdTipoComponente
+          AND padre.idTipo = pIdTipoPadre
+    ) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'No se puede eliminar la composición porque existen activos que actualmente la utilizan. Debe desvincularlos primero.';
+    END IF;
+
+    -- =========================================================================
+    -- INICIO DE TRANSACCIÓN 
+    -- =========================================================================
+    START TRANSACTION;
+
+    -- 5. Borrado físico de la composición
+    DELETE FROM ComposicionTipos 
+    WHERE idTipoPadre = pIdTipoPadre AND idTipoComponente = pIdTipoComponente;
+
+    COMMIT;
+
+END//
+DELIMITER ;
+
 -- =====================================================
 -- ACTIVOS
 -- =====================================================
