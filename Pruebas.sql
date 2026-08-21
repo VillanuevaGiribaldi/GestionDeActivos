@@ -225,7 +225,7 @@ SELECT * FROM `Historial`;
 CALL sp_modificarHistorial(4,'modificacion del historial');
 
 -- Probando buscarActivosAvanzado
--- Clave y Valor
+-- A) Clave y Valor
 CALL sp_buscarActivosAvanzado(
     NULL, NULL, NULL, NULL, NULL, NULL, -- Sin filtros comunes
     'Almacenamiento', '128GB',                   -- Busca clave y valor
@@ -240,7 +240,7 @@ CALL sp_buscarActivosAvanzado(
 );
 -- EXPECTATIVA: El SP aplicará LOWER() a ambos lados y encontrará la "PC con Linux" marca Corsair.
 
--- Texto libre
+-- B) Texto libre
 CALL sp_buscarActivosAvanzado(
     'Reparacion',  -- Busca coincidencias en Nombre, Modelo, Serie, Marca, etc.
     NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 50, 0
@@ -251,3 +251,89 @@ CALL sp_buscarActivosAvanzado(
     NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 50, 0
 );
 -- EXPECTATIVA: El sistema buscará en la columna "numeroSerie" y traerá casi todos los celulares ingresados (ej. 'SAM-CEL-001', 'MOT-CEL-002', 'XIA-CEL-003')
+
+-- C) Filtros Exactos Combinados
+-- 1)
+SET @idTipoDisco = (SELECT idTipo FROM Tipos WHERE nombre = 'Disco');
+SET @idEstadoAlmacenado = (SELECT idEstado FROM Estados WHERE nombre = 'Almacenado');
+
+CALL sp_buscarActivosAvanzado(
+    NULL, 
+    @idTipoDisco,        -- pIdTipo
+    NULL, 
+    NULL, 
+    @idEstadoAlmacenado, -- pIdEstado
+    NULL, NULL, NULL, NULL, NULL, 50, 0
+);
+-- Nota: Te trae los discos Western Digital y Seagate.
+-- 2)
+SET @idUbiVentas = (SELECT idUbicacion FROM Ubicaciones WHERE nombre = 'Oficina Ventas' LIMIT 1);
+SET @idEstOperativo = (SELECT idEstado FROM Estados WHERE nombre = 'Operativo' LIMIT 1);
+
+CALL sp_buscarActivosAvanzado(
+    NULL,                -- Texto libre
+    NULL,                -- Tipo
+    NULL,                -- Marca
+    @idUbiVentas,        -- Ubicación
+    @idEstOperativo,     -- Estado
+    NULL,                -- Persona
+    NULL, NULL,          -- JSON
+    NULL, NULL, 50, 0    -- Orden y paginación
+);
+-- EXPECTATIVA: Te trae un mix de 6 equipos: 2 PCs, 2 Celulares, 1 Notebook y 1 Monitor FHD, todos pertenecientes a esa oficina.
+-- 3)
+SET @idMarcaSamsung = (SELECT idMarca FROM Marcas WHERE nombre = 'Samsung' LIMIT 1);
+SET @idTipoCelular = (SELECT idTipo FROM Tipos WHERE nombre = 'Celular' LIMIT 1);
+
+CALL sp_buscarActivosAvanzado(
+    NULL,                
+    @idTipoCelular,      -- Tipo
+    @idMarcaSamsung,     -- Marca
+    NULL,                
+    NULL,                
+    NULL,                
+    NULL, NULL,          
+    NULL, NULL, 50, 0    
+);
+-- EXPECTATIVA: Solo devolverá los 2 celulares Samsung (Galaxy A55 y A35). Ignorará los celulares de otras marcas y también ignorará el Monitor Samsung
+
+-- D) Ordenamiento
+-- 1)
+CALL sp_buscarActivosAvanzado(
+    NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+    'marca', 'ASC', -- Orden dinámico
+    3, 0            -- Limit 3, Offset 0
+);
+-- Nota: Fíjate en la última columna de los resultados, dirá "totalRegistrosTotales" (ej. 22). Esto le dirá a tu frontend que existen más páginas.
+-- 2)
+CALL sp_buscarActivosAvanzado(
+    NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+    'tipo', 'DESC', -- Orden dinámico
+    50, 0            -- Limit 50, Offset 0 (Offset 2, no muestra las dos primeras RAM)
+);
+
+-- 3) 
+CALL sp_buscarActivosAvanzado(
+    NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 
+    'nombreActivo', 'ASC', -- Orden alfabético por nombre
+    5,  -- pLimit: Solo traer 5 registros
+    5   -- pOffset: Saltarse los primeros 5 
+);
+
+-- 4)
+SET @idEstOperativo = (SELECT idEstado FROM Estados WHERE nombre = 'Operativo' LIMIT 1);
+
+CALL sp_buscarActivosAvanzado(
+    NULL, NULL, NULL, NULL, @idEstOperativo, NULL, NULL, NULL, 
+    'ubicacion', 'ASC', -- Ordenar por catálogo Ubicación de A-Z
+    50, 0
+);
+-- EXPECTATIVA: Filtrará e ignorará los activos "Almacenados" o "En Reparación". 
+
+-- 5)
+CALL sp_buscarActivosAvanzado(
+    NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 
+    NULL, NULL, -- Al enviar NULL, asume 'fechaRegistro' y 'DESC' por defecto
+    1, 0        -- LIMIT 1, OFFSET 0
+);
+-- EXPECTATIVA: Traerá exactamente 1 sola fila correspondiente al último insert que hiciste en la base de datos 
