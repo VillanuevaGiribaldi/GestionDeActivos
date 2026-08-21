@@ -450,3 +450,74 @@ CALL sp_nuevoActivo(
     'ThinkPad E14'
 );
 
+USE GestionDeActivos;
+
+-- ==========================================
+-- FASE 10: ACTIVOS PARA PRUEBA DE BUSCADOR
+-- ==========================================
+
+-- Recuperamos IDs necesarios por si se perdió la sesión de las variables
+SET @idUsuarioJuan = (SELECT idUsuario FROM Usuarios WHERE username = 'jperez' LIMIT 1);
+SET @idCarlos = (SELECT idPersona FROM Personas WHERE nombre = 'Carlos' AND apellido = 'Rodríguez' LIMIT 1);
+SET @idAna = (SELECT idPersona FROM Personas WHERE nombre = 'Ana' AND apellido = 'López' LIMIT 1);
+SET @idMaria = (SELECT idPersona FROM Personas WHERE nombre = 'María' AND apellido = 'Gómez' LIMIT 1);
+
+-- 1. Un monitor 4K (Para probar búsqueda por JSON en "Resolucion")
+CALL sp_nuevoActivo(
+    @idUsuarioJuan, 'Samsung', 'Oficina IT', 'Monitor', 'Operativo', NULL, NULL, NULL, 
+    'MON-IT-4K', '{"Resolucion": "3840x2160", "Pulgadas": "27"}', 350.00, 'SAM-MON-4K-01', 'Odyssey G7'
+);
+
+-- 2. Un monitor estándar asignado a Ana
+CALL sp_nuevoActivo(
+    @idUsuarioJuan, 'Dell', 'Oficina Ventas', 'Monitor', 'Operativo', NULL, @idAna, NULL, 
+    'MON-VT-FHD', '{"Resolucion": "1920x1080", "Pulgadas": "24"}', 150.00, 'DEL-MON-FHD-01', 'P2419H'
+);
+
+-- 3. Una MacBook en reparación (Para probar búsqueda híbrida por estado o modelo)
+CALL sp_nuevoActivo(
+    @idUsuarioJuan, 'Apple', 'Sede Central', 'Notebook', 'En Reparación', NULL, @idMaria, NULL, 
+    'NB-SC-MAC', '{"RAM": "16GB", "Almacenamiento": "512GB SSD"}', 1500.00, 'APP-MAC-999', 'MacBook Pro M2'
+);
+
+-- 4. Una PC con Linux (Para probar búsqueda por JSON en "SO")
+CALL sp_nuevoActivo(
+    @idUsuarioJuan, 'Corsair', 'Oficina IT', 'PC', 'Almacenado', NULL, NULL, NULL, 
+    'PC-LINUX-01', '{"SO": "Ubuntu 22.04", "IP": "10.0.0.5"}', 2000.00, 'COR-PC-UBUNTU', 'One i300'
+);
+
+-- 5. RAM de 32GB (Para buscar "32GB" en el JSON)
+CALL sp_nuevoActivo(
+    @idUsuarioJuan, 'Kingston', 'Deposito Central', 'RAM', 'Almacenado', NULL, NULL, NULL, 
+    'RAM-DEP-01', '{"Tamaño": "32GB", "TipoMemoria": "DDR5"}', 120.00, 'KIN-RAM-32', 'Fury Beast'
+);
+
+-- 6. RAM de 16GB
+CALL sp_nuevoActivo(
+    @idUsuarioJuan, 'Corsair', 'Deposito Central', 'RAM', 'Almacenado', NULL, NULL, NULL, 
+    'RAM-DEP-02', '{"Tamaño": "16GB", "TipoMemoria": "DDR4"}', 80.00, 'COR-RAM-16', 'Vengeance LPX'
+);
+
+-- 7. Notebook potente en Sucursal Norte (Para probar búsqueda por ubicación)
+CALL sp_nuevoActivo(
+    @idUsuarioJuan, 'HP', 'Sucursal Norte', 'Notebook', 'Operativo', NULL, @idCarlos, NULL, 
+    'NB-SN-001', '{"RAM": "32GB", "Almacenamiento": "1TB NVMe"}', 1200.00, 'HP-NB-SN-01', 'EliteBook 840'
+);
+
+-- 8. Mouse inalámbrico
+CALL sp_nuevoActivo(
+    @idUsuarioJuan, 'Logitech', 'Sucursal Norte', 'Mouse', 'Operativo', NULL, @idCarlos, NULL, 
+    'MOU-SN-001', '{"Conexion": "Inalambrico"}', 50.00, 'LOG-MOU-01', 'MX Master 3'
+);
+
+-- 9. Disco duro mecánico
+CALL sp_nuevoActivo(
+    @idUsuarioJuan, 'Western Digital', 'Deposito Central', 'Disco', 'Almacenado', NULL, NULL, NULL, 
+    'HDD-DEP-01', '{"Capacidad": "2TB", "Tecnologia": "HDD"}', 60.00, 'WD-HDD-2TB', 'Blue'
+);
+
+-- 10. Disco sólido SSD
+CALL sp_nuevoActivo(
+    @idUsuarioJuan, 'Seagate', 'Deposito Central', 'Disco', 'Almacenado', NULL, NULL, NULL, 
+    'SSD-DEP-01', '{"Capacidad": "1TB", "Tecnologia": "NVMe"}', 100.00, 'SEA-SSD-1TB', 'FireCuda'
+);

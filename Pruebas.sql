@@ -44,7 +44,7 @@ CALL sp_modificarActivo(
 call sp_listarTodo();
 select * from `Historial`;
 
-select * from `Ubicaciones`
+select * from `Ubicaciones`;
 
 call `sp_modificarUbicacion`(5,NULL,null,null,null);
 call `sp_modificarUbicacion`(5,4,null,null,null);
@@ -128,7 +128,7 @@ SELECT * FROM `Tipos`;
 SELECT * FROM `Atributos` where `idTipo`=4;
 
 set @idAtributo = NULL;
-CALL `sp_nuevoAtributo`(4,'ip','0:0:0:0',0,@idAtributo)
+CALL `sp_nuevoAtributo`(4,'ip','0:0:0:0',0,@idAtributo);
 
 set @JSONtest = '{"SO":"windows 11","IP":"192.168.1.10","MAC":null,"Brazos":5}';
 set @resultado = NULL;
@@ -222,4 +222,32 @@ CALL sp_modificarActivo(
 
 select * from `Activos`;
 SELECT * FROM `Historial`;
-CALL sp_modificarHistorial(4,'modificacion del historial')
+CALL sp_modificarHistorial(4,'modificacion del historial');
+
+-- Probando buscarActivosAvanzado
+-- Clave y Valor
+CALL sp_buscarActivosAvanzado(
+    NULL, NULL, NULL, NULL, NULL, NULL, -- Sin filtros comunes
+    'Almacenamiento', '128GB',                   -- Busca clave y valor
+    NULL, NULL, 50, 0
+);
+-- EXPECTATIVA: mezcla de activos. Trae los celulares Samsung, Motorola y Apple, ya que todos comparten ese valor exacto en su atributo "Almacenamiento"
+
+CALL sp_buscarActivosAvanzado(
+    NULL, NULL, NULL, NULL, NULL, NULL, 
+    'SO', 'ubuntu', -- La BD tiene "Ubuntu 22.04"
+    NULL, NULL, 50, 0
+);
+-- EXPECTATIVA: El SP aplicará LOWER() a ambos lados y encontrará la "PC con Linux" marca Corsair.
+
+-- Texto libre
+CALL sp_buscarActivosAvanzado(
+    'Reparacion',  -- Busca coincidencias en Nombre, Modelo, Serie, Marca, etc.
+    NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 50, 0
+);
+
+CALL sp_buscarActivosAvanzado(
+    'CEL-00', -- pFiltroTexto
+    NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 50, 0
+);
+-- EXPECTATIVA: El sistema buscará en la columna "numeroSerie" y traerá casi todos los celulares ingresados (ej. 'SAM-CEL-001', 'MOT-CEL-002', 'XIA-CEL-003')
