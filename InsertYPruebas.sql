@@ -453,7 +453,24 @@ CALL sp_nuevoActivo(
 USE GestionDeActivos;
 
 -- ==========================================
--- FASE 10: ACTIVOS PARA PRUEBA DE BUSCADOR
+-- FASE 10: COMPONENTES DE PCs
+-- ==========================================
+CALL sp_nuevoActivo(@idUsuarioJuan,'Kingston','Oficina IT','RAM','Operativo',NULL,NULL,(SELECT idActivo FROM Activos WHERE nombre='PC-IT-001'),'RAM-PC001-01','{"Tamaño":"4GB"}',50.00,'KIN-RAM-PC001-01','ValueRAM');
+CALL sp_nuevoActivo(@idUsuarioJuan,'Kingston','Oficina IT','RAM','Operativo',NULL,NULL,(SELECT idActivo FROM Activos WHERE nombre='PC-IT-001'),'RAM-PC001-02','{"Tamaño":"4GB"}',50.00,'KIN-RAM-PC001-02','ValueRAM');
+
+CALL sp_nuevoActivo(@idUsuarioJuan,'Kingston','Oficina IT','RAM','Operativo',NULL,NULL,(SELECT idActivo FROM Activos WHERE nombre='PC-IT-002'),'RAM-PC002-01','{"Tamaño":"4GB"}',50.00,'KIN-RAM-PC002-01','ValueRAM');
+CALL sp_nuevoActivo(@idUsuarioJuan,'Kingston','Oficina IT','RAM','Operativo',NULL,NULL,(SELECT idActivo FROM Activos WHERE nombre='PC-IT-002'),'RAM-PC002-02','{"Tamaño":"4GB"}',50.00,'KIN-RAM-PC002-02','ValueRAM');
+
+CALL sp_nuevoActivo(@idUsuarioJuan,'Kingston','Oficina Ventas','RAM','Operativo',NULL,NULL,(SELECT idActivo FROM Activos WHERE nombre='PC-VT-001'),'RAM-PC003-01','{"Tamaño":"4GB"}',50.00,'KIN-RAM-PC003-01','ValueRAM');
+CALL sp_nuevoActivo(@idUsuarioJuan,'Kingston','Oficina Ventas','RAM','Operativo',NULL,NULL,(SELECT idActivo FROM Activos WHERE nombre='PC-VT-001'),'RAM-PC003-02','{"Tamaño":"4GB"}',50.00,'KIN-RAM-PC003-02','ValueRAM');
+
+CALL sp_nuevoActivo(@idUsuarioJuan,'Kingston','Oficina Ventas','RAM','Operativo',NULL,NULL,(SELECT idActivo FROM Activos WHERE nombre='PC-VT-002'),'RAM-PC004-01','{"Tamaño":"4GB"}',50.00,'KIN-RAM-PC004-01','ValueRAM');
+CALL sp_nuevoActivo(@idUsuarioJuan,'Kingston','Oficina Ventas','RAM','Operativo',NULL,NULL,(SELECT idActivo FROM Activos WHERE nombre='PC-VT-002'),'RAM-PC004-02','{"Tamaño":"4GB"}',50.00,'KIN-RAM-PC004-02','ValueRAM');
+
+CALL sp_nuevoActivo(@idUsuarioJuan,'Kingston','Sede Central','RAM','Operativo',NULL,NULL,(SELECT idActivo FROM Activos WHERE nombre='PC-SC-001'),'RAM-PC005-01','{"Tamaño":"4GB"}',50.00,'KIN-RAM-PC005-01','ValueRAM');
+CALL sp_nuevoActivo(@idUsuarioJuan,'Kingston','Sede Central','RAM','Operativo',NULL,NULL,(SELECT idActivo FROM Activos WHERE nombre='PC-SC-001'),'RAM-PC005-02','{"Tamaño":"4GB"}',50.00,'KIN-RAM-PC005-02','ValueRAM');
+-- ==========================================
+-- FASE 11: ACTIVOS PARA PRUEBA DE BUSCADOR
 -- ==========================================
 
 -- Recuperamos IDs necesarios por si se perdió la sesión de las variables

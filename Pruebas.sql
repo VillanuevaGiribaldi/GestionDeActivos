@@ -198,7 +198,7 @@ CALL sp_modificarActivo(
     /* pidPersona       */ 1,
     /* pidCompone       */ NULL,
     /* pNombre          */ 'PCJSON001',
-    /* pAtributosExtra  */ '{"SO":" ","IP":"192.168.1.10","MAC":null}',
+    /* pAtributosExtra  */ '{"SO":"Windows 10"}',
     /* pPrecioUnitario  */ 200000.00,
     /* pNumeroSerie     */ 'PCJSON001',
     /* pModelo          */ 'PCJSON'
@@ -235,14 +235,14 @@ CALL sp_buscarActivosAvanzado(
 
 CALL sp_buscarActivosAvanzado(
     NULL, NULL, NULL, NULL, NULL, NULL, 
-    'SO', 'ubuntu', -- La BD tiene "Ubuntu 22.04"
+    'SO', 'win', -- La BD tiene "Ubuntu 22.04"
     NULL, NULL, 50, 0
 );
 -- EXPECTATIVA: El SP aplicará LOWER() a ambos lados y encontrará la "PC con Linux" marca Corsair.
 
 -- B) Texto libre
 CALL sp_buscarActivosAvanzado(
-    'Reparacion',  -- Busca coincidencias en Nombre, Modelo, Serie, Marca, etc.
+    'Win',  -- Busca coincidencias en Nombre, Modelo, Serie, Marca, etc.
     NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 50, 0
 );
 
@@ -337,3 +337,10 @@ CALL sp_buscarActivosAvanzado(
     1, 0        -- LIMIT 1, OFFSET 0
 );
 -- EXPECTATIVA: Traerá exactamente 1 sola fila correspondiente al último insert que hiciste en la base de datos 
+
+select tp.nombre as 'padre',tp.`idTipo`,tc.nombre as 'componente',tc.`idTipo` from `ComposicionTipos` ct
+INNER JOIN `Tipos` tp ON tp.`idTipo`=ct.`idTipoPadre`
+INNER JOIN `Tipos` tc ON tc.`idTipo`=ct.`idTipoComponente`;
+
+call `sp_eliminarComposicionTipo`(5,5);
+call `sp_nuevaComposicionTipo`('PC','RAM',2);
