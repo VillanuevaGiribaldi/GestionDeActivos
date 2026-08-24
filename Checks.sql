@@ -25,3 +25,24 @@ CHECK( estado = 'A' or estado = 'I');
 
 ALTER TABLE `Imagenes` ADD CONSTRAINT ck_estadoImagenes
 CHECK( estado = 'A' or estado = 'I');
+
+ALTER TABLE `Facturas` ADD CONSTRAINT ck_montoFacturas
+CHECK (monto > 0);
+
+ALTER TABLE `Activos` ADD CONSTRAINT ck_precioActivos
+CHECK (precioUnitario >= 0);
+
+ALTER TABLE `Mantenimientos` ADD CONSTRAINT ck_costoMantenimientos
+CHECK (costoTotal >= 0);
+
+ALTER TABLE `Mantenimientos` ADD CONSTRAINT ck_fechasMantenimientos
+CHECK (fechaDevolucion >= fechaEnvio);
+
+ALTER TABLE `Historial` ADD CONSTRAINT ck_tipoHistorial
+CHECK (tipo IN ('A', 'M', 'B', 'R', 'D'));
+
+ALTER TABLE `Atributos` ADD CONSTRAINT ck_obligatorioAtributos
+CHECK (obligatorio IN (0, 1));
+
+ALTER TABLE `ComposicionTipos` ADD CONSTRAINT ck_cantidadMax
+CHECK (cantidadComponentesMaxima >= 1);
