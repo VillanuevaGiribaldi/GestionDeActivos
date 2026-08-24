@@ -530,7 +530,6 @@ CREATE PROCEDURE sp_nuevoActivo(
     IN pPrecioUnitario DECIMAL(12,2),
     IN pNumeroSerie VARCHAR(100),
     IN pModelo VARCHAR(50)
-
 )
 SALIR:BEGIN
     -- Declaración de variables
@@ -650,6 +649,30 @@ SALIR:BEGIN
     SET vIdActivo = LAST_INSERT_ID();
 
     -- Insertar el registro de Creacion en el Historial
+    -- 
+
+    CALL `sp_registrarHistorial`(
+        pIdUsuario, 
+        vIdActivo, 
+        'Creacion del activo',
+        'A',
+        NULL,
+            JSON_OBJECT(
+			'Marca', pNombreMarca,
+			'Ubicacion', pNombreUbicacion,
+			'Tipo', pNombreTipo,
+			'Estado', pNombreEstado,
+			'Factura', pidFactura,
+			'Persona', pidPersona,
+			'Compone', pidCompone,
+			'Nombre', pNombre,
+			'AtributosExtra', pAtributosExtra,
+			'PrecioUnitario', pPrecioUnitario,
+			'NumeroSerie', pNumeroSerie,
+			'Modelo', pModelo
+		    )
+        );
+/*
     INSERT INTO Historial (
         idUsuario, idActivo, fecha, comentario, tipo, estadoNuevo
     ) VALUES (
@@ -673,7 +696,7 @@ SALIR:BEGIN
 			'Modelo', pModelo
 		)
     );
-
+*/
     -- Confirmar los cambios
     COMMIT;
 
@@ -992,11 +1015,19 @@ SALIR:BEGIN
         numeroSerie = pNumeroSerie,
         modelo = pModelo
     WHERE a.idActivo = pidActivo;
-        
-        
 
+    -- Insertar el registro de Creacion en el Historial    
+    CALL `sp_registrarHistorial`(
+        pIdUsuario, 
+        vIdActivo, 
+        'Modificación del Activo', 
+        'M',
+        vEstadoViejo,
+        vEstadoNuevo
+        );    
 
-    -- Insertar el registro de Creacion en el Historial
+    /*
+    
     INSERT INTO Historial (
         idUsuario, idActivo, fecha, comentario, tipo, estadoNuevo, estadoAnterior
     ) VALUES (
@@ -1006,10 +1037,10 @@ SALIR:BEGIN
         'Modificación del Activo', 
         'M', 
         vEstadoNuevo,
-         vEstadoViejo
+        vEstadoViejo
         
     );
-
+    */
     -- Confirmar los cambios
     COMMIT;
 
@@ -1076,6 +1107,7 @@ BEGIN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El activo posee componentes vinculados. Debe desvincularlos antes de dar de baja el equipo principal.';
     END IF;
 
+    
     -- =========================================================================
     -- INICIO DE TRANSACCIÓN (Activo + Historial)
     -- =========================================================================
@@ -1090,6 +1122,15 @@ BEGIN
     WHERE idActivo = pIdActivo;
 
     -- 7. Registrar la baja en el Historial para la auditoría
+   CALL `sp_registrarHistorial`(
+        pIdUsuario, 
+        vIdActivo, 
+        'Creacion del activo',
+        'A',
+        JSON_OBJECT('idEstado', vViejoIdEstado, 'idUbicacion', vViejoIdUbicacion),
+        JSON_OBJECT('idEstado', pIdEstadoBaja, 'idUbicacion',           vViejoIdUbicacion)
+        ); 
+/*
     INSERT INTO Historial (idUsuario, idActivo, fecha, comentario, tipo, estadoAnterior, estadoNuevo)
     VALUES (
         pIdUsuario, 
@@ -1100,12 +1141,33 @@ BEGIN
         JSON_OBJECT('idEstado', vViejoIdEstado, 'idUbicacion', vViejoIdUbicacion),
         JSON_OBJECT('idEstado', pIdEstadoBaja, 'idUbicacion', vViejoIdUbicacion)
     );
-
+*/
     COMMIT;
 END//
 DELIMITER ;
 
--- ======================================== Modificar Comentario de Historial
+-- ======================================== HISTORIAL
+DROP PROCEDURE IF EXISTS sp_registrarHistorial;
+DELIMITER //
+
+CREATE PROCEDURE sp_registrarHistorial(
+    IN pIdUsuario INT,
+    IN pIdActivo INT,
+    IN pComentario VARCHAR(200),
+    IN pTipo CHAR(1),
+    IN pEstadoAnterior JSON,
+    IN pEstadoNuevo JSON
+)
+BEGIN
+    -- Validaciones mínimas de seguridad
+    IF pIdUsuario IS NULL OR pIdActivo IS NULL THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Usuario y Activo son obligatorios para el historial';
+    END IF;
+    -- Inserción centralizada
+    INSERT INTO Historial (idUsuario, idActivo, fecha, comentario, tipo, estadoAnterior, estadoNuevo)
+    VALUES (pIdUsuario, pIdActivo, NOW(), pComentario, pTipo, pEstadoAnterior, pEstadoNuevo);
+END//
+DELIMITER ;
 DROP PROCEDURE IF EXISTS sp_modificarHistorial;
 DELIMITER //
 
@@ -2199,19 +2261,32 @@ BEGIN
         WHERE idActivo = pIdActivo;        
     END IF;
     -- 7. Registrar el movimiento en el Historial del Activo
-    INSERT INTO Historial (idUsuario, idActivo, fecha, comentario, tipo, estadoAnterior, estadoNuevo)
-    VALUES (
+    -- Insertar el registro de Creacion en el Historial    
+    CALL `sp_registrarHistorial`(
         pIdUsuario, 
-        pIdActivo, 
-        NOW(), 
-        CONCAT('Enviado a soporte técnico. Falla: ', 
-        COALESCE(pFallaReportada, 'No especificada'),
-        ' | id del mantenimiento: ',pIdMantenimiento), 
+        vIdActivo, 
+        CONCAT('Enviado a soporte técnico. Falla: ',  
+            COALESCE(pFallaReportada, 'No especificada'),   -- 
+                ' | id del mantenimiento: ',pIdMantenimiento),  --
         'R', -- Modificación de estado
         JSON_OBJECT('Estado', vNombreEstadoViejo),
         JSON_OBJECT('Estado', vNombreEstadoNuevo)
+        ); 
+
+    /*
+    INSERT INTO Historial (idUsuario, idActivo, fecha, comentario, tipo, estadoAnterior, estadoNuevo)
+    VALUES (
+        pIdUsuario,     -- 
+        pIdActivo, 
+        NOW(), 
+        CONCAT('Enviado a soporte técnico. Falla: ',  
+        COALESCE(pFallaReportada, 'No especificada'),   -- 
+        ' | id del mantenimiento: ',pIdMantenimiento),  --
+        'R', -- Modificación de estado                  --
+        JSON_OBJECT('Estado', vNombreEstadoViejo),
+        JSON_OBJECT('Estado', vNombreEstadoNuevo)
     );
-    
+    */
     COMMIT;
 END//
 DELIMITER ;
@@ -2327,6 +2402,18 @@ BEGIN
         WHERE idActivo = vIdActivo;
     END IF;
     -- 8. Registrar el movimiento en el Historial del Activo
+
+    CALL `sp_registrarHistorial`(
+        pIdUsuario, 
+        vIdActivo, 
+        CONCAT('Retorno de soporte técnico. Reparacion realizada: ', 
+            COALESCE(pReparacionRealizada, 'No especificada'),
+            ' | id del mantenimiento: ',pIdMantenimiento), 
+        'D', -- Modificación de estado
+        JSON_OBJECT('Estado', vNombreEstadoViejo),
+        JSON_OBJECT('Estado', vNombreEstadoNuevo)
+        );
+    /*
         INSERT INTO Historial (idUsuario, idActivo, fecha, comentario, tipo, estadoAnterior, estadoNuevo)
         VALUES (
             pIdUsuario, 
@@ -2340,7 +2427,7 @@ BEGIN
             JSON_OBJECT('Estado', vNombreEstadoNuevo)
         );
     COMMIT;
-
+    */
 END//
 DELIMITER ;
 

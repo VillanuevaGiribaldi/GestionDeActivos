@@ -1,3 +1,4 @@
+-- Active: 1786028033197@@127.0.0.1@3306@GestionDeActivos
 select * from Activos;
 select * from Tipos;
 select * from ComposicionTipos;
@@ -90,12 +91,12 @@ CALL sp_modificarActivo(5,1, 'Dell', 'Sede Central', 'RAM', 'Operativo', NULL, 1
 
 SET @idMantenimiento = NULL;
 
-CALL sp_altaMantenimiento(
+CALL sp_nuevoMantenimiento(
     1,
     1,
     'El equipo no enciende',
     CURDATE(),
-    3,
+    1,
     1,
     @idMantenimiento
 );
@@ -344,3 +345,6 @@ INNER JOIN `Tipos` tc ON tc.`idTipo`=ct.`idTipoComponente`;
 
 call `sp_eliminarComposicionTipo`(5,5);
 call `sp_nuevaComposicionTipo`('PC','RAM',2);
+
+SELECT * FROM `Atributos`;
+ 

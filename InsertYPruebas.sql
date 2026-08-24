@@ -536,5 +536,5 @@ CALL sp_nuevoActivo(
 -- 10. Disco sólido SSD
 CALL sp_nuevoActivo(
     @idUsuarioJuan, 'Seagate', 'Deposito Central', 'Disco', 'Almacenado', NULL, NULL, NULL, 
-    'SSD-DEP-01', '{"Capacidad": "1TB", "Tecnologia": "NVMe"}', 100.00, 'SEA-SSD-1TB', 'FireCuda'
+    'SSD-DEP-99', '{"Capacidad": "1TB", "Tecnologia": "NVMe"}', 100.00, 'SEA-SSD-1TBq', 'FireCudaq'
 );
