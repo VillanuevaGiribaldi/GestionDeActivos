@@ -5,3 +5,20 @@
 Es la forma correcta de hacerlo? o conviene usar triggers y tablas de auditoria? Usar sp_
 
 - Atributos JSON: Actualmente completamos los atributos faltantantes con NULL en el JSON para que los JSON sean todos iguales, está bien? o es mejor no hacerlo?
+
+
+- Tabla Activos-Atributos:
+  idValor ?
+  idActivo
+  idAtributo
+  Valor
+  Estado ?
+  FechaAsignación o modificación ?
+  
+    Opciones:
+      - PK es idActivo con idAtributo: valor unico, no se usan estados. inexistencia es NULL
+      - iD especifico: Podemos tener todos los valores almacenados, necesitamos estados para identificar el último o el válido.
+              Otra forma que pensé es, se relaciona consigo mismo, de forma que el valor indica el id del valor anterior si esta variable es null significa que.
+              Otra forma más es con "fecha insersión" y el más reciente el válido.
+    resumen: Todo esto es para ver que columnas debería tener
+      
