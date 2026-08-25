@@ -23,4 +23,10 @@ Es la forma correcta de hacerlo? o conviene usar triggers y tablas de auditoria?
               Otra forma que pensé es, se relaciona consigo mismo, de forma que el valor indica el id del valor anterior si esta variable es null significa que.
               Otra forma más es con "fecha insersión" y el más reciente el válido.
     resumen: Todo esto es para ver que columnas debería tener
-      
+
+
+
+1  pc1     ip    192.0.0.1
+2  pc1     so    windows
+3  pc1     ip    192.0.0.3
+

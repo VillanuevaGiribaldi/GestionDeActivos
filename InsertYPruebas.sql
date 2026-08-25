@@ -248,7 +248,82 @@ CALL sp_nuevaFactura(
     'A',
     @idFacturaCelulares
 );
+-- ==========================================
+-- FASE 7: PROVEEDORES
+-- ==========================================
 
+CALL sp_nuevoProveedor(
+    'TechStore Arg',
+    'Av. Corrientes 1234',
+    '11-4567-8900',
+    'ventas@techstore.com',
+    'Venta de computadoras y notebooks',
+    @idProveedorTechStore
+);
+
+CALL sp_nuevoProveedor(
+    'Hardware Tucumán',
+    'Av. Mate de Luna 850',
+    '381-4567890',
+    'contacto@hardwaretuc.com',
+    'Componentes y periféricos informáticos',
+    @idProveedorHardware
+);
+
+CALL sp_nuevoProveedor(
+    'CompuMarket',
+    'San Martín 650',
+    '381-4234567',
+    'ventas@compumarket.com',
+    'Equipamiento informático y accesorios',
+    @idProveedorCompuMarket
+);
+
+CALL sp_nuevoProveedor(
+    'ElectroTec',
+    '24 de Septiembre 420',
+    '381-4345678',
+    'info@electrotec.com',
+    'Fuentes, discos y componentes electrónicos',
+    @idProveedorElectroTec
+);
+
+CALL sp_nuevoProveedor(
+    'MovilTech',
+    'Junín 780',
+    '381-4456789',
+    'ventas@moviltech.com',
+    'Celulares, SIM y accesorios móviles',
+    @idProveedorMovilTech
+);
+
+-- ==========================================
+-- FASE 8: FACTURAS
+-- ==========================================
+
+-- Factura correspondiente a 5 PCs
+CALL sp_nuevaFactura(
+    @idProveedorTechStore,
+    '2026-08-20 10:00:00',
+    5000.00,
+    'USD',
+    'FC-A-0001-00000001',
+    '/docs/facturas/fc-pcs-0001.pdf',
+    'A',
+    @idFacturaPC
+);
+
+-- Factura correspondiente a 5 celulares
+CALL sp_nuevaFactura(
+    @idProveedorMovilTech,
+    '2026-08-20 11:00:00',
+    1000.00,
+    'USD',
+    'FC-A-0001-00000002',
+    '/docs/facturas/fc-celulares-0001.pdf',
+     'A',
+    @idFacturaCelulares
+);
 -- ==========================================
 -- FASE 9: ACTIVOS
 -- ==========================================

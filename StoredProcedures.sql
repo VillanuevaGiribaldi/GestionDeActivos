@@ -672,31 +672,6 @@ SALIR:BEGIN
 			'Modelo', pModelo
 		    )
         );
-/*
-    INSERT INTO Historial (
-        idUsuario, idActivo, fecha, comentario, tipo, estadoNuevo
-    ) VALUES (
-        pIdUsuario, 
-        vIdActivo, 
-        NOW(), 
-        'Creacion del activo', 
-        'A', 
-        JSON_OBJECT(
-			'Marca', pNombreMarca,
-			'Ubicacion', pNombreUbicacion,
-			'Tipo', pNombreTipo,
-			'Estado', pNombreEstado,
-			'Factura', pidFactura,
-			'Persona', pidPersona,
-			'Compone', pidCompone,
-			'Nombre', pNombre,
-			'AtributosExtra', pAtributosExtra,
-			'PrecioUnitario', pPrecioUnitario,
-			'NumeroSerie', pNumeroSerie,
-			'Modelo', pModelo
-		)
-    );
-*/
     -- Confirmar los cambios
     COMMIT;
 
@@ -1019,28 +994,13 @@ SALIR:BEGIN
     -- Insertar el registro de Creacion en el Historial    
     CALL `sp_registrarHistorial`(
         pIdUsuario, 
-        vIdActivo, 
+        pIdActivo, 
         'Modificación del Activo', 
         'M',
         vEstadoViejo,
         vEstadoNuevo
         );    
 
-    /*
-    
-    INSERT INTO Historial (
-        idUsuario, idActivo, fecha, comentario, tipo, estadoNuevo, estadoAnterior
-    ) VALUES (
-        pIdUsuario, 
-        pIdActivo, 
-        NOW(), 
-        'Modificación del Activo', 
-        'M', 
-        vEstadoNuevo,
-        vEstadoViejo
-        
-    );
-    */
     -- Confirmar los cambios
     COMMIT;
 
@@ -1124,24 +1084,13 @@ BEGIN
     -- 7. Registrar la baja en el Historial para la auditoría
    CALL `sp_registrarHistorial`(
         pIdUsuario, 
-        vIdActivo, 
-        'Creacion del activo',
-        'A',
+        pIdActivo, 
+        'Baja del activo',
+        'B',
         JSON_OBJECT('idEstado', vViejoIdEstado, 'idUbicacion', vViejoIdUbicacion),
         JSON_OBJECT('idEstado', pIdEstadoBaja, 'idUbicacion',           vViejoIdUbicacion)
         ); 
-/*
-    INSERT INTO Historial (idUsuario, idActivo, fecha, comentario, tipo, estadoAnterior, estadoNuevo)
-    VALUES (
-        pIdUsuario, 
-        pIdActivo, 
-        NOW(), 
-        COALESCE(pComentario, 'Baja del activo en el sistema'), 
-        'B', -- 'B' para Baja
-        JSON_OBJECT('idEstado', vViejoIdEstado, 'idUbicacion', vViejoIdUbicacion),
-        JSON_OBJECT('idEstado', pIdEstadoBaja, 'idUbicacion', vViejoIdUbicacion)
-    );
-*/
+
     COMMIT;
 END//
 DELIMITER ;
@@ -2264,7 +2213,7 @@ BEGIN
     -- Insertar el registro de Creacion en el Historial    
     CALL `sp_registrarHistorial`(
         pIdUsuario, 
-        vIdActivo, 
+        pIdActivo, 
         CONCAT('Enviado a soporte técnico. Falla: ',  
             COALESCE(pFallaReportada, 'No especificada'),   -- 
                 ' | id del mantenimiento: ',pIdMantenimiento),  --
@@ -2273,20 +2222,6 @@ BEGIN
         JSON_OBJECT('Estado', vNombreEstadoNuevo)
         ); 
 
-    /*
-    INSERT INTO Historial (idUsuario, idActivo, fecha, comentario, tipo, estadoAnterior, estadoNuevo)
-    VALUES (
-        pIdUsuario,     -- 
-        pIdActivo, 
-        NOW(), 
-        CONCAT('Enviado a soporte técnico. Falla: ',  
-        COALESCE(pFallaReportada, 'No especificada'),   -- 
-        ' | id del mantenimiento: ',pIdMantenimiento),  --
-        'R', -- Modificación de estado                  --
-        JSON_OBJECT('Estado', vNombreEstadoViejo),
-        JSON_OBJECT('Estado', vNombreEstadoNuevo)
-    );
-    */
     COMMIT;
 END//
 DELIMITER ;
@@ -2413,21 +2348,8 @@ BEGIN
         JSON_OBJECT('Estado', vNombreEstadoViejo),
         JSON_OBJECT('Estado', vNombreEstadoNuevo)
         );
-    /*
-        INSERT INTO Historial (idUsuario, idActivo, fecha, comentario, tipo, estadoAnterior, estadoNuevo)
-        VALUES (
-            pIdUsuario, 
-            vIdActivo, 
-            NOW(), 
-            CONCAT('Retorno de soporte técnico. Reparacion realizada: ', 
-            COALESCE(pReparacionRealizada, 'No especificada'),
-            ' | id del mantenimiento: ',pIdMantenimiento), 
-            'D', -- 'M' para Modificación
-            JSON_OBJECT('Estado', vNombreEstadoViejo),
-            JSON_OBJECT('Estado', vNombreEstadoNuevo)
-        );
     COMMIT;
-    */
+    
 END//
 DELIMITER ;
 
