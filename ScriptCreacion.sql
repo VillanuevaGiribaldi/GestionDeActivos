@@ -18,6 +18,8 @@ USE `GestionDeActivos` ;
 -- -----------------------------------------------------
 -- Table `GestionDeActivos`.`Ubicaciones`
 -- -----------------------------------------------------
+DROP TABLE IF EXISTS `GestionDeActivos`.`Ubicaciones` ;
+
 CREATE TABLE IF NOT EXISTS `GestionDeActivos`.`Ubicaciones` (
   `idUbicacion` INT NOT NULL AUTO_INCREMENT,
   `idUbicacionPadre` INT NULL,
@@ -38,6 +40,8 @@ ENGINE = InnoDB;
 -- -----------------------------------------------------
 -- Table `GestionDeActivos`.`Marcas`
 -- -----------------------------------------------------
+DROP TABLE IF EXISTS `GestionDeActivos`.`Marcas` ;
+
 CREATE TABLE IF NOT EXISTS `GestionDeActivos`.`Marcas` (
   `idMarca` INT NOT NULL AUTO_INCREMENT,
   `nombre` VARCHAR(100) NOT NULL,
@@ -51,6 +55,8 @@ ENGINE = InnoDB;
 -- -----------------------------------------------------
 -- Table `GestionDeActivos`.`Estados`
 -- -----------------------------------------------------
+DROP TABLE IF EXISTS `GestionDeActivos`.`Estados` ;
+
 CREATE TABLE IF NOT EXISTS `GestionDeActivos`.`Estados` (
   `idEstado` INT NOT NULL AUTO_INCREMENT,
   `nombre` VARCHAR(45) NOT NULL,
@@ -64,6 +70,8 @@ ENGINE = InnoDB;
 -- -----------------------------------------------------
 -- Table `GestionDeActivos`.`Personas`
 -- -----------------------------------------------------
+DROP TABLE IF EXISTS `GestionDeActivos`.`Personas` ;
+
 CREATE TABLE IF NOT EXISTS `GestionDeActivos`.`Personas` (
   `idPersona` INT NOT NULL AUTO_INCREMENT,
   `nombre` VARCHAR(45) NOT NULL,
@@ -79,6 +87,8 @@ ENGINE = InnoDB;
 -- -----------------------------------------------------
 -- Table `GestionDeActivos`.`Tipos`
 -- -----------------------------------------------------
+DROP TABLE IF EXISTS `GestionDeActivos`.`Tipos` ;
+
 CREATE TABLE IF NOT EXISTS `GestionDeActivos`.`Tipos` (
   `idTipo` INT NOT NULL AUTO_INCREMENT,
   `nombre` VARCHAR(45) NOT NULL,
@@ -92,6 +102,8 @@ ENGINE = InnoDB;
 -- -----------------------------------------------------
 -- Table `GestionDeActivos`.`Proveedores`
 -- -----------------------------------------------------
+DROP TABLE IF EXISTS `GestionDeActivos`.`Proveedores` ;
+
 CREATE TABLE IF NOT EXISTS `GestionDeActivos`.`Proveedores` (
   `idProveedor` INT NOT NULL AUTO_INCREMENT,
   `nombre` VARCHAR(100) NOT NULL,
@@ -108,6 +120,8 @@ ENGINE = InnoDB;
 -- -----------------------------------------------------
 -- Table `GestionDeActivos`.`Facturas`
 -- -----------------------------------------------------
+DROP TABLE IF EXISTS `GestionDeActivos`.`Facturas` ;
+
 CREATE TABLE IF NOT EXISTS `GestionDeActivos`.`Facturas` (
   `idFactura` INT NOT NULL AUTO_INCREMENT,
   `idProveedor` INT NULL,
@@ -130,6 +144,8 @@ ENGINE = InnoDB;
 -- -----------------------------------------------------
 -- Table `GestionDeActivos`.`Activos`
 -- -----------------------------------------------------
+DROP TABLE IF EXISTS `GestionDeActivos`.`Activos` ;
+
 CREATE TABLE IF NOT EXISTS `GestionDeActivos`.`Activos` (
   `idActivo` INT NOT NULL AUTO_INCREMENT,
   `idMarca` INT NOT NULL,
@@ -141,7 +157,6 @@ CREATE TABLE IF NOT EXISTS `GestionDeActivos`.`Activos` (
   `compone` INT NULL,
   `nombre` VARCHAR(45) NULL,
   `fechaRegistro` DATETIME NULL,
-  `atributosExtra` JSON NULL,
   `precioUnitario` DECIMAL(12,2) NULL,
   `numeroSerie` VARCHAR(100) NULL,
   `modelo` VARCHAR(50) NULL,
@@ -195,6 +210,8 @@ ENGINE = InnoDB;
 -- -----------------------------------------------------
 -- Table `GestionDeActivos`.`Atributos`
 -- -----------------------------------------------------
+DROP TABLE IF EXISTS `GestionDeActivos`.`Atributos` ;
+
 CREATE TABLE IF NOT EXISTS `GestionDeActivos`.`Atributos` (
   `idAtributo` INT NOT NULL AUTO_INCREMENT,
   `idTipo` INT NOT NULL,
@@ -214,6 +231,8 @@ ENGINE = InnoDB;
 -- -----------------------------------------------------
 -- Table `GestionDeActivos`.`ComposicionTipos`
 -- -----------------------------------------------------
+DROP TABLE IF EXISTS `GestionDeActivos`.`ComposicionTipos` ;
+
 CREATE TABLE IF NOT EXISTS `GestionDeActivos`.`ComposicionTipos` (
   `idTipoPadre` INT NOT NULL,
   `idTipoComponente` INT NOT NULL,
@@ -237,6 +256,8 @@ ENGINE = InnoDB;
 -- -----------------------------------------------------
 -- Table `GestionDeActivos`.`Usuarios`
 -- -----------------------------------------------------
+DROP TABLE IF EXISTS `GestionDeActivos`.`Usuarios` ;
+
 CREATE TABLE IF NOT EXISTS `GestionDeActivos`.`Usuarios` (
   `idUsuario` INT NOT NULL AUTO_INCREMENT,
   `idPersona` INT NOT NULL,
@@ -258,6 +279,8 @@ ENGINE = InnoDB;
 -- -----------------------------------------------------
 -- Table `GestionDeActivos`.`Historial`
 -- -----------------------------------------------------
+DROP TABLE IF EXISTS `GestionDeActivos`.`Historial` ;
+
 CREATE TABLE IF NOT EXISTS `GestionDeActivos`.`Historial` (
   `idHistorial` INT NOT NULL AUTO_INCREMENT,
   `idUsuario` INT NOT NULL,
@@ -286,6 +309,8 @@ ENGINE = InnoDB;
 -- -----------------------------------------------------
 -- Table `GestionDeActivos`.`Imagenes`
 -- -----------------------------------------------------
+DROP TABLE IF EXISTS `GestionDeActivos`.`Imagenes` ;
+
 CREATE TABLE IF NOT EXISTS `GestionDeActivos`.`Imagenes` (
   `idImagen` INT NOT NULL AUTO_INCREMENT,
   `idActivo` INT NOT NULL,
@@ -306,6 +331,8 @@ ENGINE = InnoDB;
 -- -----------------------------------------------------
 -- Table `GestionDeActivos`.`Mantenimientos`
 -- -----------------------------------------------------
+DROP TABLE IF EXISTS `GestionDeActivos`.`Mantenimientos` ;
+
 CREATE TABLE IF NOT EXISTS `GestionDeActivos`.`Mantenimientos` (
   `idMantenimiento` INT NOT NULL AUTO_INCREMENT,
   `idActivo` INT NOT NULL,
@@ -326,6 +353,30 @@ CREATE TABLE IF NOT EXISTS `GestionDeActivos`.`Mantenimientos` (
   CONSTRAINT `fk_Mantenimientos_Proveedores1`
     FOREIGN KEY (`idProveedor`)
     REFERENCES `GestionDeActivos`.`Proveedores` (`idProveedor`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `GestionDeActivos`.`Valores`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `GestionDeActivos`.`Valores` ;
+
+CREATE TABLE IF NOT EXISTS `GestionDeActivos`.`Valores` (
+  `idActivo` INT NOT NULL,
+  `idAtributo` INT NOT NULL,
+  `valor` VARCHAR(100) NULL,
+  PRIMARY KEY (`idActivo`, `idAtributo`),
+  INDEX `fk_table1_Atributos1_idx` (`idAtributo` ASC) VISIBLE,
+  CONSTRAINT `fk_table1_Activos1`
+    FOREIGN KEY (`idActivo`)
+    REFERENCES `GestionDeActivos`.`Activos` (`idActivo`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_table1_Atributos1`
+    FOREIGN KEY (`idAtributo`)
+    REFERENCES `GestionDeActivos`.`Atributos` (`idAtributo`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION)
 ENGINE = InnoDB;
