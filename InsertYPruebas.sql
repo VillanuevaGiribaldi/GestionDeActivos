@@ -56,95 +56,58 @@ USE GestionDeActivos;
 
 -- ==========================================
 -- FASE 3: ATRIBUTOS
+-- (Cada CALL guarda su idAtributo en una variable propia,
+--  porque después se necesita para armar el JSON con
+--  formato idAtributo:"valor")
 -- ==========================================
 
-SET @idTipo = (SELECT idTipo FROM Tipos WHERE nombre = 'Notebook');
-CALL sp_nuevoAtributo(@idTipo, 'RAM', NULL, TRUE, @idAtributo);
-CALL sp_nuevoAtributo(@idTipo, 'Almacenamiento', NULL, TRUE, @idAtributo);
+SET @idTipoNotebook = (SELECT idTipo FROM Tipos WHERE nombre = 'Notebook');
+CALL sp_nuevoAtributo(@idTipoNotebook, 'RAM', NULL, TRUE, @idAtrNB_RAM);
+CALL sp_nuevoAtributo(@idTipoNotebook, 'Almacenamiento', NULL, TRUE, @idAtrNB_Almacenamiento);
 
-SET @idTipo = (SELECT idTipo FROM Tipos WHERE nombre = 'Monitor');
-CALL sp_nuevoAtributo(@idTipo, 'Resolucion', '1920x1080', FALSE, @idAtributo);
-CALL sp_nuevoAtributo(@idTipo, 'Pulgadas', NULL, FALSE, @idAtributo);
+SET @idTipoMonitor = (SELECT idTipo FROM Tipos WHERE nombre = 'Monitor');
+CALL sp_nuevoAtributo(@idTipoMonitor, 'Resolucion', '1920x1080', FALSE, @idAtrMON_Resolucion);
+CALL sp_nuevoAtributo(@idTipoMonitor, 'Pulgadas', NULL, FALSE, @idAtrMON_Pulgadas);
 
-SET @idTipo = (SELECT idTipo FROM Tipos WHERE nombre = 'Mouse');
-CALL sp_nuevoAtributo(@idTipo, 'Conexion', 'USB', FALSE, @idAtributo);
+SET @idTipoMouse = (SELECT idTipo FROM Tipos WHERE nombre = 'Mouse');
+CALL sp_nuevoAtributo(@idTipoMouse, 'Conexion', 'USB', FALSE, @idAtrMOU_Conexion);
 
-SET @idTipo = (SELECT idTipo FROM Tipos WHERE nombre = 'PC');
-CALL sp_nuevoAtributo(@idTipo, 'SO', 'Windows 10', TRUE, @idAtributo);
-CALL sp_nuevoAtributo(@idTipo, 'IP', NULL, FALSE, @idAtributo);
+SET @idTipoPC = (SELECT idTipo FROM Tipos WHERE nombre = 'PC');
+CALL sp_nuevoAtributo(@idTipoPC, 'SO', 'Windows 10', TRUE, @idAtrPC_SO);
+CALL sp_nuevoAtributo(@idTipoPC, 'IP', NULL, FALSE, @idAtrPC_IP);
 
-SET @idTipo = (SELECT idTipo FROM Tipos WHERE nombre = 'RAM');
-CALL sp_nuevoAtributo(@idTipo, 'Tamaño', NULL, TRUE, @idAtributo);
-CALL sp_nuevoAtributo(@idTipo, 'TipoMemoria', 'DDR4', FALSE, @idAtributo);
+SET @idTipoRAM = (SELECT idTipo FROM Tipos WHERE nombre = 'RAM');
+CALL sp_nuevoAtributo(@idTipoRAM, 'Tamaño', NULL, TRUE, @idAtrRAM_Tamano);
+CALL sp_nuevoAtributo(@idTipoRAM, 'TipoMemoria', 'DDR4', FALSE, @idAtrRAM_TipoMemoria);
 
-SET @idTipo = (SELECT idTipo FROM Tipos WHERE nombre = 'CPU');
-CALL sp_nuevoAtributo(@idTipo, 'Modelo', NULL, TRUE, @idAtributo);
-CALL sp_nuevoAtributo(@idTipo, 'Nucleos', NULL, FALSE, @idAtributo);
+SET @idTipoCPU = (SELECT idTipo FROM Tipos WHERE nombre = 'CPU');
+CALL sp_nuevoAtributo(@idTipoCPU, 'Modelo', NULL, TRUE, @idAtrCPU_Modelo);
+CALL sp_nuevoAtributo(@idTipoCPU, 'Nucleos', NULL, FALSE, @idAtrCPU_Nucleos);
 
-SET @idTipo = (SELECT idTipo FROM Tipos WHERE nombre = 'Fuente');
-CALL sp_nuevoAtributo(@idTipo, 'Potencia', NULL, TRUE, @idAtributo);
-CALL sp_nuevoAtributo(@idTipo, 'Certificacion', NULL, FALSE, @idAtributo);
+SET @idTipoFuente = (SELECT idTipo FROM Tipos WHERE nombre = 'Fuente');
+CALL sp_nuevoAtributo(@idTipoFuente, 'Potencia', NULL, TRUE, @idAtrFUE_Potencia);
+CALL sp_nuevoAtributo(@idTipoFuente, 'Certificacion', NULL, FALSE, @idAtrFUE_Certificacion);
 
-SET @idTipo = (SELECT idTipo FROM Tipos WHERE nombre = 'Disco');
-CALL sp_nuevoAtributo(@idTipo, 'Capacidad', NULL, TRUE, @idAtributo);
-CALL sp_nuevoAtributo(@idTipo, 'Tecnologia', 'SSD', FALSE, @idAtributo);
+SET @idTipoDisco = (SELECT idTipo FROM Tipos WHERE nombre = 'Disco');
+CALL sp_nuevoAtributo(@idTipoDisco, 'Capacidad', NULL, TRUE, @idAtrDIS_Capacidad);
+CALL sp_nuevoAtributo(@idTipoDisco, 'Tecnologia', 'SSD', FALSE, @idAtrDIS_Tecnologia);
 
-SET @idTipo = (SELECT idTipo FROM Tipos WHERE nombre = 'SIM');
-CALL sp_nuevoAtributo(@idTipo, 'Numero', NULL, TRUE, @idAtributo);
-CALL sp_nuevoAtributo(@idTipo, 'Operador', NULL, FALSE, @idAtributo);
+SET @idTipoSIM = (SELECT idTipo FROM Tipos WHERE nombre = 'SIM');
+CALL sp_nuevoAtributo(@idTipoSIM, 'Numero', NULL, TRUE, @idAtrSIM_Numero);
+CALL sp_nuevoAtributo(@idTipoSIM, 'Operador', NULL, FALSE, @idAtrSIM_Operador);
 
-SET @idTipo = (SELECT idTipo FROM Tipos WHERE nombre = 'Celular');
-CALL sp_nuevoAtributo(@idTipo, 'SistemaOperativo', 'Android', TRUE, @idAtributo);
-CALL sp_nuevoAtributo(@idTipo, 'Almacenamiento', NULL, FALSE, @idAtributo);
+SET @idTipoCelular = (SELECT idTipo FROM Tipos WHERE nombre = 'Celular');
+CALL sp_nuevoAtributo(@idTipoCelular, 'SistemaOperativo', 'Android', TRUE, @idAtrCEL_SO);
+CALL sp_nuevoAtributo(@idTipoCelular, 'Almacenamiento', NULL, FALSE, @idAtrCEL_Almacenamiento);
 
 -- ==========================================
 -- FASE 4: UBICACIONES
 -- ==========================================
-
--- Ubicación principal 1
-CALL sp_nuevaUbicacion(
-    NULL,
-    'Sede Central',
-    'Edificio principal',
-    'A',
-    @idSedeCentral
-);
-
--- Subdivisión 1
-CALL sp_nuevaUbicacion(
-    @idSedeCentral,
-    'Oficina IT',
-    'Área de sistemas y servidores',
-    'A',
-    @idOficinaIT
-);
-
--- Subdivisión 2
-CALL sp_nuevaUbicacion(
-    @idSedeCentral,
-    'Oficina Ventas',
-    'Área de ventas',
-    'A',
-    @idOficinaVentas
-);
-
--- Ubicación principal 2
-CALL sp_nuevaUbicacion(
-    NULL,
-    'Sucursal Norte',
-    'Sucursal de atención al público',
-    'A',
-    @idSucursalNorte
-);
-
--- Ubicación principal 3
-CALL sp_nuevaUbicacion(
-    NULL,
-    'Deposito Central',
-    'Depósito general de equipos',
-    'A',
-    @idDepositoCentral
-);
+CALL sp_nuevaUbicacion(NULL, 'Sede Central', 'Edificio principal', 'A', @idSedeCentral);
+CALL sp_nuevaUbicacion(@idSedeCentral, 'Oficina IT', 'Área de sistemas y servidores', 'A', @idOficinaIT);
+CALL sp_nuevaUbicacion(@idSedeCentral, 'Oficina Ventas', 'Área de ventas', 'A', @idOficinaVentas);
+CALL sp_nuevaUbicacion(NULL, 'Sucursal Norte', 'Sucursal de atención al público', 'A', @idSucursalNorte);
+CALL sp_nuevaUbicacion(NULL, 'Deposito Central', 'Depósito general de equipos', 'A', @idDepositoCentral);
 
 -- ==========================================
 -- FASE 5: PERSONAS
@@ -221,33 +184,6 @@ CALL sp_nuevoUsuario(
     @idUsuarioMaria
 );
 
--- ==========================================
--- FASE 8: FACTURAS
--- ==========================================
-
--- Factura correspondiente a 5 PCs
-CALL sp_nuevaFactura(
-    @idProveedorTechStore,
-    '2026-08-20 10:00:00',
-    5000.00,
-    'USD',
-    'FC-A-0001-00000001',
-    '/docs/facturas/fc-pcs-0001.pdf',
-    'A',
-    @idFacturaPC
-);
-
--- Factura correspondiente a 5 celulares
-CALL sp_nuevaFactura(
-    @idProveedorMovilTech,
-    '2026-08-20 11:00:00',
-    1000.00,
-    'USD',
-    'FC-A-0001-00000002',
-    '/docs/facturas/fc-celulares-0001.pdf',
-    'A',
-    @idFacturaCelulares
-);
 -- ==========================================
 -- FASE 7: PROVEEDORES
 -- ==========================================
@@ -330,199 +266,91 @@ CALL sp_nuevaFactura(
 
 -- 5 PCs de la factura @idFacturaPC
 CALL sp_nuevoActivo(
-    @idUsuarioJuan,
-    'Dell',
-    'Oficina IT',
-    'PC',
-    'Operativo',
-    @idFacturaPC,
-    NULL,
-    NULL,
-    'PC-IT-001',
-    '{"SO": "Windows 10", "IP": "192.168.1.101"}',
-    1000.00,
-    'DELL-PC-001',
-    'OptiPlex 7090'
+    @idUsuarioJuan, 'Dell', 'Oficina IT', 'PC', 'Operativo',
+    @idFacturaPC, NULL, NULL, 'PC-IT-001',
+    JSON_OBJECT(CAST(@idAtrPC_SO AS CHAR), 'Windows 10', CAST(@idAtrPC_IP AS CHAR), '192.168.1.101'),
+    1000.00, 'DELL-PC-001', 'OptiPlex 7090'
 );
 
 CALL sp_nuevoActivo(
-    @idUsuarioJuan,
-    'Lenovo',
-    'Oficina IT',
-    'PC',
-    'Operativo',
-    @idFacturaPC,
-    NULL,
-    NULL,
-    'PC-IT-002',
-    '{"SO": "Windows 11", "IP": "192.168.1.102"}',
-    1000.00,
-    'LEN-PC-002',
-    'ThinkCentre M70'
+    @idUsuarioJuan, 'Lenovo', 'Oficina IT', 'PC', 'Operativo',
+    @idFacturaPC, NULL, NULL, 'PC-IT-002',
+    JSON_OBJECT(CAST(@idAtrPC_SO AS CHAR), 'Windows 11', CAST(@idAtrPC_IP AS CHAR), '192.168.1.102'),
+    1000.00, 'LEN-PC-002', 'ThinkCentre M70'
 );
 
 CALL sp_nuevoActivo(
-    @idUsuarioJuan,
-    'HP',
-    'Oficina Ventas',
-    'PC',
-    'Operativo',
-    @idFacturaPC,
-    NULL,
-    NULL,
-    'PC-VT-001',
-    '{"SO": "Windows 11", "IP": "192.168.1.103"}',
-    1000.00,
-    'HP-PC-003',
-    'ProDesk 400'
+    @idUsuarioJuan, 'HP', 'Oficina Ventas', 'PC', 'Operativo',
+    @idFacturaPC, NULL, NULL, 'PC-VT-001',
+    JSON_OBJECT(CAST(@idAtrPC_SO AS CHAR), 'Windows 11', CAST(@idAtrPC_IP AS CHAR), '192.168.1.103'),
+    1000.00, 'HP-PC-003', 'ProDesk 400'
 );
 
 CALL sp_nuevoActivo(
-    @idUsuarioJuan,
-    'Dell',
-    'Oficina Ventas',
-    'PC',
-    'Operativo',
-    @idFacturaPC,
-    NULL,
-    NULL,
-    'PC-VT-002',
-    '{"SO": "Windows 10", "IP": "192.168.1.104"}',
-    1000.00,
-    'DELL-PC-004',
-    'OptiPlex 3080'
+    @idUsuarioJuan, 'Dell', 'Oficina Ventas', 'PC', 'Operativo',
+    @idFacturaPC, NULL, NULL, 'PC-VT-002',
+    JSON_OBJECT(CAST(@idAtrPC_SO AS CHAR), 'Windows 10', CAST(@idAtrPC_IP AS CHAR), '192.168.1.104'),
+    1000.00, 'DELL-PC-004', 'OptiPlex 3080'
 );
 
 CALL sp_nuevoActivo(
-    @idUsuarioJuan,
-    'Lenovo',
-    'Sede Central',
-    'PC',
-    'Operativo',
-    @idFacturaPC,
-    NULL,
-    NULL,
-    'PC-SC-001',
-    '{"SO": "Windows 11", "IP": "192.168.1.105"}',
-    1000.00,
-    'LEN-PC-005',
-    'ThinkCentre M75'
+    @idUsuarioJuan, 'Lenovo', 'Sede Central', 'PC', 'Operativo',
+    @idFacturaPC, NULL, NULL, 'PC-SC-001',
+    JSON_OBJECT(CAST(@idAtrPC_SO AS CHAR), 'Windows 11', CAST(@idAtrPC_IP AS CHAR), '192.168.1.105'),
+    1000.00, 'LEN-PC-005', 'ThinkCentre M75'
 );
 
 -- 5 Celulares de la factura @idFacturaCelulares
 
 CALL sp_nuevoActivo(
-    @idUsuarioJuan,
-    'Samsung',
-    'Oficina Ventas',
-    'Celular',
-    'Operativo',
-    @idFacturaCelulares,
-    NULL,
-    NULL,
-    'CEL-VT-001',
-    '{"SistemaOperativo": "Android", "Almacenamiento": "128GB"}',
-    200.00,
-    'SAM-CEL-001',
-    'Galaxy A55'
+    @idUsuarioJuan, 'Samsung', 'Oficina Ventas', 'Celular', 'Operativo',
+    @idFacturaCelulares, NULL, NULL, 'CEL-VT-001',
+    JSON_OBJECT(CAST(@idAtrCEL_SO AS CHAR), 'Android', CAST(@idAtrCEL_Almacenamiento AS CHAR), '128GB'),
+    200.00, 'SAM-CEL-001', 'Galaxy A55'
 );
 
 CALL sp_nuevoActivo(
-    @idUsuarioJuan,
-    'Motorola',
-    'Oficina Ventas',
-    'Celular',
-    'Operativo',
-    @idFacturaCelulares,
-    NULL,
-    NULL,
-    'CEL-VT-002',
-    '{"SistemaOperativo": "Android", "Almacenamiento": "128GB"}',
-    200.00,
-    'MOT-CEL-002',
-    'Moto G84'
+    @idUsuarioJuan, 'Motorola', 'Oficina Ventas', 'Celular', 'Operativo',
+    @idFacturaCelulares, NULL, NULL, 'CEL-VT-002',
+    JSON_OBJECT(CAST(@idAtrCEL_SO AS CHAR), 'Android', CAST(@idAtrCEL_Almacenamiento AS CHAR), '128GB'),
+    200.00, 'MOT-CEL-002', 'Moto G84'
 );
 
 CALL sp_nuevoActivo(
-    @idUsuarioJuan,
-    'Xiaomi',
-    'Sede Central',
-    'Celular',
-    'Operativo',
-    @idFacturaCelulares,
-    NULL,
-    NULL,
-    'CEL-SC-001',
-    '{"SistemaOperativo": "Android", "Almacenamiento": "256GB"}',
-    200.00,
-    'XIA-CEL-003',
-    'Redmi Note 13'
+    @idUsuarioJuan, 'Xiaomi', 'Sede Central', 'Celular', 'Operativo',
+    @idFacturaCelulares, NULL, NULL, 'CEL-SC-001',
+    JSON_OBJECT(CAST(@idAtrCEL_SO AS CHAR), 'Android', CAST(@idAtrCEL_Almacenamiento AS CHAR), '256GB'),
+    200.00, 'XIA-CEL-003', 'Redmi Note 13'
 );
 
 CALL sp_nuevoActivo(
-    @idUsuarioJuan,
-    'Samsung',
-    'Sede Central',
-    'Celular',
-    'Operativo',
-    @idFacturaCelulares,
-    NULL,
-    NULL,
-    'CEL-SC-002',
-    '{"SistemaOperativo": "Android", "Almacenamiento": "128GB"}',
-    200.00,
-    'SAM-CEL-004',
-    'Galaxy A35'
+    @idUsuarioJuan, 'Samsung', 'Sede Central', 'Celular', 'Operativo',
+    @idFacturaCelulares, NULL, NULL, 'CEL-SC-002',
+    JSON_OBJECT(CAST(@idAtrCEL_SO AS CHAR), 'Android', CAST(@idAtrCEL_Almacenamiento AS CHAR), '128GB'),
+    200.00, 'SAM-CEL-004', 'Galaxy A35'
 );
 
 CALL sp_nuevoActivo(
-    @idUsuarioJuan,
-    'Apple',
-    'Oficina IT',
-    'Celular',
-    'Operativo',
-    @idFacturaCelulares,
-    NULL,
-    NULL,
-    'CEL-IT-001',
-    '{"SistemaOperativo": "iOS", "Almacenamiento": "128GB"}',
-    200.00,
-    'APP-CEL-005',
-    'iPhone 13'
+    @idUsuarioJuan, 'Apple', 'Oficina IT', 'Celular', 'Operativo',
+    @idFacturaCelulares, NULL, NULL, 'CEL-IT-001',
+    JSON_OBJECT(CAST(@idAtrCEL_SO AS CHAR), 'iOS', CAST(@idAtrCEL_Almacenamiento AS CHAR), '128GB'),
+    200.00, 'APP-CEL-005', 'iPhone 13'
 );
 
 -- 2 Notebooks sin factura
 
 CALL sp_nuevoActivo(
-    @idUsuarioJuan,
-    'Dell',
-    'Oficina IT',
-    'Notebook',
-    'Operativo',
-    NULL,
-    @idJuan,
-    NULL,
-    'NB-IT-001',
-    '{"RAM": "16GB", "Almacenamiento": "512GB SSD"}',
-    750.00,
-    'DELL-NB-001',
-    'Latitude 5420'
+    @idUsuarioJuan, 'Dell', 'Oficina IT', 'Notebook', 'Operativo',
+    NULL, @idJuan, NULL, 'NB-IT-001',
+    JSON_OBJECT(CAST(@idAtrNB_RAM AS CHAR), '16GB', CAST(@idAtrNB_Almacenamiento AS CHAR), '512GB SSD'),
+    750.00, 'DELL-NB-001', 'Latitude 5420'
 );
 
 CALL sp_nuevoActivo(
-    @idUsuarioJuan,
-    'Lenovo',
-    'Oficina Ventas',
-    'Notebook',
-    'Operativo',
-    NULL,
-    @idMaria,
-    NULL,
-    'NB-VT-001',
-    '{"RAM": "8GB", "Almacenamiento": "256GB SSD"}',
-    750.00,
-    'LEN-NB-002',
-    'ThinkPad E14'
+    @idUsuarioJuan, 'Lenovo', 'Oficina Ventas', 'Notebook', 'Operativo',
+    NULL, @idMaria, NULL, 'NB-VT-001',
+    JSON_OBJECT(CAST(@idAtrNB_RAM AS CHAR), '8GB', CAST(@idAtrNB_Almacenamiento AS CHAR), '256GB SSD'),
+    750.00, 'LEN-NB-002', 'ThinkPad E14'
 );
 
 USE GestionDeActivos;
@@ -530,20 +358,21 @@ USE GestionDeActivos;
 -- ==========================================
 -- FASE 10: COMPONENTES DE PCs
 -- ==========================================
-CALL sp_nuevoActivo(@idUsuarioJuan,'Kingston','Oficina IT','RAM','Operativo',NULL,NULL,(SELECT idActivo FROM Activos WHERE nombre='PC-IT-001'),'RAM-PC001-01','{"Tamaño":"4GB"}',50.00,'KIN-RAM-PC001-01','ValueRAM');
-CALL sp_nuevoActivo(@idUsuarioJuan,'Kingston','Oficina IT','RAM','Operativo',NULL,NULL,(SELECT idActivo FROM Activos WHERE nombre='PC-IT-001'),'RAM-PC001-02','{"Tamaño":"4GB"}',50.00,'KIN-RAM-PC001-02','ValueRAM');
+CALL sp_nuevoActivo(@idUsuarioJuan,'Kingston','Oficina IT','RAM','Operativo',NULL,NULL,(SELECT idActivo FROM Activos WHERE nombre='PC-IT-001'),'RAM-PC001-01',JSON_OBJECT(CAST(@idAtrRAM_Tamano AS CHAR),'4GB'),50.00,'KIN-RAM-PC001-01','ValueRAM');
+CALL sp_nuevoActivo(@idUsuarioJuan,'Kingston','Oficina IT','RAM','Operativo',NULL,NULL,(SELECT idActivo FROM Activos WHERE nombre='PC-IT-001'),'RAM-PC001-02',JSON_OBJECT(CAST(@idAtrRAM_Tamano AS CHAR),'4GB'),50.00,'KIN-RAM-PC001-02','ValueRAM');
 
-CALL sp_nuevoActivo(@idUsuarioJuan,'Kingston','Oficina IT','RAM','Operativo',NULL,NULL,(SELECT idActivo FROM Activos WHERE nombre='PC-IT-002'),'RAM-PC002-01','{"Tamaño":"4GB"}',50.00,'KIN-RAM-PC002-01','ValueRAM');
-CALL sp_nuevoActivo(@idUsuarioJuan,'Kingston','Oficina IT','RAM','Operativo',NULL,NULL,(SELECT idActivo FROM Activos WHERE nombre='PC-IT-002'),'RAM-PC002-02','{"Tamaño":"4GB"}',50.00,'KIN-RAM-PC002-02','ValueRAM');
+CALL sp_nuevoActivo(@idUsuarioJuan,'Kingston','Oficina IT','RAM','Operativo',NULL,NULL,(SELECT idActivo FROM Activos WHERE nombre='PC-IT-002'),'RAM-PC002-01',JSON_OBJECT(CAST(@idAtrRAM_Tamano AS CHAR),'4GB'),50.00,'KIN-RAM-PC002-01','ValueRAM');
+CALL sp_nuevoActivo(@idUsuarioJuan,'Kingston','Oficina IT','RAM','Operativo',NULL,NULL,(SELECT idActivo FROM Activos WHERE nombre='PC-IT-002'),'RAM-PC002-02',JSON_OBJECT(CAST(@idAtrRAM_Tamano AS CHAR),'4GB'),50.00,'KIN-RAM-PC002-02','ValueRAM');
 
-CALL sp_nuevoActivo(@idUsuarioJuan,'Kingston','Oficina Ventas','RAM','Operativo',NULL,NULL,(SELECT idActivo FROM Activos WHERE nombre='PC-VT-001'),'RAM-PC003-01','{"Tamaño":"4GB"}',50.00,'KIN-RAM-PC003-01','ValueRAM');
-CALL sp_nuevoActivo(@idUsuarioJuan,'Kingston','Oficina Ventas','RAM','Operativo',NULL,NULL,(SELECT idActivo FROM Activos WHERE nombre='PC-VT-001'),'RAM-PC003-02','{"Tamaño":"4GB"}',50.00,'KIN-RAM-PC003-02','ValueRAM');
+CALL sp_nuevoActivo(@idUsuarioJuan,'Kingston','Oficina Ventas','RAM','Operativo',NULL,NULL,(SELECT idActivo FROM Activos WHERE nombre='PC-VT-001'),'RAM-PC003-01',JSON_OBJECT(CAST(@idAtrRAM_Tamano AS CHAR),'4GB'),50.00,'KIN-RAM-PC003-01','ValueRAM');
+CALL sp_nuevoActivo(@idUsuarioJuan,'Kingston','Oficina Ventas','RAM','Operativo',NULL,NULL,(SELECT idActivo FROM Activos WHERE nombre='PC-VT-001'),'RAM-PC003-02',JSON_OBJECT(CAST(@idAtrRAM_Tamano AS CHAR),'4GB'),50.00,'KIN-RAM-PC003-02','ValueRAM');
 
-CALL sp_nuevoActivo(@idUsuarioJuan,'Kingston','Oficina Ventas','RAM','Operativo',NULL,NULL,(SELECT idActivo FROM Activos WHERE nombre='PC-VT-002'),'RAM-PC004-01','{"Tamaño":"4GB"}',50.00,'KIN-RAM-PC004-01','ValueRAM');
-CALL sp_nuevoActivo(@idUsuarioJuan,'Kingston','Oficina Ventas','RAM','Operativo',NULL,NULL,(SELECT idActivo FROM Activos WHERE nombre='PC-VT-002'),'RAM-PC004-02','{"Tamaño":"4GB"}',50.00,'KIN-RAM-PC004-02','ValueRAM');
+CALL sp_nuevoActivo(@idUsuarioJuan,'Kingston','Oficina Ventas','RAM','Operativo',NULL,NULL,(SELECT idActivo FROM Activos WHERE nombre='PC-VT-002'),'RAM-PC004-01',JSON_OBJECT(CAST(@idAtrRAM_Tamano AS CHAR),'4GB'),50.00,'KIN-RAM-PC004-01','ValueRAM');
+CALL sp_nuevoActivo(@idUsuarioJuan,'Kingston','Oficina Ventas','RAM','Operativo',NULL,NULL,(SELECT idActivo FROM Activos WHERE nombre='PC-VT-002'),'RAM-PC004-02',JSON_OBJECT(CAST(@idAtrRAM_Tamano AS CHAR),'4GB'),50.00,'KIN-RAM-PC004-02','ValueRAM');
 
-CALL sp_nuevoActivo(@idUsuarioJuan,'Kingston','Sede Central','RAM','Operativo',NULL,NULL,(SELECT idActivo FROM Activos WHERE nombre='PC-SC-001'),'RAM-PC005-01','{"Tamaño":"4GB"}',50.00,'KIN-RAM-PC005-01','ValueRAM');
-CALL sp_nuevoActivo(@idUsuarioJuan,'Kingston','Sede Central','RAM','Operativo',NULL,NULL,(SELECT idActivo FROM Activos WHERE nombre='PC-SC-001'),'RAM-PC005-02','{"Tamaño":"4GB"}',50.00,'KIN-RAM-PC005-02','ValueRAM');
+CALL sp_nuevoActivo(@idUsuarioJuan,'Kingston','Sede Central','RAM','Operativo',NULL,NULL,(SELECT idActivo FROM Activos WHERE nombre='PC-SC-001'),'RAM-PC005-01',JSON_OBJECT(CAST(@idAtrRAM_Tamano AS CHAR),'4GB'),50.00,'KIN-RAM-PC005-01','ValueRAM');
+CALL sp_nuevoActivo(@idUsuarioJuan,'Kingston','Sede Central','RAM','Operativo',NULL,NULL,(SELECT idActivo FROM Activos WHERE nombre='PC-SC-001'),'RAM-PC005-02',JSON_OBJECT(CAST(@idAtrRAM_Tamano AS CHAR),'4GB'),50.00,'KIN-RAM-PC005-02','ValueRAM');
+
 -- ==========================================
 -- FASE 11: ACTIVOS PARA PRUEBA DE BUSCADOR
 -- ==========================================
@@ -556,60 +385,80 @@ SET @idMaria = (SELECT idPersona FROM Personas WHERE nombre = 'María' AND apell
 
 -- 1. Un monitor 4K (Para probar búsqueda por JSON en "Resolucion")
 CALL sp_nuevoActivo(
-    @idUsuarioJuan, 'Samsung', 'Oficina IT', 'Monitor', 'Operativo', NULL, NULL, NULL, 
-    'MON-IT-4K', '{"Resolucion": "3840x2160", "Pulgadas": "27"}', 350.00, 'SAM-MON-4K-01', 'Odyssey G7'
+    @idUsuarioJuan, 'Samsung', 'Oficina IT', 'Monitor', 'Operativo', NULL, NULL, NULL,
+    'MON-IT-4K',
+    JSON_OBJECT(CAST(@idAtrMON_Resolucion AS CHAR), '3840x2160', CAST(@idAtrMON_Pulgadas AS CHAR), '27'),
+    350.00, 'SAM-MON-4K-01', 'Odyssey G7'
 );
 
 -- 2. Un monitor estándar asignado a Ana
 CALL sp_nuevoActivo(
-    @idUsuarioJuan, 'Dell', 'Oficina Ventas', 'Monitor', 'Operativo', NULL, @idAna, NULL, 
-    'MON-VT-FHD', '{"Resolucion": "1920x1080", "Pulgadas": "24"}', 150.00, 'DEL-MON-FHD-01', 'P2419H'
+    @idUsuarioJuan, 'Dell', 'Oficina Ventas', 'Monitor', 'Operativo', NULL, @idAna, NULL,
+    'MON-VT-FHD',
+    JSON_OBJECT(CAST(@idAtrMON_Resolucion AS CHAR), '1920x1080', CAST(@idAtrMON_Pulgadas AS CHAR), '24'),
+    150.00, 'DEL-MON-FHD-01', 'P2419H'
 );
 
 -- 3. Una MacBook en reparación (Para probar búsqueda híbrida por estado o modelo)
 CALL sp_nuevoActivo(
-    @idUsuarioJuan, 'Apple', 'Sede Central', 'Notebook', 'En Reparación', NULL, @idMaria, NULL, 
-    'NB-SC-MAC', '{"RAM": "16GB", "Almacenamiento": "512GB SSD"}', 1500.00, 'APP-MAC-999', 'MacBook Pro M2'
+    @idUsuarioJuan, 'Apple', 'Sede Central', 'Notebook', 'En Reparación', NULL, @idMaria, NULL,
+    'NB-SC-MAC',
+    JSON_OBJECT(CAST(@idAtrNB_RAM AS CHAR), '16GB', CAST(@idAtrNB_Almacenamiento AS CHAR), '512GB SSD'),
+    1500.00, 'APP-MAC-999', 'MacBook Pro M2'
 );
 
 -- 4. Una PC con Linux (Para probar búsqueda por JSON en "SO")
 CALL sp_nuevoActivo(
-    @idUsuarioJuan, 'Corsair', 'Oficina IT', 'PC', 'Almacenado', NULL, NULL, NULL, 
-    'PC-LINUX-01', '{"SO": "Ubuntu 22.04", "IP": "10.0.0.5"}', 2000.00, 'COR-PC-UBUNTU', 'One i300'
+    @idUsuarioJuan, 'Corsair', 'Oficina IT', 'PC', 'Almacenado', NULL, NULL, NULL,
+    'PC-LINUX-01',
+    JSON_OBJECT(CAST(@idAtrPC_SO AS CHAR), 'Ubuntu 22.04', CAST(@idAtrPC_IP AS CHAR), '10.0.0.5'),
+    2000.00, 'COR-PC-UBUNTU', 'One i300'
 );
 
 -- 5. RAM de 32GB (Para buscar "32GB" en el JSON)
 CALL sp_nuevoActivo(
-    @idUsuarioJuan, 'Kingston', 'Deposito Central', 'RAM', 'Almacenado', NULL, NULL, NULL, 
-    'RAM-DEP-01', '{"Tamaño": "32GB", "TipoMemoria": "DDR5"}', 120.00, 'KIN-RAM-32', 'Fury Beast'
+    @idUsuarioJuan, 'Kingston', 'Deposito Central', 'RAM', 'Almacenado', NULL, NULL, NULL,
+    'RAM-DEP-01',
+    JSON_OBJECT(CAST(@idAtrRAM_Tamano AS CHAR), '32GB', CAST(@idAtrRAM_TipoMemoria AS CHAR), 'DDR5'),
+    120.00, 'KIN-RAM-32', 'Fury Beast'
 );
 
 -- 6. RAM de 16GB
 CALL sp_nuevoActivo(
-    @idUsuarioJuan, 'Corsair', 'Deposito Central', 'RAM', 'Almacenado', NULL, NULL, NULL, 
-    'RAM-DEP-02', '{"Tamaño": "16GB", "TipoMemoria": "DDR4"}', 80.00, 'COR-RAM-16', 'Vengeance LPX'
+    @idUsuarioJuan, 'Corsair', 'Deposito Central', 'RAM', 'Almacenado', NULL, NULL, NULL,
+    'RAM-DEP-02',
+    JSON_OBJECT(CAST(@idAtrRAM_Tamano AS CHAR), '16GB', CAST(@idAtrRAM_TipoMemoria AS CHAR), 'DDR4'),
+    80.00, 'COR-RAM-16', 'Vengeance LPX'
 );
 
 -- 7. Notebook potente en Sucursal Norte (Para probar búsqueda por ubicación)
 CALL sp_nuevoActivo(
-    @idUsuarioJuan, 'HP', 'Sucursal Norte', 'Notebook', 'Operativo', NULL, @idCarlos, NULL, 
-    'NB-SN-001', '{"RAM": "32GB", "Almacenamiento": "1TB NVMe"}', 1200.00, 'HP-NB-SN-01', 'EliteBook 840'
+    @idUsuarioJuan, 'HP', 'Sucursal Norte', 'Notebook', 'Operativo', NULL, @idCarlos, NULL,
+    'NB-SN-001',
+    JSON_OBJECT(CAST(@idAtrNB_RAM AS CHAR), '32GB', CAST(@idAtrNB_Almacenamiento AS CHAR), '1TB NVMe'),
+    1200.00, 'HP-NB-SN-01', 'EliteBook 840'
 );
 
 -- 8. Mouse inalámbrico
 CALL sp_nuevoActivo(
-    @idUsuarioJuan, 'Logitech', 'Sucursal Norte', 'Mouse', 'Operativo', NULL, @idCarlos, NULL, 
-    'MOU-SN-001', '{"Conexion": "Inalambrico"}', 50.00, 'LOG-MOU-01', 'MX Master 3'
+    @idUsuarioJuan, 'Logitech', 'Sucursal Norte', 'Mouse', 'Operativo', NULL, @idCarlos, NULL,
+    'MOU-SN-001',
+    JSON_OBJECT(CAST(@idAtrMOU_Conexion AS CHAR), 'Inalambrico'),
+    50.00, 'LOG-MOU-01', 'MX Master 3'
 );
 
 -- 9. Disco duro mecánico
 CALL sp_nuevoActivo(
-    @idUsuarioJuan, 'Western Digital', 'Deposito Central', 'Disco', 'Almacenado', NULL, NULL, NULL, 
-    'HDD-DEP-01', '{"Capacidad": "2TB", "Tecnologia": "HDD"}', 60.00, 'WD-HDD-2TB', 'Blue'
+    @idUsuarioJuan, 'Western Digital', 'Deposito Central', 'Disco', 'Almacenado', NULL, NULL, NULL,
+    'HDD-DEP-01',
+    JSON_OBJECT(CAST(@idAtrDIS_Capacidad AS CHAR), '2TB', CAST(@idAtrDIS_Tecnologia AS CHAR), 'HDD'),
+    60.00, 'WD-HDD-2TB', 'Blue'
 );
 
 -- 10. Disco sólido SSD
 CALL sp_nuevoActivo(
-    @idUsuarioJuan, 'Seagate', 'Deposito Central', 'Disco', 'Almacenado', NULL, NULL, NULL, 
-    'SSD-DEP-99', '{"Capacidad": "1TB", "Tecnologia": "NVMe"}', 100.00, 'SEA-SSD-1TBq', 'FireCudaq'
+    @idUsuarioJuan, 'Seagate', 'Deposito Central', 'Disco', 'Almacenado', NULL, NULL, NULL,
+    'SSD-DEP-99',
+    JSON_OBJECT(CAST(@idAtrDIS_Capacidad AS CHAR), '1TB', CAST(@idAtrDIS_Tecnologia AS CHAR), 'NVMe'),
+    100.00, 'SEA-SSD-1TBq', 'FireCudaq'
 );

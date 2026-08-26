@@ -220,7 +220,7 @@ CALL sp_modificarActivo(
     /* pNumeroSerie     */ 'PCJSON001',
     /* pModelo          */ 'PCJSON'
 );
-
+call `sp_listarTodo`;
 select * from `Activos`;
 SELECT * FROM `Historial`;
 CALL sp_modificarHistorial(4,'modificacion del historial');

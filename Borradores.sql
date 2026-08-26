@@ -120,6 +120,22 @@ SET @pAtributos = JSON_MERGE_PRESERVE(
 SELECT @pAtributos;
 
 
+SET @valores = JSON_OBJECT('6', 'Windows 11', '7', '192.1.1.5');
+
+CALL sp_verificarValores(4, @valores);
+
+
+SELECT 
+    4 AS idTipo_prueba,
+    jt.idAtributo,
+    JSON_UNQUOTE(JSON_EXTRACT(@valores, CONCAT('$."', jt.idAtributo, '"'))) AS valor
+FROM JSON_TABLE(
+    JSON_KEYS(@valores),
+    '$[*]' COLUMNS (idAtributo INT PATH '$')
+) AS jt;
+select * from JSON_EXTRACT(@valores)
+select * from `Atributos` a
+inner join Tipos t on a.`idTipo`=t.`idTipo`;
 
 
 

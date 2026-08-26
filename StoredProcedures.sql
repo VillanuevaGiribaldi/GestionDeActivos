@@ -526,7 +526,9 @@ CREATE PROCEDURE sp_nuevoActivo(
     IN pidPersona INT,
     IN pidCompone INT,
     IN pNombre VARCHAR(45),
-    IN pAtributosExtra JSON,
+
+    IN pValoresAtributos JSON,  -- ahora es un par idAtributo: valor
+
     IN pPrecioUnitario DECIMAL(12,2),
     IN pNumeroSerie VARCHAR(100),
     IN pModelo VARCHAR(50)
@@ -538,9 +540,6 @@ SALIR:BEGIN
     DECLARE vIdTipo INT;
     DECLARE vIdEstado INT;
     DECLARE vIdActivo INT; -- NUEVO: Para guardar el ID del Activo creado
-
-    -- Variables para el resultado de la validacion de JSON
-    DECLARE vResultadoJSON BOOLEAN;
 
     -- Manejador de errores: Si algo falla, deshace los cambios (Rollback)
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
@@ -623,13 +622,7 @@ SALIR:BEGIN
                 SET MESSAGE_TEXT = 'El activo ya tiene demasiados componentes de este tipo';
     END IF;
 
-     -- Validación del formato JSON
-    SET vResultadoJSON = FALSE;
-    CALL sp_verificarAtributos(vIdTipo,pAtributosExtra,vResultadoJSON);
-
-    IF NOT vResultadoJSON THEN
-        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Los atributos extra no tienen un formato JSON válido';
-    END IF;
+    CALL `sp_verificarValores`(vIdTipo,pValoresAtributos);
 
     -- =========================================================================
     -- INICIO DE TRANSACCIÓN (Activo + Historial)
@@ -639,18 +632,28 @@ SALIR:BEGIN
     -- Insertar el Activo
     INSERT INTO Activos(
         `idMarca`, `idUbicacion`, `idTipo`, `idEstado`, `idFactura`, `idPersona`, `compone`,
-        `nombre`, `fechaRegistro`, `atributosExtra`, `precioUnitario`, `numeroSerie`, `modelo`
+        `nombre`, `fechaRegistro`, `precioUnitario`, `numeroSerie`, `modelo`
     ) VALUES (
         vIdMarca, vIdUbicacion, vIdTipo, vIdEstado, pidFactura, pidPersona, pidCompone,
-        pNombre, NOW(), pAtributosExtra, pPrecioUnitario, pNumeroSerie, pModelo
+        pNombre, NOW(), pPrecioUnitario, pNumeroSerie, pModelo
     );
 
     -- Obtener el ID que se le acaba de asignar al Activo
     SET vIdActivo = LAST_INSERT_ID();
 
-    -- Insertar el registro de Creacion en el Historial
-    -- 
+    -- Insertar los Valores de los aributos
+    INSERT INTO Valores(idActivo, idAtributo, valor)  
+    SELECT vIdActivo, 
+    jt.idAtributo,
+    JSON_UNQUOTE(
+        JSON_EXTRACT(pValoresAtributos, CONCAT('$."', jt.idAtributo, '"'))
+        ) AS valor
+            FROM JSON_TABLE(
+                JSON_KEYS(pValoresAtributos),
+                '$[*]' COLUMNS (idAtributo INT PATH '$')
+            ) AS jt;
 
+    -- Insertar el registro de Creacion en el Historial
     CALL `sp_registrarHistorial`(
         pIdUsuario, 
         vIdActivo, 
@@ -666,7 +669,7 @@ SALIR:BEGIN
 			'Persona', pidPersona,
 			'Compone', pidCompone,
 			'Nombre', pNombre,
-			'AtributosExtra', pAtributosExtra,
+			'AtributosExtra', pValoresAtributos,
 			'PrecioUnitario', pPrecioUnitario,
 			'NumeroSerie', pNumeroSerie,
 			'Modelo', pModelo
@@ -2980,69 +2983,7 @@ BEGIN
 
 END//
 DELIMITER ;
--- =========================================== VERIFICAR ATRIBUTOS
-DROP PROCEDURE IF EXISTS sp_verificarAtributos;
-DELIMITER //
-CREATE PROCEDURE sp_verificarAtributos(
-    IN pIdTipo INT,
-    INOUT pAtributos JSON,
-    OUT pResultado BOOLEAN
-)
-BEGIN
-    DECLARE vFaltantes JSON;
-    set pAtributos=COALESCE(pAtributos,JSON_OBJECT());
-    -- Verificar que el Tipo exista
-    IF NOT EXISTS (SELECT 1 FROM Tipos WHERE idTipo = pIdTipo) THEN
-        SET pResultado = FALSE;
-        SIGNAL SQLSTATE '45000'
-            SET MESSAGE_TEXT = 'El tipo ingresado no existe';
-    END IF;
 
-    -- Verificar que no haya claves que no pertenezcan al tipo
-    IF EXISTS (
-        SELECT 1
-        FROM JSON_TABLE(
-            JSON_KEYS(pAtributos),
-            '$[*]' COLUMNS (nombre VARCHAR(45) PATH '$')
-        ) AS j
-        WHERE NOT EXISTS (
-            SELECT 1 FROM Atributos a
-            WHERE a.idTipo = pIdTipo AND a.nombre = j.nombre
-        )
-    ) THEN
-        SET pResultado = FALSE;
-        SIGNAL SQLSTATE '45000'
-            SET MESSAGE_TEXT = 'Hay atributos que no pertenecen al tipo en los atributos recibidos';
-    END IF;
 
-    -- Verificar obligatorios faltantes o vacíos
-    IF EXISTS (
-        SELECT 1
-        FROM Atributos a
-        WHERE a.idTipo = pIdTipo
-          AND a.obligatorio = 1
-          AND (
-              JSON_EXTRACT(pAtributos, CONCAT('$."', a.nombre, '"')) IS NULL
-              OR JSON_TYPE(JSON_EXTRACT(pAtributos, CONCAT('$."', a.nombre, '"'))) = 'NULL'
-              OR TRIM(JSON_UNQUOTE(JSON_EXTRACT(pAtributos, CONCAT('$."', a.nombre, '"')))) = ''
-          )
-    ) THEN
-        SET pResultado = FALSE;
-        SIGNAL SQLSTATE '45000'
-            SET MESSAGE_TEXT = 'Se detectaron atributos obligatorios faltantes o vacios';
-    END IF;
 
-    -- Completar con NULL los atributos del tipo que no vinieron en el JSON
-    SET vFaltantes = (
-        SELECT JSON_OBJECTAGG(a.nombre, NULL)
-        FROM Atributos a
-        WHERE a.idTipo = pIdTipo
-        AND NOT JSON_CONTAINS_PATH(pAtributos, 'one', CONCAT('$."', a.nombre, '"'))
-    );
-
-    SET pAtributos = JSON_MERGE_PRESERVE(pAtributos, COALESCE(vFaltantes, JSON_OBJECT()));
-
-    SET pResultado = TRUE;
-END//
-DELIMITER ;
 
