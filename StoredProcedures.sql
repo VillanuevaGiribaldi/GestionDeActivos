@@ -700,7 +700,6 @@ CREATE procedure sp_modificarActivo(
     IN pidPersona INT,
     IN pidCompone INT,
     IN pNombre VARCHAR(45),
-    IN pAtributosExtra JSON,
     IN pPrecioUnitario DECIMAL(12,2),
     IN pNumeroSerie VARCHAR(100),
     IN pModelo VARCHAR(50)
@@ -712,7 +711,6 @@ SALIR:BEGIN
 	DECLARE vIdUbicacion INT;
 	DECLARE vIdTipo INT;
 	DECLARE vIdEstado INT;
-    DECLARE vIdActivo INT;
 
     -- Variables para el historial
 
@@ -731,12 +729,9 @@ SALIR:BEGIN
     DECLARE oldIdPersona INT;
     DECLARE oldIdCompone INT;
     DECLARE oldNombre VARCHAR(45);
-    DECLARE oldAtributosExtra JSON;
     DECLARE oldPrecioUnitario DECIMAL(12,2);
     DECLARE oldNumeroSerie VARCHAR(100);
     DECLARE oldModelo VARCHAR(50);
-
-    DECLARE vResultadoJSON BOOLEAN;
 
     
     -- Manejador de errores: Si algo falla, deshace los cambios (Rollback)
@@ -843,8 +838,8 @@ SALIR:BEGIN
 
      -- Copiamos los valores viejos en las variables old, esto es usado principalmente para el JSON
      -- Pero tambien sirve para la verificación siguiente:
-        SELECT   a.idMarca, a.idUbicacion, a.idTipo, a.idEstado,m.nombre, u.nombre, t.nombre, e.nombre, a.idFactura, a.idPersona, a.compone, a.nombre, a.atributosExtra, a.precioUnitario, a.numeroSerie, a.modelo
-        INTO oldIdMarca, oldIdUbicacion, oldIdTipo, oldIdEstado, oldNombreMarca, oldNombreUbicacion, oldNombreTipo, oldNombreEstado, oldIdFactura, oldIdPersona, oldIdCompone, oldNombre, oldAtributosExtra, oldPrecioUnitario, oldNumeroSerie, oldModelo
+        SELECT   a.idMarca, a.idUbicacion, a.idTipo, a.idEstado,m.nombre, u.nombre, t.nombre, e.nombre, a.idFactura, a.idPersona, a.compone, a.nombre, a.precioUnitario, a.numeroSerie, a.modelo
+        INTO oldIdMarca, oldIdUbicacion, oldIdTipo, oldIdEstado, oldNombreMarca, oldNombreUbicacion, oldNombreTipo, oldNombreEstado, oldIdFactura, oldIdPersona, oldIdCompone, oldNombre, oldPrecioUnitario, oldNumeroSerie, oldModelo
         FROM Activos a
         JOIN Marcas m ON m.idMarca = a.idMarca
         JOIN Ubicaciones u ON u.idUbicacion = a.idUbicacion
@@ -890,13 +885,6 @@ SALIR:BEGIN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El precio ingresado tiene que ser mayor a cero';
     END IF;
 
-     -- Validación del formato JSON
-    SET vResultadoJSON = FALSE;
-    CALL sp_verificarAtributos(vIdTipo,pAtributosExtra,vResultadoJSON);
-
-    IF NOT vResultadoJSON THEN
-        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Los atributos extra no tienen un formato JSON válido';
-    END IF;
     
     -- =========================================================================
     -- Armar JSONs
@@ -948,11 +936,6 @@ SALIR:BEGIN
             SET vEstadoNuevo = JSON_SET(vEstadoNuevo, '$.Nombre', pNombre);
         END IF;
 
-        IF  NOT pAtributosExtra <=> oldAtributosExtra THEN
-            SET vEstadoViejo = JSON_SET(vEstadoViejo, '$.AtributosExtra', oldAtributosExtra);
-            SET vEstadoNuevo = JSON_SET(vEstadoNuevo, '$.AtributosExtra', pAtributosExtra);
-        END IF;
-
         IF  NOT pPrecioUnitario <=> oldPrecioUnitario THEN
             SET vEstadoViejo = JSON_SET(vEstadoViejo, '$.PrecioUnitario', oldPrecioUnitario);
             SET vEstadoNuevo = JSON_SET(vEstadoNuevo, '$.PrecioUnitario', pPrecioUnitario);
@@ -988,7 +971,6 @@ SALIR:BEGIN
         idPersona = pidPersona,
         compone = pidCompone,
         nombre = pNombre,
-        atributosExtra = pAtributosExtra,
         precioUnitario = pPrecioUnitario,
         numeroSerie = pNumeroSerie,
         modelo = pModelo
@@ -997,7 +979,7 @@ SALIR:BEGIN
     -- Insertar el registro de Creacion en el Historial    
     CALL `sp_registrarHistorial`(
         pIdUsuario, 
-        pIdActivo, 
+        pidActivo, 
         'Modificación del Activo', 
         'M',
         vEstadoViejo,
@@ -1097,6 +1079,258 @@ BEGIN
     COMMIT;
 END//
 DELIMITER ;
+
+-- =====================================================
+-- VALORES
+-- =====================================================
+-- ======================================== Nuevo Valor
+DROP PROCEDURE IF EXISTS sp_nuevoValor;
+DELIMITER //
+
+CREATE PROCEDURE sp_nuevoValor(
+    IN pIdUsuario INT,
+    IN pIdActivo INT,
+    IN pIdAtributo INT,
+    IN pValor VARCHAR(100)
+)
+BEGIN
+    DECLARE vIdTipoActivo INT;
+    DECLARE vIdTipoAtributo INT;
+    DECLARE vNombreAtributo VARCHAR(45);
+    DECLARE vObligatorio TINYINT;
+
+    -- Manejador de errores (Transacciones ACID)
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        RESIGNAL;
+    END;
+
+    -- 1. Sanitización de entradas
+    IF pValor IS NOT NULL THEN SET pValor = TRIM(pValor); END IF;
+
+    -- 2. Validaciones iniciales
+    IF pIdUsuario IS NULL OR NOT EXISTS (SELECT 1 FROM Usuarios WHERE idUsuario = pIdUsuario) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El usuario no existe o es inválido';
+    END IF;
+
+    IF pIdActivo IS NULL THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Debe indicar el activo al que pertenece el valor';
+    END IF;
+
+    IF pIdAtributo IS NULL THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Debe indicar el atributo al que pertenece el valor';
+    END IF;
+
+    -- 3. Validar existencia del Activo y obtener su Tipo
+    SELECT idTipo INTO vIdTipoActivo FROM Activos WHERE idActivo = pIdActivo;
+    IF vIdTipoActivo IS NULL THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El activo indicado no existe';
+    END IF;
+
+    -- 4. Validar existencia del Atributo y obtener sus datos
+    SELECT idTipo, nombre, obligatorio INTO vIdTipoAtributo, vNombreAtributo, vObligatorio
+    FROM Atributos WHERE idAtributo = pIdAtributo;
+
+    IF vIdTipoAtributo IS NULL THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El atributo indicado no existe';
+    END IF;
+
+    -- 5. Validar que el atributo pertenezca al Tipo del Activo
+    IF vIdTipoAtributo <> vIdTipoActivo THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El atributo indicado no pertenece al tipo de este activo';
+    END IF;
+
+    -- 6. Validar que no exista ya un valor cargado para ese Activo/Atributo
+    IF EXISTS (SELECT 1 FROM Valores WHERE idActivo = pIdActivo AND idAtributo = pIdAtributo) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Ya existe un valor cargado para este atributo en este activo. Utilice la modificación';
+    END IF;
+
+    -- 7. Si el atributo es obligatorio, no puede venir NULL o vacío
+    IF vObligatorio = 1 AND (pValor IS NULL or pValor='') THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Este atributo es obligatorio, no puede dejarse vacío o nulo';
+    END IF;
+
+    -- =========================================================================
+    -- INICIO DE TRANSACCIÓN (Valor + Historial)
+    -- =========================================================================
+    START TRANSACTION;
+
+    -- 8. Inserción del valor
+    INSERT INTO Valores (idActivo, idAtributo, valor)
+    VALUES (pIdActivo, pIdAtributo, pValor);
+
+    -- 9. Registrar en el Historial como modificación
+    CALL sp_registrarHistorial(
+        pIdUsuario,
+        pIdActivo,
+        'Alta de valor de atributo',
+        'M',
+        JSON_OBJECT(vNombreAtributo, NULL),
+        JSON_OBJECT(vNombreAtributo, pValor)
+    );
+
+    COMMIT;
+
+END//
+DELIMITER ;
+
+-- ======================================== Modificar Valor
+DROP PROCEDURE IF EXISTS sp_modificarValor;
+DELIMITER //
+
+CREATE PROCEDURE sp_modificarValor(
+    IN pIdUsuario INT,
+    IN pIdActivo INT,
+    IN pIdAtributo INT,
+    IN pValor VARCHAR(100)
+)
+BEGIN
+    DECLARE vNombreAtributo VARCHAR(45);
+    DECLARE vValorViejo VARCHAR(100);
+
+    -- Manejador de errores (Transacciones ACID)
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        RESIGNAL;
+    END;
+
+    -- 1. Sanitización de entradas
+    IF pValor IS NOT NULL THEN SET pValor = TRIM(pValor); END IF;
+    IF pValor = '' THEN SET pValor = NULL; END IF;
+
+    -- 2. Validaciones iniciales
+    IF pIdUsuario IS NULL OR NOT EXISTS (SELECT 1 FROM Usuarios WHERE idUsuario = pIdUsuario) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El usuario no existe o es inválido';
+    END IF;
+
+    IF pIdActivo IS NULL THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Debe indicar el activo al que pertenece el valor';
+    END IF;
+
+    IF pIdAtributo IS NULL THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Debe indicar el atributo al que pertenece el valor';
+    END IF;
+
+    -- 3. No se puede modificar un valor a NULL o vacío (para eso está sp_eliminarValor)
+    IF pValor IS NULL THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'No se puede modificar un valor a nulo o vacío. Si desea quitarlo, utilice la eliminación';
+    END IF;
+
+    -- 4. Validar existencia del valor actual y obtener nombre del atributo
+    SELECT v.valor, a.nombre INTO vValorViejo, vNombreAtributo
+    FROM Valores v
+    INNER JOIN Atributos a ON a.idAtributo = v.idAtributo
+    WHERE v.idActivo = pIdActivo AND v.idAtributo = pIdAtributo;
+
+    IF vNombreAtributo IS NULL THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'No existe un valor cargado para este atributo en este activo';
+    END IF;
+
+    -- 5. Verificar que haya algún cambio
+    IF pValor <=> vValorViejo THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'No se realizaron cambios en el valor del atributo';
+    END IF;
+
+    -- =========================================================================
+    -- INICIO DE TRANSACCIÓN (Valor + Historial)
+    -- =========================================================================
+    START TRANSACTION;
+
+    -- 6. Actualización del valor
+    UPDATE Valores
+    SET valor = pValor
+    WHERE idActivo = pIdActivo AND idAtributo = pIdAtributo;
+
+    -- 7. Registrar en el Historial como modificación
+    CALL sp_registrarHistorial(
+        pIdUsuario,
+        pIdActivo,
+        'Modificación de valor de atributo',
+        'M',
+        JSON_OBJECT(vNombreAtributo, vValorViejo),
+        JSON_OBJECT(vNombreAtributo, pValor)
+    );
+
+    COMMIT;
+
+END//
+DELIMITER ;
+
+-- ======================================== Eliminar Valor
+DROP PROCEDURE IF EXISTS sp_eliminarValor;
+DELIMITER //
+
+CREATE PROCEDURE sp_eliminarValor(
+    IN pIdUsuario INT,
+    IN pIdActivo INT,
+    IN pIdAtributo INT
+)
+BEGIN
+    DECLARE vNombreAtributo VARCHAR(45);
+    DECLARE vValorViejo VARCHAR(100);
+    DECLARE vObligatorio TINYINT;
+
+    -- Manejador de errores (Transacciones ACID)
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        RESIGNAL;
+    END;
+
+    -- 1. Validaciones iniciales
+    IF pIdUsuario IS NULL OR NOT EXISTS (SELECT 1 FROM Usuarios WHERE idUsuario = pIdUsuario) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El usuario no existe o es inválido';
+    END IF;
+
+    IF pIdActivo IS NULL THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Debe indicar el activo al que pertenece el valor';
+    END IF;
+
+    IF pIdAtributo IS NULL THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Debe indicar el atributo a eliminar';
+    END IF;
+
+    -- 2. Validar existencia del valor actual y obtener datos del atributo
+    SELECT v.valor, a.nombre, a.obligatorio INTO vValorViejo, vNombreAtributo, vObligatorio
+    FROM Valores v
+    INNER JOIN Atributos a ON a.idAtributo = v.idAtributo
+    WHERE v.idActivo = pIdActivo AND v.idAtributo = pIdAtributo;
+
+    IF vNombreAtributo IS NULL THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'No existe un valor cargado para este atributo en este activo';
+    END IF;
+
+    -- 3. REGLA CRÍTICA: no se puede eliminar el valor de un atributo obligatorio
+    IF vObligatorio = 1 THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'No se puede eliminar el valor de un atributo obligatorio';
+    END IF;
+
+    -- =========================================================================
+    -- INICIO DE TRANSACCIÓN (Valor + Historial)
+    -- =========================================================================
+    START TRANSACTION;
+
+    -- 4. Borrado físico del valor
+    DELETE FROM Valores
+    WHERE idActivo = pIdActivo AND idAtributo = pIdAtributo;
+
+    -- 5. Registrar en el Historial como modificación
+    CALL sp_registrarHistorial(
+        pIdUsuario,
+        pIdActivo,
+        'Eliminación de valor de atributo',
+        'M',
+        JSON_OBJECT(vNombreAtributo, vValorViejo),
+        JSON_OBJECT(vNombreAtributo, NULL)
+    );
+
+    COMMIT;
+
+END//
+DELIMITER ;
+
 
 -- ======================================== HISTORIAL
 DROP PROCEDURE IF EXISTS sp_registrarHistorial;
