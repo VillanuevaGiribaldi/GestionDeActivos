@@ -1007,6 +1007,10 @@ BEGIN
     DECLARE vViejoIdEstado INT;
     DECLARE vViejoIdUbicacion INT;
 
+    -- Para el historial:
+    DECLARE vNombreEstadoViejo VARCHAR(45);
+    DECLARE vNombreEstadoNuevo VARCHAR(45);
+
     -- Manejador de errores para asegurar transacciones ACID
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
@@ -1030,13 +1034,17 @@ BEGIN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El usuario indicado no existe o es inválido';
     END IF;
 
-    IF NOT EXISTS (SELECT 1 FROM Estados WHERE idEstado = pIdEstadoBaja) THEN
+    SELECT nombre INTO vNombreEstadoNuevo FROM Estados WHERE idEstado = pIdEstadoBaja;
+
+    IF  (vNombreEstadoNuevo) IS NULL THEN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El estado de baja indicado no existe en el sistema';
     END IF;
 
     -- 3. Obtener el estado actual del activo
-    SELECT idEstado, idUbicacion INTO vViejoIdEstado, vViejoIdUbicacion 
-    FROM Activos WHERE idActivo = pIdActivo;
+    SELECT a.idEstado, idUbicacion,e.nombre INTO vViejoIdEstado, vViejoIdUbicacion,vNombreEstadoViejo
+    FROM Activos a 
+    INNER JOIN Estados e on e.`idEstado`= a.`idEstado`
+    WHERE idActivo = pIdActivo;
 
     IF vViejoIdEstado IS NULL THEN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El activo que desea dar de baja no existe';
@@ -1072,8 +1080,8 @@ BEGIN
         pIdActivo, 
         'Baja del activo',
         'B',
-        JSON_OBJECT('idEstado', vViejoIdEstado, 'idUbicacion', vViejoIdUbicacion),
-        JSON_OBJECT('idEstado', pIdEstadoBaja, 'idUbicacion',           vViejoIdUbicacion)
+        JSON_OBJECT('estado', vNombreEstadoViejo),
+        JSON_OBJECT('estado', vNombreEstadoNuevo)
         ); 
 
     COMMIT;

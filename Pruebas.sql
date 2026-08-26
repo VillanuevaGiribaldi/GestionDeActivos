@@ -346,3 +346,65 @@ call `sp_nuevaComposicionTipo`('PC','RAM',2);
 
 SELECT * FROM `Atributos`;
  
+
+-- ==========================================
+-- Recuperar IDs necesarios
+-- ==========================================
+SET @idActivoTest = (SELECT idActivo FROM Activos WHERE numeroSerie = 'COR-PC-UBUNTU');
+SET @idUsuarioJuan = (SELECT idUsuario FROM Usuarios WHERE username = 'jperez' LIMIT 1);
+SET @idCarlos = (SELECT idPersona FROM Personas WHERE nombre = 'Carlos' AND apellido = 'Rodríguez' LIMIT 1);
+SET @idEstadoReparacion = (SELECT idEstado FROM Estados WHERE nombre = 'En Reparación' LIMIT 1);
+SET @idEstadoAlmacenado = (SELECT idEstado FROM Estados WHERE nombre = 'Almacenado' LIMIT 1);
+SET @idProveedorHardware = (SELECT idProveedor FROM Proveedores WHERE nombre = 'Hardware Tucumán' LIMIT 1);
+SET @idAtributoIP = (
+    SELECT a.idAtributo FROM Atributos a
+    INNER JOIN Tipos t ON t.idTipo = a.idTipo
+    WHERE t.nombre = 'PC' AND a.nombre = 'IP' LIMIT 1
+);
+
+-- ==========================================
+-- TEST 1: sp_modificarActivo (caso exitoso)
+-- ==========================================
+CALL sp_modificarActivo(
+    @idActivoTest, @idUsuarioJuan,
+    'Corsair', 'Oficina IT', 'PC', 'Operativo',
+    NULL, @idCarlos, NULL, 'PC-LINUX-01',
+    2100.00, 'COR-PC-UBUNTU', 'One i300'
+);
+
+-- ==========================================
+-- TEST 2: sp_setValor (caso exitoso - alta de valor IP)
+-- ==========================================
+CALL sp_setValor(@idUsuarioJuan, @idActivoTest, @idAtributoIP, '10.0.0.9');
+
+-- ==========================================
+-- TEST 3: sp_nuevoMantenimiento (caso exitoso)
+-- ==========================================
+CALL sp_nuevoMantenimiento(
+    @idActivoTest, @idProveedorHardware, 'No enciende', NULL,
+    @idEstadoReparacion, @idUsuarioJuan, @idMantenimientoTest
+);
+
+-- ==========================================
+-- TEST 4: sp_bajaActivo (caso exitoso)
+-- ==========================================
+CALL sp_bajaActivo(@idActivoTest, 3, @idUsuarioJuan, 'Baja por prueba');
+select * from `Estados`;
+-- ==========================================
+-- SELECT 1: Historial completo del activo
+-- ==========================================
+SELECT idHistorial, idUsuario, fecha, comentario, tipo, estadoAnterior, estadoNuevo
+FROM Historial
+ORDER BY idHistorial;
+
+-- ==========================================
+-- SELECT 2: Valores del activo con nombre de atributo y de activo
+-- ==========================================
+SELECT
+    ac.nombre AS Activo,
+    at.nombre AS Atributo,
+    v.valor AS Valor
+FROM Valores v
+INNER JOIN Activos ac ON ac.idActivo = v.idActivo
+INNER JOIN Atributos at ON at.idAtributo = v.idAtributo
+WHERE v.idActivo = @idActivoTest;
