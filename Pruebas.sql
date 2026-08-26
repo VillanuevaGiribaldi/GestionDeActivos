@@ -151,7 +151,7 @@ CALL sp_nuevoActivo(
     /* pidPersona       */ 1,
     /* pidCompone       */ NULL,
     /* pNombre          */ 'RAM1',
-    /* pAtributosExtra  */ '{"Tamaño":"(8 GB)"}',
+    /* pAtributosExtra  */ JSON_OBJECT(CAST(@idAtrPC_SO AS CHAR), 'Windows 10', CAST(@idAtrPC_IP AS CHAR), '192.168.1.104'),
     /* pPrecioUnitario  */ 200000.00,
     /* pNumeroSerie     */ 'PCJSON001',
     /* pModelo          */ 'PCJSON'
@@ -166,7 +166,7 @@ CALL sp_nuevoActivo(
     /* pidPersona       */ 1,
     /* pidCompone       */ NULL,
     /* pNombre          */ 'RAM1',
-    /* pAtributosExtra  */ '{"SO":" ","IP":"192.168.1.10","MAC":null}',
+    /* pAtributosExtra  */ JSON_OBJECT(CAST(@idAtrPC_SO AS CHAR), 'Windows 10', CAST(@idAtrPC_IP AS CHAR), '192.168.1.104'),
     /* pPrecioUnitario  */ 200000.00,
     /* pNumeroSerie     */ 'PCJSON001',
     /* pModelo          */ 'PCJSON'
@@ -181,7 +181,7 @@ CALL sp_nuevoActivo(
     /* pidPersona       */ 1,
     /* pidCompone       */ NULL,
     /* pNombre          */ 'RAM1',
-    /* pAtributosExtra  */ '{"SO":"Windows 11","IP":"192.168.1.10","MAC":null}',
+    /* pAtributosExtra  */ JSON_OBJECT(CAST(@idAtrPC_SO AS CHAR), 'Windows 10', CAST(@idAtrPC_IP AS CHAR), '192.168.1.104'),
     /* pPrecioUnitario  */ 200000.00,
     /* pNumeroSerie     */ 'PCJSON001',
     /* pModelo          */ 'PCJSON'
@@ -199,7 +199,6 @@ CALL sp_modificarActivo(
     /* pidPersona       */ 1,
     /* pidCompone       */ NULL,
     /* pNombre          */ 'PCJSON001',
-    /* pAtributosExtra  */ '{"SO":"Windows 10"}',
     /* pPrecioUnitario  */ 200000.00,
     /* pNumeroSerie     */ 'PCJSON001',
     /* pModelo          */ 'PCJSON'
@@ -215,7 +214,6 @@ CALL sp_modificarActivo(
     /* pidPersona       */ 1,
     /* pidCompone       */ NULL,
     /* pNombre          */ 'PCJSON002',
-    /* pAtributosExtra  */ '{"SO":"Windows 10","IP":"192.168.1.10","MAC":null}',
     /* pPrecioUnitario  */ 200000.00,
     /* pNumeroSerie     */ 'PCJSON001',
     /* pModelo          */ 'PCJSON'
