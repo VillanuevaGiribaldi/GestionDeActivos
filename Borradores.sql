@@ -138,4 +138,61 @@ select * from `Atributos` a
 inner join Tipos t on a.`idTipo`=t.`idTipo`;
 
 
+SELECT * from `Ubicaciones`;
+select a.`idActivo`,a.`idUbicacion` from `Activos` a
+-- WHERE a.`idActivo`=25
+ORDER BY  a.`idUbicacion`;   ;
+select a.`idActivo`,a.`idUbicacion`, `Descendientes`.`nombre` from `Activos` a
+INNER JOIN 
+(
+        WITH RECURSIVE Descendientes AS (
+            SELECT idUbicacion, nombre 
+            FROM `Ubicaciones`
+            WHERE `idUbicacion`=1
 
+            UNION 
+
+            SELECT u.`idUbicacion`,u.nombre
+            FROM `Ubicaciones` u INNER JOIN Descendientes d
+            ON u.`idUbicacionPadre` = d.`idUbicacion`) 
+    SELECT * FROM Descendientes 
+) as Descendientes
+ON a.`idUbicacion`=Descendientes.`idUbicacion`
+ORDER BY  a.`idActivo`;   
+SELECT * FROM `Descendientes`;
+
+CALL `sp_modificarUbicacion`(6,2,'Sala de servidores','servidores','A');
+select @servidores;
+WITH RECURSIVE Descendientes AS (
+            SELECT idUbicacion, nombre 
+            FROM `Ubicaciones`
+            WHERE `idUbicacion`=1
+
+            UNION 
+
+            SELECT u.`idUbicacion`,u.nombre
+            FROM `Ubicaciones` u INNER JOIN Descendientes d
+            ON u.`idUbicacionPadre` = d.`idUbicacion`) 
+    SELECT * FROM Descendientes;
+
+    INNER JOIN 
+    (
+                INNER JOIN 
+    (
+            WITH RECURSIVE Descendientes AS 
+            (
+                SELECT idUbicacion, nombre 
+                FROM `Ubicaciones`
+                WHERE `idUbicacion`=pIdUbicacion
+
+                UNION 
+
+                SELECT u.`idUbicacion`,u.nombre
+                FROM `Ubicaciones` u INNER JOIN Descendientes d
+                ON u.`idUbicacionPadre` = d.`idUbicacion`
+            ) 
+        SELECT * FROM Descendientes
+    ) as UbicacionesDescendientes
+        ON a.`idUbicacion` = UbicacionesDescendientes.`idUbicacion`
+    ) as UbicacionesDescendientes
+        ON a.`idUbicacion` = UbicacionesDescendientes.`idUbicacion`

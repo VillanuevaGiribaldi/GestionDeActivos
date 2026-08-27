@@ -228,6 +228,7 @@ CREATE PROCEDURE sp_modificarAtributo(
 )
 BEGIN
     DECLARE vEstadoTipo CHAR(1);
+    DECLARE vIdTipoOld INT;
 
     -- Manejador de errores (Transacciones ACID)
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
@@ -275,6 +276,14 @@ BEGIN
         AND idAtributo != pIdAtributo
     ) THEN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Este tipo de activo ya posee otro atributo registrado con ese mismo nombre';
+    END IF;
+    
+    SELECT idTipo INTO vIdTipoOld FROM `Tipos`t
+    INNER join `Atributos` a ON a.`idTipo`=t.`idTipo`
+    where a.`idAtributo`= pIdAtributo;
+
+    IF EXISTS (SELECT 1 FROM `Valores` WHERE `idAtributo` = pIdAtributo) and pIdTipo <> vIdTipoOld THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'No se puede modificar el atributo porque existen activos utilizando este atributo.';
     END IF;
 
     -- 6. Manejo seguro del valor lógico
@@ -334,8 +343,8 @@ BEGIN
 
     -- 2. REGLA CRÍTICA: Proteger la integridad de los JSON en los Activos
     -- Si ya hay equipos de este Tipo registrados, no podemos alterar su plantilla base
-    IF EXISTS (SELECT 1 FROM Activos WHERE idTipo = vIdTipo) THEN
-        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'No se puede eliminar el atributo porque ya existen activos físicos registrados bajo este tipo. Eliminarlo corrompería sus datos.';
+    IF EXISTS (SELECT 1 FROM `Valores` WHERE `idAtributo` = pIdAtributo) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'No se puede eliminar el atributo porque existen activos utilizando este atributo.';
     END IF;
 
     -- =========================================================================
@@ -669,7 +678,7 @@ SALIR:BEGIN
 			'Persona', pidPersona,
 			'Compone', pidCompone,
 			'Nombre', pNombre,
-			'AtributosExtra', pValoresAtributos,
+			'Atributos', pValoresAtributos,
 			'PrecioUnitario', pPrecioUnitario,
 			'NumeroSerie', pNumeroSerie,
 			'Modelo', pModelo

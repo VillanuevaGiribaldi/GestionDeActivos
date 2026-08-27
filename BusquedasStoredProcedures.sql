@@ -55,6 +55,7 @@ BEGIN
         a.precioUnitario,
         a.fechaRegistro,
         
+        
         -- Nombres legibles de los catálogos para el frontend
         t.nombre AS tipo,
         m.nombre AS marca,
@@ -63,7 +64,7 @@ BEGIN
         CONCAT(p.nombre, ' ', p.apellido) AS personaAsignada,
         
         -- JSON completo de características extra
-        a.atributosExtra,
+--        a.atributosExtra,
         
         -- Función de Ventana para el Total de Registros (Paginación Frontend)
         COUNT(*) OVER() AS totalRegistrosTotales
@@ -72,7 +73,7 @@ BEGIN
     -- INNER JOIN para los catálogos obligatorios
     INNER JOIN Tipos t ON a.idTipo = t.idTipo
     INNER JOIN Marcas m ON a.idMarca = m.idMarca
-    INNER JOIN Ubicaciones u ON a.idUbicacion = u.idUbicacion
+    INNER JOIN Ubicaciones u ON a.idUbicacion = u.idUbicacion 
     INNER JOIN Estados e ON a.idEstado = e.idEstado
     -- LEFT JOIN para el catálogo opcional
     LEFT JOIN Personas p ON a.idPersona = p.idPersona
@@ -92,13 +93,35 @@ BEGIN
         -- B) FILTROS EXACTOS POR ID (Dropdowns)
         AND (pIdTipo IS NULL OR a.idTipo = pIdTipo)
         AND (pIdMarca IS NULL OR a.idMarca = pIdMarca)
-        AND (pIdUbicacion IS NULL OR a.idUbicacion = pIdUbicacion)
+        AND (pIdUbicacion IS NULL OR (
+            EXISTS(
+                     
+                            WITH RECURSIVE Descendientes AS 
+                            (
+                                SELECT idUbicacion, nombre 
+                                FROM `Ubicaciones`
+                                WHERE `idUbicacion`=pIdUbicacion
+
+                                UNION 
+
+                                SELECT u.`idUbicacion`,u.nombre
+                                FROM `Ubicaciones` u INNER JOIN Descendientes d
+                                ON u.`idUbicacionPadre` = d.`idUbicacion`
+                            ) 
+                        SELECT 1 FROM Descendientes
+                        WHERE a.`idUbicacion`= Descendientes.`idUbicacion`
+            )
+        ))
         AND (pIdEstado IS NULL OR a.idEstado = pIdEstado)
         AND (pIdPersona IS NULL OR a.idPersona = pIdPersona)
         
         -- C) FILTRO PROFUNDO EN JSON (Case-insensitive)
-        AND (pAtributoClave IS NULL OR pAtributoValor IS NULL OR 
-             LOWER(JSON_UNQUOTE(JSON_EXTRACT(a.atributosExtra, CONCAT('$."', pAtributoClave, '"')))) LIKE CONCAT('%', LOWER(pAtributoValor), '%')
+        AND (pAtributoClave IS NULL OR pAtributoValor IS NULL 
+        OR EXISTS (
+            SELECT 1 FROM Valores v
+            INNER JOIN `Atributos` atr ON v.`idAtributo`=atr.`idAtributo`
+            WHERE atr.nombre=pAtributoClave AND atr.`idTipo`=a.idTipo AND valor LIKE CONCAT('%', pAtributoValor, '%')
+            )
         )
         
     -- =========================================================================

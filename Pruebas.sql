@@ -323,7 +323,7 @@ CALL sp_buscarActivosAvanzado(
 SET @idEstOperativo = (SELECT idEstado FROM Estados WHERE nombre = 'Operativo' LIMIT 1);
 
 CALL sp_buscarActivosAvanzado(
-    NULL, NULL, NULL, NULL, @idEstOperativo, NULL, NULL, NULL, 
+    NULL, NULL, NULL, 1, @idEstOperativo, NULL, NULL, NULL, 
     'ubicacion', 'ASC', -- Ordenar por catálogo Ubicación de A-Z
     50, 0
 );
@@ -408,3 +408,11 @@ FROM Valores v
 INNER JOIN Activos ac ON ac.idActivo = v.idActivo
 INNER JOIN Atributos at ON at.idAtributo = v.idAtributo
 WHERE v.idActivo = @idActivoTest;
+
+call `sp_verHistorialActivo`(@idActivoTest);
+
+CALL sp_buscarActivosAvanzado(
+    NULL, NULL, NULL, 1, @idEstOperativo, NULL, NULL, NULL, 
+    'ubicacion', 'ASC', -- Ordenar por catálogo Ubicación de A-Z
+    50, 0
+);

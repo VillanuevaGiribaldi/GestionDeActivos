@@ -105,10 +105,14 @@ CALL sp_nuevoAtributo(@idTipoCelular, 'Almacenamiento', NULL, FALSE, @idAtrCEL_A
 -- ==========================================
 CALL sp_nuevaUbicacion(NULL, 'Sede Central', 'Edificio principal', 'A', @idSedeCentral);
 CALL sp_nuevaUbicacion(@idSedeCentral, 'Oficina IT', 'Área de sistemas y servidores', 'A', @idOficinaIT);
+
 CALL sp_nuevaUbicacion(@idSedeCentral, 'Oficina Ventas', 'Área de ventas', 'A', @idOficinaVentas);
 CALL sp_nuevaUbicacion(NULL, 'Sucursal Norte', 'Sucursal de atención al público', 'A', @idSucursalNorte);
 CALL sp_nuevaUbicacion(NULL, 'Deposito Central', 'Depósito general de equipos', 'A', @idDepositoCentral);
 
+CALL sp_nuevaUbicacion(@idOficinaIT, 'Sala de servidores', 'servidores', 'A', @servidores);
+CALL sp_nuevaUbicacion( @servidores, 'Rack1', 'rack con un servidor', 'A',@rack1);
+CALL sp_nuevaUbicacion( @servidores, 'Rack2', 'rack con un nvr', 'A',@rack2);
 -- ==========================================
 -- FASE 5: PERSONAS
 -- ==========================================
