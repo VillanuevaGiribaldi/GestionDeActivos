@@ -159,7 +159,7 @@ BEGIN
 END//
 DELIMITER ;
 
--- ===========================================  VER HISTORIAL
+-- ===========================================  VER HISTORIAL ACTIVO
 DROP PROCEDURE IF EXISTS sp_verHistorialActivo;
 DELIMITER //
 
@@ -208,7 +208,97 @@ BEGIN
 END//
 DELIMITER ;
 
+-- ===========================================  VER HISTORIAL POR FECHAS
+DROP PROCEDURE IF EXISTS sp_verHistorialFechas;
+DELIMITER //
+
+CREATE PROCEDURE sp_verHistorialFechas(
+    IN pFechaInicio DATETIME,
+    IN pFechaFin DATETIME
+)
+BEGIN
+    -- 1. Validación de coherencia temporal
+    IF pFechaInicio IS NOT NULL AND pFechaFin IS NOT NULL AND pFechaInicio > pFechaFin THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'La fecha de inicio no puede ser mayor a la fecha de fin';
+    END IF;
+
+    -- 2. Consulta del reporte global 
+    SELECT 
+        h.idHistorial,
+        h.fecha,
+        
+        -- Datos del Activo 
+        a.idActivo,
+        a.nombre AS nombreActivo,
+        a.numeroSerie,
+        
+        -- Datos del responsable del cambio
+        u.username AS usuario,
+        CONCAT(p.nombre, ' ', p.apellido) AS responsable,
+        
+        -- Traducción de códigos 
+        CASE h.tipo
+            WHEN 'A' THEN 'Alta de Activo'
+            WHEN 'M' THEN 'Modificación'
+            WHEN 'B' THEN 'Baja'
+            WHEN 'R' THEN 'Envío a Reparación'
+            WHEN 'D' THEN 'Devolución de Reparación'
+            ELSE 'Otro'
+        END AS accionRealizada,
+        
+        h.comentario,
+        h.estadoAnterior,
+        h.estadoNuevo
+        
+    FROM Historial h
+    INNER JOIN Activos a ON h.idActivo = a.idActivo
+    INNER JOIN Usuarios u ON h.idUsuario = u.idUsuario
+    INNER JOIN Personas p ON u.idPersona = p.idPersona
+    
+    WHERE 
+        -- Filtros dinámicos por rango de fechas
+        (pFechaInicio IS NULL OR h.fecha >= pFechaInicio) AND
+        (pFechaFin IS NULL OR h.fecha <= pFechaFin)
+        
+    ORDER BY h.fecha DESC;
+
+END//
+DELIMITER ;
+
 -- =========================================================
 -- PRUEBAS DEL PROCEDIMIENTO DE HISTORIAL
 -- =========================================================
-CALL sp_verHistorialActivo(1);
+-- CALL sp_verHistorialActivo(1);
+
+CALL sp_verHistorialFechas('2026-08-01 00:00:00', '2026-08-31 23:59:59');
+
+
+DROP VIEW IF EXISTS vw_resumenInventario;
+
+CREATE VIEW vw_resumenInventario AS
+SELECT 
+    t.nombre AS tipoActivo,
+    m.nombre AS marca,
+    COALESCE(a.modelo, 'Genérico / Sin Especificar') AS modelo,
+    u.nombre AS ubicacion,
+    e.nombre AS estado,
+    
+    -- Cálculos de agrupación
+    COUNT(a.idActivo) AS cantidadTotal,
+    SUM(a.precioUnitario) AS capitalInvertido
+
+FROM Activos a
+INNER JOIN Tipos t ON a.idTipo = t.idTipo
+INNER JOIN Marcas m ON a.idMarca = m.idMarca
+INNER JOIN Ubicaciones u ON a.idUbicacion = u.idUbicacion
+INNER JOIN Estados e ON a.idEstado = e.idEstado
+
+-- La agrupación define qué se considera un "equipo idéntico"
+GROUP BY 
+    t.nombre, 
+    m.nombre, 
+    a.modelo, 
+    u.nombre, 
+    e.nombre;
+    
+SELECT * FROM vw_resumenInventario ORDER BY cantidadTotal DESC;
