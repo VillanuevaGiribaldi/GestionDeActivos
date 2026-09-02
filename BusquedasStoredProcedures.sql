@@ -70,7 +70,7 @@ BEGIN
         COUNT(*) OVER() AS totalRegistrosTotales
         
     FROM Activos a
-    -- INNER JOIN para los catálogos obligatorios
+    -- INNER JOIN para los catálogos obligatorios 
     INNER JOIN Tipos t ON a.idTipo = t.idTipo
     INNER JOIN Marcas m ON a.idMarca = m.idMarca
     INNER JOIN Ubicaciones u ON a.idUbicacion = u.idUbicacion 
@@ -114,13 +114,12 @@ BEGIN
         ))
         AND (pIdEstado IS NULL OR a.idEstado = pIdEstado)
         AND (pIdPersona IS NULL OR a.idPersona = pIdPersona)
-        
         -- C) FILTRO PROFUNDO EN JSON (Case-insensitive)
         AND (pAtributoClave IS NULL OR pAtributoValor IS NULL 
         OR EXISTS (
             SELECT 1 FROM Valores v
             INNER JOIN `Atributos` atr ON v.`idAtributo`=atr.`idAtributo`
-            WHERE atr.nombre=pAtributoClave AND atr.`idTipo`=a.idTipo AND valor LIKE CONCAT('%', pAtributoValor, '%')
+            WHERE atr.nombre=pAtributoClave AND atr.`idTipo`=a.idTipo AND valor LIKE pAtributoValor
             )
         )
         
@@ -270,10 +269,11 @@ DELIMITER ;
 -- =========================================================
 -- CALL sp_verHistorialActivo(1);
 
-CALL sp_verHistorialFechas('2026-08-01 00:00:00', '2026-08-31 23:59:59');
+CALL sp_verHistorialFechas('2026-09-01 00:00:00', '2026-10-01 00:00:00');
 
 
 DROP VIEW IF EXISTS vw_resumenInventario;
+DELIMITER //
 
 CREATE VIEW vw_resumenInventario AS
 SELECT 
@@ -282,7 +282,6 @@ SELECT
     COALESCE(a.modelo, 'Genérico / Sin Especificar') AS modelo,
     u.nombre AS ubicacion,
     e.nombre AS estado,
-    
     -- Cálculos de agrupación
     COUNT(a.idActivo) AS cantidadTotal,
     SUM(a.precioUnitario) AS capitalInvertido
@@ -292,7 +291,6 @@ INNER JOIN Tipos t ON a.idTipo = t.idTipo
 INNER JOIN Marcas m ON a.idMarca = m.idMarca
 INNER JOIN Ubicaciones u ON a.idUbicacion = u.idUbicacion
 INNER JOIN Estados e ON a.idEstado = e.idEstado
-
 -- La agrupación define qué se considera un "equipo idéntico"
 GROUP BY 
     t.nombre, 
@@ -301,4 +299,10 @@ GROUP BY
     u.nombre, 
     e.nombre;
     
-SELECT * FROM vw_resumenInventario ORDER BY cantidadTotal DESC;
+END//
+
+SELECT * FROM `vw_resumenInventario`;
+
+SELECT `tipoActivo`,marca, sum(`cantidadTotal`), sum(capitalInvertido) FROM vw_resumenInventario 
+GROUP BY `tipoActivo`,marca
+ORDER BY `tipoActivo` DESC;

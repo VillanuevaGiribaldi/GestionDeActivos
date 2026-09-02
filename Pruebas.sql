@@ -234,9 +234,11 @@ CALL sp_buscarActivosAvanzado(
 
 CALL sp_buscarActivosAvanzado(
     NULL, NULL, NULL, NULL, NULL, NULL, 
-    'SO', 'win', -- La BD tiene "Ubuntu 22.04"
+    'IP', '192.168.1.101', -- La BD tiene "Ubuntu 22.04"
     NULL, NULL, 50, 0
 );
+SELECT * from `Valores` v
+inner join `Atributos` a on a.`idAtributo`=v.`idAtributo`;
 -- EXPECTATIVA: El SP aplicará LOWER() a ambos lados y encontrará la "PC con Linux" marca Corsair.
 
 -- B) Texto libre

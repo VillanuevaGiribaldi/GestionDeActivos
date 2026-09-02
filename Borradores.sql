@@ -195,4 +195,12 @@ WITH RECURSIVE Descendientes AS (
     ) as UbicacionesDescendientes
         ON a.`idUbicacion` = UbicacionesDescendientes.`idUbicacion`
     ) as UbicacionesDescendientes
-        ON a.`idUbicacion` = UbicacionesDescendientes.`idUbicacion`
+        ON a.`idUbicacion` = UbicacionesDescendientes.`idUbicacion`;
+
+select * from `Activos` a 
+WHERE exists(
+SELECT * FROM Valores v
+            INNER JOIN `Atributos` atr ON v.`idAtributo`=atr.`idAtributo`
+            WHERE atr.nombre='SO'  AND valor LIKE '%Win%')
+
+            

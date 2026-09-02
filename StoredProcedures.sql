@@ -1750,7 +1750,7 @@ SALIR: BEGIN
 
                 SELECT u.idUbicacion, u.idUbicacionPadre 
                 FROM Ubicaciones u INNER JOIN Ancestros a
-                ON u.idUbicacion = a.idUbicacionPadre
+                ON u.idUbicacion = a.idUbicacionPadre 
             )
             SELECT 1
             FROM Ancestros
