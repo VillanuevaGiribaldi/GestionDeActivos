@@ -422,3 +422,59 @@ BEGIN
     ORDER BY nombre ASC;
 END//
 DELIMITER ;
+
+-- ===========================================  VER DETALLE ACTIVO
+DROP PROCEDURE IF EXISTS sp_verDetalleActivo;
+DELIMITER //
+
+CREATE PROCEDURE sp_sp_verDetalleActivo(
+    IN pIdActivo INT
+)
+BEGIN
+    -- 1. Validacion
+    IF pIdActivo IS NULL THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Debe indicar el ID del activo a consultar';
+    END IF;
+
+    IF NOT EXISTS (SELECT 1 FROM Activos WHERE idActivo = pIdActivo) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El activo indicado no existe en el sistema';
+    END IF;
+
+    -- 2. Consulta principal
+    SELECT 
+        a.idActivo,
+        a.nombre AS nombreActivo,
+        a.numeroSerie,
+        a.modelo,
+        a.precioUnitario,
+        a.fechaRegistro,
+        
+        -- Datos descriptivos 
+        t.nombre AS tipo,
+        m.nombre AS marca,
+        u.nombre AS ubicacion,
+        e.nombre AS estado,
+        CONCAT(p.nombre, ' ', p.apellido) AS personaAsignada,
+        
+        -- Recorre las filas de 'Valores' y convertirlas en un solo JSON
+        COALESCE(
+            (
+                SELECT JSON_OBJECTAGG(atr.nombre, v.valor)
+                FROM Valores v
+                INNER JOIN Atributos atr ON v.idAtributo = atr.idAtributo
+                WHERE v.idActivo = a.idActivo
+            ), 
+            JSON_OBJECT() -- Devuelve un objeto vacío {} si el activo no tiene atributos
+        ) AS atributosDinamicos
+        
+    FROM Activos a
+    INNER JOIN Tipos t ON a.idTipo = t.idTipo
+    INNER JOIN Marcas m ON a.idMarca = m.idMarca
+    INNER JOIN Ubicaciones u ON a.idUbicacion = u.idUbicacion
+    INNER JOIN Estados e ON a.idEstado = e.idEstado
+    LEFT JOIN Personas p ON a.idPersona = p.idPersona
+    
+    WHERE a.idActivo = pIdActivo;
+
+END//
+DELIMITER ;
