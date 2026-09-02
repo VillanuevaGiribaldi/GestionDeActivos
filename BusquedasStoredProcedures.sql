@@ -306,3 +306,119 @@ SELECT * FROM `vw_resumenInventario`;
 SELECT `tipoActivo`,marca, sum(`cantidadTotal`), sum(capitalInvertido) FROM vw_resumenInventario 
 GROUP BY `tipoActivo`,marca
 ORDER BY `tipoActivo` DESC;
+
+-- ===========================================  LISTAR MARCAS
+DROP PROCEDURE IF EXISTS sp_listarMarcas;
+DELIMITER //
+CREATE PROCEDURE sp_listarMarcas(
+    IN pEstado CHAR(1)
+)
+BEGIN
+    SELECT 
+        idMarca, 
+        nombre, 
+        descripcion, 
+        estado
+    FROM Marcas
+    WHERE pEstado IS NULL OR estado = pEstado	-- Cuando este creando un Activo recibira 'A', entonces mostrara solo las marcas que estan Activas. Y cuando se quiera listar las m
+    ORDER BY nombre ASC;						-- Y cuando se quiera listar las marcas para Altas, bajas y modificaciones, recibira un "null" para mostrar todas.
+END//
+DELIMITER ;
+
+-- ===========================================  LISTAR PROVEEDORES
+DROP PROCEDURE IF EXISTS sp_listarProveedores;
+DELIMITER //
+CREATE PROCEDURE sp_listarProveedores(
+    IN pEstado CHAR(1)
+)
+BEGIN
+    SELECT 
+        idProveedor, 
+        nombre, 
+        direccion, 
+        telefono, 
+        mail, 
+        descripcion, 
+        estado
+    FROM Proveedores
+    WHERE pEstado IS NULL OR estado = pEstado	-- Misma logica que listar Marcas.
+    ORDER BY nombre ASC;
+END//
+DELIMITER ;
+
+-- ===========================================  LISTAR TIPOS
+DROP PROCEDURE IF EXISTS sp_listarTipos;
+DELIMITER //
+CREATE PROCEDURE sp_listarTipos(
+    IN pEstado CHAR(1)
+)
+BEGIN
+    SELECT 
+        idTipo, 
+        nombre, 
+        descripcion, 
+        estado
+    FROM Tipos
+    WHERE pEstado IS NULL OR estado = pEstado	-- Misma logica que listar Marcas.
+    ORDER BY nombre ASC;
+END//
+DELIMITER ;
+
+-- ===========================================  LISTAR UBICACIONES
+DROP PROCEDURE IF EXISTS sp_listarUbicaciones;
+DELIMITER //
+CREATE PROCEDURE sp_listarUbicaciones(
+    IN pEstado CHAR(1)
+)
+BEGIN
+    SELECT 
+        u1.idUbicacion, 
+        u1.nombre, 
+        u1.descripcion, 
+        u1.estado,
+        u1.idUbicacionPadre,
+        u2.nombre AS nombreUbicacionPadre
+    FROM Ubicaciones u1
+    LEFT JOIN Ubicaciones u2 ON u1.idUbicacionPadre = u2.idUbicacion
+    WHERE pEstado IS NULL OR u1.estado = pEstado
+    ORDER BY u1.nombre ASC;
+END//
+DELIMITER ;
+
+-- ===========================================  LISTAR PERSONAS
+DROP PROCEDURE IF EXISTS sp_listarPersonas;
+DELIMITER //
+CREATE PROCEDURE sp_listarPersonas(
+    IN pEstado CHAR(1)
+)
+BEGIN
+    SELECT 
+        idPersona, 
+        nombre, 
+        apellido, 
+        dni, 
+        cargo, 
+        estado
+    FROM Personas
+    WHERE pEstado IS NULL OR estado = pEstado	-- Misma logica que listar Marcas. 
+    ORDER BY nombre ASC, apellido ASC;
+END//
+DELIMITER ;
+
+-- ===========================================  LISTAR ESTADOS
+DROP PROCEDURE IF EXISTS sp_listarEstados;
+DELIMITER //
+CREATE PROCEDURE sp_listarEstados(
+    IN pEstado CHAR(1)
+)
+BEGIN
+    SELECT 
+        idEstado, 
+        nombre, 
+        descripcion, 
+        estado
+    FROM Estados
+    WHERE pEstado IS NULL OR estado = pEstado	-- Misma logica que listar Marcas.
+    ORDER BY nombre ASC;
+END//
+DELIMITER ;
