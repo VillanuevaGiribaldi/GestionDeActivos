@@ -314,13 +314,14 @@ CREATE PROCEDURE sp_listarMarcas(
     IN pEstado CHAR(1)
 )
 BEGIN
+    
     SELECT 
         idMarca, 
         nombre, 
         descripcion, 
         estado
     FROM Marcas
-    WHERE pEstado IS NULL OR estado = pEstado	-- Cuando este creando un Activo recibira 'A', entonces mostrara solo las marcas que estan Activas. Y cuando se quiera listar las m
+    WHERE pEstado IS NULL OR estado = COALESCE(pEstado,'A')	-- Cuando este creando un Activo recibira 'A', entonces mostrara solo las marcas que estan Activas. Y cuando se quiera listar las m
     ORDER BY nombre ASC;						-- Y cuando se quiera listar las marcas para Altas, bajas y modificaciones, recibira un "null" para mostrar todas.
 END//
 DELIMITER ;
@@ -341,7 +342,7 @@ BEGIN
         descripcion, 
         estado
     FROM Proveedores
-    WHERE pEstado IS NULL OR estado = pEstado	-- Misma logica que listar Marcas.
+    WHERE pEstado IS NULL OR estado = COALESCE(pEstado,'A')	-- Misma logica que listar Marcas.
     ORDER BY nombre ASC;
 END//
 DELIMITER ;
@@ -359,7 +360,7 @@ BEGIN
         descripcion, 
         estado
     FROM Tipos
-    WHERE pEstado IS NULL OR estado = pEstado	-- Misma logica que listar Marcas.
+    WHERE pEstado IS NULL OR estado = COALESCE(pEstado,'A')	-- Misma logica que listar Marcas.
     ORDER BY nombre ASC;
 END//
 DELIMITER ;
@@ -371,6 +372,7 @@ CREATE PROCEDURE sp_listarUbicaciones(
     IN pEstado CHAR(1)
 )
 BEGIN
+
     SELECT 
         u1.idUbicacion, 
         u1.nombre, 
@@ -380,8 +382,9 @@ BEGIN
         u2.nombre AS nombreUbicacionPadre
     FROM Ubicaciones u1
     LEFT JOIN Ubicaciones u2 ON u1.idUbicacionPadre = u2.idUbicacion
-    WHERE pEstado IS NULL OR u1.estado = pEstado
+    WHERE pEstado IS NULL OR u1.estado = COALESCE(pEstado,'A')
     ORDER BY u1.nombre ASC;
+
 END//
 DELIMITER ;
 
@@ -400,7 +403,7 @@ BEGIN
         cargo, 
         estado
     FROM Personas
-    WHERE pEstado IS NULL OR estado = pEstado	-- Misma logica que listar Marcas. 
+    WHERE pEstado IS NULL OR estado = COALESCE(pEstado,'A')	-- Misma logica que listar Marcas. 
     ORDER BY nombre ASC, apellido ASC;
 END//
 DELIMITER ;
@@ -418,7 +421,7 @@ BEGIN
         descripcion, 
         estado
     FROM Estados
-    WHERE pEstado IS NULL OR estado = pEstado	-- Misma logica que listar Marcas.
+    WHERE pEstado IS NULL OR estado = COALESCE(pEstado,'A')	-- Misma logica que listar Marcas.
     ORDER BY nombre ASC;
 END//
 DELIMITER ;
@@ -476,5 +479,25 @@ BEGIN
     
     WHERE a.idActivo = pIdActivo;
 
+END//
+DELIMITER ;
+
+
+DROP PROCEDURE IF EXISTS sp_listarValoresActivo;
+DELIMITER //
+
+CREATE PROCEDURE sp_listarValoresActivo(
+    IN pIdActivo INT
+)
+BEGIN
+    SELECT 
+        a.nombre AS nombreActivo,
+        atr.nombre AS nombreAtributo,
+        v.valor
+    FROM Activos a
+    INNER JOIN Atributos atr ON a.`idTipo`=atr.`idTipo`
+    LEFT JOIN Valores v 
+        ON v.idActivo=a.idActivo and v.`idAtributo`=atr.`idAtributo`
+    WHERE pIdActivo IS NULL OR a.idActivo = pIdActivo;
 END//
 DELIMITER ;

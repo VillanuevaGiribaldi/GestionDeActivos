@@ -364,6 +364,10 @@ SET @idAtributoIP = (
     WHERE t.nombre = 'PC' AND a.nombre = 'IP' LIMIT 1
 );
 
+
+call `sp_verHistorialActivo`(@idActivoTest);
+CALL `sp_listarValoresActivo`(@idActivoTest);
+CALL `sp_buscarActivosAvanzado`('pc-linux-01',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
 -- ==========================================
 -- TEST 1: sp_modificarActivo (caso exitoso)
 -- ==========================================
@@ -371,13 +375,13 @@ CALL sp_modificarActivo(
     @idActivoTest, @idUsuarioJuan,
     'Corsair', 'Oficina IT', 'PC', 'Operativo',
     NULL, @idCarlos, NULL, 'PC-LINUX-01',
-    2100.00, 'COR-PC-UBUNTU', 'One i300'
+    2000.00, 'COR-PC-UBUNTU', 'One i300'
 );
 
 -- ==========================================
 -- TEST 2: sp_setValor (caso exitoso - alta de valor IP)
 -- ==========================================
-CALL sp_setValor(@idUsuarioJuan, @idActivoTest, @idAtributoIP, '10.0.0.9');
+CALL sp_setValor(@idUsuarioJuan, @idActivoTest, @idAtributoIP, null);
 
 -- ==========================================
 -- TEST 3: sp_nuevoMantenimiento (caso exitoso)
@@ -386,30 +390,17 @@ CALL sp_nuevoMantenimiento(
     @idActivoTest, @idProveedorHardware, 'No enciende', NULL,
     @idEstadoReparacion, @idUsuarioJuan, @idMantenimientoTest
 );
+call `sp_verHistorialActivo`(@idActivoTest);
+call `sp_finMantenimiento`(1,"Se cambió la fuente","2026-09-10",100.50, 1,1);
 
 -- ==========================================
 -- TEST 4: sp_bajaActivo (caso exitoso)
 -- ==========================================
 CALL sp_bajaActivo(@idActivoTest, 3, @idUsuarioJuan, 'Baja por prueba');
-select * from `Estados`;
--- ==========================================
--- SELECT 1: Historial completo del activo
--- ==========================================
-SELECT idHistorial, idUsuario, fecha, comentario, tipo, estadoAnterior, estadoNuevo
-FROM Historial
-ORDER BY idHistorial;
 
 -- ==========================================
 -- SELECT 2: Valores del activo con nombre de atributo y de activo
 -- ==========================================
-SELECT
-    ac.nombre AS Activo,
-    at.nombre AS Atributo,
-    v.valor AS Valor
-FROM Valores v
-INNER JOIN Activos ac ON ac.idActivo = v.idActivo
-INNER JOIN Atributos at ON at.idAtributo = v.idAtributo
-WHERE v.idActivo = @idActivoTest;
 
 call `sp_verHistorialActivo`(@idActivoTest);
 
@@ -418,3 +409,13 @@ CALL sp_buscarActivosAvanzado(
     'ubicacion', 'ASC', -- Ordenar por catálogo Ubicación de A-Z
     50, 0
 );
+
+
+call `sp_verHistorialFechas`(null,null);
+call `sp_listarTodo`();
+SELECT * from `Estados`;
+
+-- ATRIBUTOS DE UN ACTIVO
+call `sp_listarValoresActivo`(@idActivoTest);
+select * from `Ubicaciones`;
+call `sp_listarEstados`(NULL);
