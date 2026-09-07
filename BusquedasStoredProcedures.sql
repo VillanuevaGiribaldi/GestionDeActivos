@@ -276,29 +276,28 @@ DROP VIEW IF EXISTS vw_resumenInventario;
 DELIMITER //
 
 CREATE VIEW vw_resumenInventario AS
-SELECT 
-    t.nombre AS tipoActivo,
-    m.nombre AS marca,
-    COALESCE(a.modelo, 'Genérico / Sin Especificar') AS modelo,
-    u.nombre AS ubicacion,
-    e.nombre AS estado,
-    -- Cálculos de agrupación
-    COUNT(a.idActivo) AS cantidadTotal,
-    SUM(a.precioUnitario) AS capitalInvertido
+    SELECT 
+        t.nombre AS tipoActivo,
+        m.nombre AS marca,
+        COALESCE(a.modelo, 'Genérico / Sin Especificar') AS modelo,
+        u.nombre AS ubicacion,
+        e.nombre AS estado,
+        -- Cálculos de agrupación
+        COUNT(a.idActivo) AS cantidadTotal,
+        SUM(a.precioUnitario) AS capitalInvertido
 
-FROM Activos a
-INNER JOIN Tipos t ON a.idTipo = t.idTipo
-INNER JOIN Marcas m ON a.idMarca = m.idMarca
-INNER JOIN Ubicaciones u ON a.idUbicacion = u.idUbicacion
-INNER JOIN Estados e ON a.idEstado = e.idEstado
--- La agrupación define qué se considera un "equipo idéntico"
-GROUP BY 
-    t.nombre, 
-    m.nombre, 
-    a.modelo, 
-    u.nombre, 
-    e.nombre;
-    
+    FROM Activos a
+    INNER JOIN Tipos t ON a.idTipo = t.idTipo
+    INNER JOIN Marcas m ON a.idMarca = m.idMarca
+    INNER JOIN Ubicaciones u ON a.idUbicacion = u.idUbicacion
+    INNER JOIN Estados e ON a.idEstado = e.idEstado
+    -- La agrupación define qué se considera un "equipo idéntico"
+    GROUP BY 
+        t.nombre, 
+        m.nombre, 
+        a.modelo, 
+        u.nombre, 
+        e.nombre;
 END//
 
 SELECT * FROM `vw_resumenInventario`;

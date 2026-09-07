@@ -18,7 +18,7 @@ CALL sp_nuevoActivo(
     /* pidPersona       */ 1,
     /* pidCompone       */ NULL,
     /* pNombre          */ 'PC-Administracion-01',
-    /* pAtributosExtra  */ '{"Sistema Operativo":"Windows 11","Direccion IP":"192.168.1.10"}',
+    /* pAtributosExtra  */ '{"SO":"Windows 11","IP":"192.168.1.10"}',
     /* pPrecioUnitario  */ 1250000.00,
     /* pNumeroSerie     */ 'DLPCA001',
     /* pModelo          */ 'OptiPlex 7010'
@@ -367,7 +367,7 @@ SET @idAtributoIP = (
 
 call `sp_verHistorialActivo`(@idActivoTest);
 CALL `sp_listarValoresActivo`(@idActivoTest);
-CALL `sp_buscarActivosAvanzado`('pc-linux-01',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+CALL `sp_buscarActivosAvanzado`('pc-',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
 -- ==========================================
 -- TEST 1: sp_modificarActivo (caso exitoso)
 -- ==========================================
@@ -407,10 +407,10 @@ call `sp_verHistorialActivo`(@idActivoTest);
 CALL sp_buscarActivosAvanzado(
     NULL, NULL, NULL, 1, @idEstOperativo, NULL, NULL, NULL, 
     'ubicacion', 'ASC', -- Ordenar por catálogo Ubicación de A-Z
-    50, 0
+    3, 2
 );
 
-
+SELECT * from vw_resumenInventario;
 call `sp_verHistorialFechas`(null,null);
 call `sp_listarTodo`();
 SELECT * from `Estados`;
