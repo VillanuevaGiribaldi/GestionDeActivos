@@ -1,0 +1,56 @@
+volumes:
+  mysql-data:
+services:
+  activos-db:
+    image: mysql:8.0     
+    environment:
+        MYSQL_ROOT_PASSWORD: example
+        MYSQL_DATABASE: GestionDeActivos
+    volumes:
+      - mysql-data:/var/lib/mysql
+    ports:
+      - 3306:3306
+      - 33060:33060
+  activos-backend:
+    build: 
+      context: ./activos-backend
+#    depends_on:
+#      - activos-db
+    environment:
+      NODE_ENV: production
+    ports:
+      - 3000:3000
+      - 35729:35729
+    stdin_open: true
+    tty: true
+    command: sh
+    develop:
+      watch:
+        - path: ./activos-backend/package.json
+          action: rebuild
+        - path: ./activos-backend/
+          target: /usr/src/activos-backend/
+          action: sync
+          ignore:
+            - node_modules/ 
+  activos-frontend:
+    build: 
+      context: ./activos-frontend
+    depends_on:
+      - activos-backend
+    environment:
+      NODE_ENV: production
+    ports:
+      - 5173:5173
+    stdin_open: true
+    tty: true
+    command: sh
+    develop:
+      watch:
+        - path: ./activos-frontend/package.json
+          action: rebuild
+        - path: ./activos-frontend/
+          target: /usr/src/activos-frontend/
+          action: sync
+          ignore:
+            - node_modules/ 
