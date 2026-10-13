@@ -27,23 +27,23 @@ services:
     stdin_open: true
     tty: true
     command: sh
-    volumes:
-      - ./activos-backend:/usr/src/activos-backend/
+    # volumes:
+    #   - ./activos-backend:/usr/src/activos-backend/
     develop:
       watch:
         - path: ./activos-backend/package.json
           action: rebuild
-#        - path: ./activos-backend/
-#          target: /usr/src/activos-backend/
-#          action: sync
-#          ignore:
-#            - node_modules/ 
+        - path: ./activos-backend/
+          target: /usr/src/activos-backend/
+          action: sync
+          ignore:
+            - node_modules/ 
   activos-frontend:
     container_name: activos-frontend
     build: 
       context: ./activos-frontend
-    depends_on:
-      - activos-backend
+    # volumes:
+    #   - ./activos-backend:/usr/src/activos-frontend/
     environment:
       NODE_ENV: development
     ports:
