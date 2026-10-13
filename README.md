@@ -14,12 +14,12 @@ Con esto inicia el servidor mysql, node y vite (react). actualmente node no ejec
 Agregar la flag `--build` si se modifico compose o algún dockerfile desde la última vez que se usó
 
 Una vez iniciado el compose puedes revisar el estado de los contenedores en la aplicación o con el comando `docker ps`.
-Deberías tener uno llamado `docker-test-activos-backend-1` o similar.
+Deberías tener uno llamado `activos-api` o similar.
 Puede usar el sgte comando para acceder al terminal del backend (node):
- `docker exec -it docker-test-activos-backend-1 sh`
+ `docker exec -it activos-api sh`
 Allí puedes ejecutar cualquier comando que necesite node (`npm run`, `npm install`,etc.)
 Con este comando se accede al contenedor del front end:
-`docker exec -it docker-test-activos-frontend-1 sh`
+`docker exec -it activos-frontend sh`
 
 
 ## Arquitectura del proyecto

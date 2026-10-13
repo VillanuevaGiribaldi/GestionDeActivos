@@ -4,7 +4,7 @@ WORKDIR /usr/src/activos-backend
 
 COPY package*.json ./
 RUN npm install
-COPY . .
+#COPY . .
 EXPOSE 3000
 
 CMD ["sh"]

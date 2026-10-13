@@ -1,7 +1,9 @@
 volumes:
   mysql-data:
+
 services:
   activos-db:
+    container_name: activos-db
     image: mysql:8.0     
     environment:
         MYSQL_ROOT_PASSWORD: example
@@ -12,6 +14,7 @@ services:
       - 3306:3306
       - 33060:33060
   activos-backend:
+    container_name: activos-api
     build: 
       context: ./activos-backend
 #    depends_on:
@@ -24,16 +27,19 @@ services:
     stdin_open: true
     tty: true
     command: sh
+    volumes:
+      - ./activos-backend:/usr/src/activos-backend/
     develop:
       watch:
         - path: ./activos-backend/package.json
           action: rebuild
-        - path: ./activos-backend/
-          target: /usr/src/activos-backend/
-          action: sync
-          ignore:
-            - node_modules/ 
+#        - path: ./activos-backend/
+#          target: /usr/src/activos-backend/
+#          action: sync
+#          ignore:
+#            - node_modules/ 
   activos-frontend:
+    container_name: activos-frontend
     build: 
       context: ./activos-frontend
     depends_on:
