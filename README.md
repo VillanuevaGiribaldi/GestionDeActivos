@@ -5,29 +5,43 @@ Autores:
 Tutor:
 - Carlos Albaaca Paraván
 
-El repositorio contiene una carpeta con las queries SQL para creación de base de datos y otro que incluye un docker compose para ejecutar todo el stack simultaneamente.
-Para iniciar los contenedores ejecuta el sgte comando desde adentro de docker-test:
+## Guia de uso con docker:
+### Iniciar los contenedores: 
 
-  `docker compose up --watch`
-Con esto inicia el servidor mysql, node y vite (react). actualmente node no ejecuta nada por que no tenemos código. Frontend tiene un template de vite.
+  docker compose up --watch
 
-Agregar la flag `--build` si se modifico compose o algún dockerfile desde la última vez que se usó
+flags opcionales: 
+  `-d` para poder cerrar la linea de comandos
+  `--build` si se modificó algún dockerfile o compose
 
-Una vez iniciado el compose puedes revisar el estado de los contenedores en la aplicación o con el comando `docker ps`.
-Deberías tener uno llamado `activos-api` o similar.
-Puede usar el sgte comando para acceder al terminal del backend (node):
- `docker exec -it activos-api sh`
-Allí puedes ejecutar cualquier comando que necesite node (`npm run`, `npm install`,etc.)
-Con este comando se accede al contenedor del front end:
-`docker exec -it activos-frontend sh`
+Acceder a la linea de comandos de un contenedor:
 
+  doker exec -it activos-api sh
+
+o:
+
+  doker exec -it activos-frontend sh
+
+### Variables de entorno
+Api tiene acceso a las variables de entorno en las carpetas:
+- .env.database
+- .env.node
+- /activos-api/.env
+
+activos-frontend tiene acceso a las variablesde entorno en las carpetas:
+- .env.node
+- /activos-frontend/.env
+
+Si es usada por la api y el frontend -> .env.node
+Si es usada por la db y api -> .env.database
+Si es usada solo por un servidor -> .env del correspondiente
 
 ## Arquitectura del proyecto
 
 El stack se compone de tres servicios orquestados con Docker Compose:
 
 - **`activos-db`**: base de datos MySQL 8.0, con los datos persistidos en el volumen `mysql-data` para que no se pierdan al reiniciar el contenedor.
-- **`activos-backend`**: API en Node.js + Express, expuesta en el puerto `3000`.
+- **`activos-api`**: API en Node.js + Express, expuesta en el puerto `3000`.
 - **`activos-frontend`**: aplicación React + Vite, expuesta en el puerto `5173`.
 
 Ambos servicios de Node (frontend y backend) usan **Docker Compose Watch** (`develop.watch`) para sincronizar cambios de código en caliente durante el desarrollo, excluyendo `node_modules` del sync y reconstruyendo la imagen automáticamente si cambia `package.json`.
