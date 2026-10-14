@@ -46,3 +46,4 @@ CHECK (obligatorio IN (0, 1));
 
 ALTER TABLE `ComposicionTipos` ADD CONSTRAINT ck_cantidadMax
 CHECK (cantidadComponentesMaxima >= 1);
+
