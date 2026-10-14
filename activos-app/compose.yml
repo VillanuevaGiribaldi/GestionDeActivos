@@ -5,36 +5,36 @@ services:
   activos-db:
     container_name: activos-db
     image: mysql:8.0     
-    environment:
-        MYSQL_ROOT_PASSWORD: example
-        MYSQL_DATABASE: GestionDeActivos
+    env_file:
+      - .env.database
     volumes:
       - mysql-data:/var/lib/mysql
     ports:
       - 3306:3306
       - 33060:33060
-  activos-backend:
+  activos-api:
     container_name: activos-api
     build: 
-      context: ./activos-backend
-#    depends_on:
-#      - activos-db
-    environment:
-      NODE_ENV: development
+      context: ./activos-api
+    depends_on:
+      - activos-db
+    env_file:
+      - .env.database
+      - ./activos-api/.env
+      - .env.node
     ports:
       - 3000:3000
       - 35729:35729
     stdin_open: true
     tty: true
-#    command: sh
     # volumes:
     #   - ./activos-backend:/usr/src/activos-backend/
     develop:
       watch:
-        - path: ./activos-backend/package.json
+        - path: ./activos-api/package.json
           action: rebuild
-        - path: ./activos-backend/
-          target: /usr/src/activos-backend/
+        - path: ./activos-api/
+          target: /usr/src/activos-api/
           action: sync
           ignore:
             - node_modules/ 
@@ -42,15 +42,13 @@ services:
     container_name: activos-frontend
     build: 
       context: ./activos-frontend
-    # volumes:
-    #   - ./activos-backend:/usr/src/activos-frontend/
-    environment:
-      NODE_ENV: development
+    env_file:
+      - .env.node
+      - ./activos-frontend/.env
     ports:
       - 5173:5173
     stdin_open: true
     tty: true
-#    command: sh
     develop:
       watch:
         - path: ./activos-frontend/package.json

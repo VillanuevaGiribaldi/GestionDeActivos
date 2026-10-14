@@ -8,10 +8,10 @@ const startServer = async () => {
             console.log("ERROR", error)
             throw error;
         });
-        app.listen(3000,'0.0.0.0',()=>{
-            console.log('El servidor activos-api se encuentra funcionando sobre el puerto '+3000);
+        app.listen(process.env.API_PORT,'0.0.0.0',()=>{
+            console.log('El servidor activos-api se encuentra funcionando sobre el  puerto '+process.env.API_PORT);
         })
-    } catch (error) {
+    } catch (error) { 
         console.log(error)
     }
 }

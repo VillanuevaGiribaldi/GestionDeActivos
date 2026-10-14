@@ -4,10 +4,10 @@ import mysql from  'mysql2/promise'
 const connectarMySQL = async () => {
     console.log('conectando a la base de datos...')
     const connection = await mysql.createConnection({
-        host: 'activos-db',
+        host: process.env.DB_HOSTNAME,
         user: 'root',
-        database: 'GestionDeActivos',
-        password: 'example'
+        database: process.env.MYSQL_DATABASE,
+        password: process.env.MYSQL_ROOT_PASSWORD
     })
     try {
         const [results,fields] = await connection.query(
