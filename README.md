@@ -8,7 +8,7 @@ Tutor:
 ## Guia de uso con docker:
 ### Iniciar los contenedores: 
 
-  docker compose up --watch
+    docker compose up --watch
 
 flags opcionales: 
   `-d` para poder cerrar la linea de comandos
@@ -16,11 +16,11 @@ flags opcionales:
 
 Acceder a la linea de comandos de un contenedor:
 
-  doker exec -it activos-api sh
+    doker exec -it activos-api sh
 
 o:
 
-  doker exec -it activos-frontend sh
+    doker exec -it activos-frontend sh
 
 ### Variables de entorno
 Api tiene acceso a las variables de entorno en las carpetas:

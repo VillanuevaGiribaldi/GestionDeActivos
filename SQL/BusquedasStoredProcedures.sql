@@ -429,7 +429,7 @@ DELIMITER ;
 DROP PROCEDURE IF EXISTS sp_verDetalleActivo;
 DELIMITER //
 
-CREATE PROCEDURE sp_sp_verDetalleActivo(
+CREATE PROCEDURE sp_verDetalleActivo(
     IN pIdActivo INT
 )
 BEGIN
@@ -498,5 +498,18 @@ BEGIN
     LEFT JOIN Valores v 
         ON v.idActivo=a.idActivo and v.`idAtributo`=atr.`idAtributo`
     WHERE pIdActivo IS NULL OR a.idActivo = pIdActivo;
+END//
+DELIMITER ;
+
+DROP PROCEDURE IF EXISTS sp_buscarUsuarios;
+DELIMITER //
+
+CREATE PROCEDURE sp_buscarUsuario(
+    IN pUsername VARCHAR(45)
+)
+BEGIN
+    SELECT u.username, u.rol, p.nombre, p.apellido, p.dni, p.cargo FROM `Usuarios` u 
+    LEFT JOIN `Personas` p ON u.`idPersona`=p.`idPersona`
+    WHERE u.username = pUsername and u.estado='A';
 END//
 DELIMITER ;
