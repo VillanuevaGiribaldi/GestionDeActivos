@@ -508,18 +508,18 @@ CREATE PROCEDURE sp_buscarUsuario(
     IN pUsername VARCHAR(45)
 )
 BEGIN
-    SELECT * FROM `Usuarios` u 
-    WHERE u.username = pUsername and u.estado='A';
-END//
-DELIMITER ;
-DELIMITER //
-
-CREATE PROCEDURE sp_buscarUsuario(
-    IN pUsername VARCHAR(45)
-)
-BEGIN
-    SELECT u.username, u.password, u.rol, p.nombre, p.apellido, p.dni, p.cargo FROM `Usuarios` u 
-    LEFT JOIN `Personas` p ON u.`idPersona`=p.`idPersona`
-    WHERE u.username = pUsername and u.estado='A';
+    SELECT 
+        u.idPersona, 
+        u.username, 
+        u.password, 
+        u.rol, 
+        u.estado, 
+        p.nombre, 
+        p.apellido, 
+        p.dni, 
+        p.cargo 
+    FROM `Usuarios` u
+    LEFT JOIN `Personas` p ON u.`idPersona` = p.`idPersona`
+    WHERE u.username = pUsername AND u.estado = 'A';
 END//
 DELIMITER ;

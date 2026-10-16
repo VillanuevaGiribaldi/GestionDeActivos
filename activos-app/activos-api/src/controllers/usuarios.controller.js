@@ -2,7 +2,8 @@ import Usuario  from '../models/usuarios.models.js'
 import jwt from 'jsonwebtoken';
 
 
-const loginUsuario = async (req,res) => { 
+const loginUsuario = async (req,res) => {
+    console.log("Entró al controlador real") 
     const {username, password} = req.body
     if (!username || !password) {
         return res.status(400).json({ mensaje: 'Por favor, ingrese usuario y contraseña' });
@@ -53,14 +54,37 @@ const loginUsuario = async (req,res) => {
     }  
     
 }
-const nuevoUsuario = async (req,res) => {
-    const usuario = Usuario.fromObject(req.body)
-    try {
-        console.log(usuario.save())
-    } catch (error) {
-        console.log(error)
-    }
+//const nuevoUsuario = async (req,res) => {
+//    const usuario = Usuario.fromObject(req.body)
+//    try {
+
+//        console.log(usuario.save())
+//    } catch (error) {
+//        console.log(error)
+//    }
     
+//}
+
+const nuevoUsuario = async (req, res) => {
+    const usuario = Usuario.fromObject(req.body);
+    try {
+        // 1. Agregamos await para esperar que la BD termine la inserción
+        const resultado = await usuario.save();
+        
+        // 2. Respondemos a Postman para que no se quede colgado
+        return res.status(201).json({ 
+            mensaje: 'Usuario creado exitosamente', 
+            datos: resultado 
+        });
+    } catch (error) {
+        console.error('Error al guardar el usuario:', error);
+        
+        // 3. Devolvemos el error a Postman si algo falla en la BD
+        return res.status(500).json({ 
+            mensaje: 'Hubo un error al crear el usuario',
+            error: error.message 
+        });
+    }
 }
 
 export {

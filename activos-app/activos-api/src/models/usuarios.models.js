@@ -48,7 +48,7 @@ class Usuario {
     }
 
     async compararContrasenia(password){
-        if (!password || !this._password) return false;
+        if (!password || !this.passwordHash) return false;
  //       console.log(await bcrypt.hash(password,10))
         return await bcrypt.compare(password, this.passwordHash);
     }
