@@ -49,7 +49,7 @@ class Usuario {
 
     async compararContrasenia(password){
         if (!password || !this.passwordHash) return false;
- //       console.log(await bcrypt.hash(password,10))
+        console.log(await bcrypt.hash(password,10))
         return await bcrypt.compare(password, this.passwordHash);
     }
 
@@ -60,7 +60,18 @@ class Usuario {
             'CALL sp_nuevoUsuario( ?, ?, ?, ?, ?,? );', [this.idPersona,this.username,(await bcrypt.hash(this.passwordHash,10)), this.rol, this.estado, outId]
         )
         console.log(outId)
-        return result
+        return
+    }
+    static async encriptar(username){
+        
+        const datos = (await pool.execute(
+            'CALL  sp_buscarUsuario( ? );', [username]
+        ))[0][0][0]
+        console.log(datos)
+        return await pool.execute(
+            'CALL sp_modificarUsuario(?,?,?,?,?,?)',[datos.idUsuario,datos.idPersona,datos.username,await bcrypt.hash(datos.password,10),datos.rol,datos.estado]
+        )
+        
     }
 
 }

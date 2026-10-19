@@ -6,6 +6,7 @@ select * from Marcas;
 select * from Ubicaciones;
 select * from Estados;
 select * from `Usuarios`;
+select * from `Personas`;
     
 -- Probando sp_nuevoActivo
 CALL sp_nuevoActivo(

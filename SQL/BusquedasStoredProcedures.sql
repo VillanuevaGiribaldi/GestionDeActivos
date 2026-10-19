@@ -508,7 +508,8 @@ CREATE PROCEDURE sp_buscarUsuario(
     IN pUsername VARCHAR(45)
 )
 BEGIN
-    SELECT 
+    SELECT
+        u.idUsuario,
         u.idPersona, 
         u.username, 
         u.password, 

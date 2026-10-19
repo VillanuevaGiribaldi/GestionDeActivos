@@ -1,64 +1,62 @@
+import Usuario  from '../models/usuarios.models.js'
 import jwt from 'jsonwebtoken';
 
-const login = async (req, res) => {
-    const { username, password } = req.body;
 
+const login = async (req,res) => {
+    console.log("Entró al controlador real") 
+    const {username, password} = req.body 
     if (!username || !password) {
         return res.status(400).json({ mensaje: 'Por favor, ingrese usuario y contraseña' });
     }
-
     try {
-        // Prueba. Lo ideal es insertar el procedimiento sp_buscarUsuario
-        const usuario = await buscarUsuarioEnDB(username); 
 
-        if (!usuario) {
+        const usuarioData = (await Usuario.buscar(username))[0]
+        console.log(usuarioData)
+        const usuario = Usuario.fromObject(usuarioData)
+        console.log(usuario)
+
+        if (!usuarioData || usuarioData.length > 1) {
             return res.status(401).json({ mensaje: 'Credenciales inválidas' });
         }
-        // Comparo texto plano, pero debe ser HASH
-        const passwordValida = (password === usuario.password);
-
+        
+        const passwordValida = await usuario.compararContrasenia(password);
+        console.log(passwordValida)
         if (!passwordValida) {
             return res.status(401).json({ mensaje: 'Credenciales inválidas' });
         }
         // genero el token
         const token = jwt.sign(
             { 
-                id: usuario.idUsuario, 
-                rol: usuario.rol 
+                id: usuarioData.idUsuario, 
+                rol: usuarioData.rol 
             },
             process.env.JWT_SECRET || 'secreto_de_prueba_temporal', 
             { expiresIn: '8h' }
         );
 
         // Respuesta
-        res.status(200).json({
+        return res.status(200).json({
             mensaje: 'Autenticación exitosa',
             token: token,
             usuario: {
-                id: usuario.idUsuario,
-                username: usuario.username,
-                rol: usuario.rol
+                id: usuarioData.idUsuario,
+                username: usuarioData.username,
+                rol: usuarioData.rol
             }
         });
-
     } catch (error) {
-        console.error('Error en el login:', error);
-        res.status(500).json({ mensaje: 'Error interno del servidor' });
-    }
-};
-
-
-async function buscarUsuarioEnDB(usernameABuscar) {
-    if (usernameABuscar === 'jperez') {
-        return {
-            idUsuario: 1,
-            username: 'jperez',
-            password: 'contrasenia1', 
-            rol: 'ADMIN_IT'
-        };
-    }
-    return null;
+        console.log(error)
+    }  
+    
 }
 
-// Exportamos la función para poder usarla en las rutas
-export { login };
+const authAdmin = async (req,res,next) => {
+    if(! (jwt.verify(req.body.token, ('secreto_de_prueba_temporal') ).rol === 'ADMIN_IT')){
+        res.status(401).json({
+            message:"No tiene permiso para realizar esta acción"
+        })
+    }
+
+    next();
+}
+export { login,authAdmin };
