@@ -1,0 +1,40 @@
+info:
+  name: nuevoUsuario
+  type: http
+  seq: 1
+
+http:
+  method: POST
+  url: http://localhost:3000/api/usuario/nuevo
+  headers:
+    - name: Authorization
+      value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwicm9sIjoiQURNSU5fSVQiLCJpYXQiOjE3OTI1Mzk2MDYsImV4cCI6MTc5MjU2ODQwNn0.4maC1V9uRnvz-s6CLPw0TnlYHi5elFSxIRUBmSrZyZ0
+  body:
+    type: json
+    data: "{\r
+
+      \    \"usuario\":{\r
+
+      \        \"idPersona\": 4,\r
+
+      \        \"username\": \"pepe\",\r
+
+      \        \"password\":\"1234\",\r
+
+      \        \"rol\": \"ADMIN_IT\",\r
+
+      \        \"estado\": \"A\"\r
+
+      \    }\r
+
+      }"
+  auth:
+    type: bearer
+    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwicm9sIjoiQURNSU5fSVQiLCJpYXQiOjE3OTI1Mzc4NjcsImV4cCI6MTc5MjU2NjY2N30.SIWC7NFmbNHiklCvB-YHkHEOqTweBXJe0LyUUJmpiA0
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

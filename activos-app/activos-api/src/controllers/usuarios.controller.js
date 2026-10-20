@@ -2,9 +2,12 @@ import Usuario  from '../models/usuarios.models.js'
 import jwt from 'jsonwebtoken';
 
 
-
+/*
+    @openAPI
+    
+*/
 const nuevoUsuario = async (req, res) => {
-    const usuario = Usuario.fromObject(req.body);
+    const usuario = Usuario.fromObject(req.body.usuario);
     try {
         // 1. Agregamos await para esperar que la BD termine la inserción
         console.log(usuario)

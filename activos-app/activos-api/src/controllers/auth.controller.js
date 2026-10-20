@@ -52,8 +52,10 @@ const login = async (req,res) => {
 
 const authAdmin = async (req, res, next) => {
     try {
-        const decoded = jwt.verify(req.body.token, process.env.JWT_SECRET || 'secreto_de_prueba_temporal');
+        console.log(req.headers.authorization.split(" ")[1])
+        const decoded = jwt.verify(req.headers.authorization.split(" ")[1], process.env.JWT_SECRET || 'secreto_de_prueba_temporal');
         if (decoded.rol !== 'ADMIN_IT') {
+            console.log(decoded)
             return res.status(403).json({ message: "No tiene permiso para realizar esta accion. Se requiere rol de Administrador." });
         }
         req.usuario = decoded;
@@ -65,7 +67,8 @@ const authAdmin = async (req, res, next) => {
 
 const authDefault = async (req, res, next) => {
     try {
-        const decoded = jwt.verify(req.body.token, process.env.JWT_SECRET || 'secreto_de_prueba_temporal');
+        console.log("autenticando admin")
+        const decoded = jwt.verify(req.headers.authorization, process.env.JWT_SECRET || 'secreto_de_prueba_temporal');
         // Permite el paso si el rol incluye 'IT' Ej. ADMIN_IT, SOPORTE_IT, PASANTE_IT)
         if (!decoded.rol.includes('IT')) {
             return res.status(403).json({ message: "Acceso denegado. Se requiere ser empleado de TI." });

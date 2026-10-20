@@ -15,6 +15,7 @@ const pool = mysql.createPool({
 });
 
 const connectarMySQL = async () => {
+    
     console.log('conectando a la base de datos...')
     const connection = await mysql.createConnection({
         host: process.env.DB_HOSTNAME,
