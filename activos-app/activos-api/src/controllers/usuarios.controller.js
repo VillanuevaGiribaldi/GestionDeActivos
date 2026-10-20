@@ -25,17 +25,20 @@ const nuevoUsuario = async (req, res) => {
         });
     }
 }
-const encriptar= async (req,res) => {
-    if(! process.env.NODE_ENV==="development"){
-        res(404)
+const encriptar = async (req, res) => {
+    // Corrección: Validación estricta y respuesta válida de Express
+    if (process.env.NODE_ENV !== "development") {
+        return res.status(404).json({ mensaje: "Endpoint de prueba no disponible en producción" });
     }
     try {
-        const result = Usuario.encriptar(req.body.username)
-        res.status(200).json({
+        // Corrección: Agregamos await para esperar a la base de datos
+        const result = await Usuario.encriptar(req.body.username);
+        return res.status(200).json({
             result: result
-        })
+        });
     } catch (error) {
-        
+        console.error('Error en encriptación:', error);
+        return res.status(500).json({ mensaje: 'Error interno', error: error.message });
     }
 }
 

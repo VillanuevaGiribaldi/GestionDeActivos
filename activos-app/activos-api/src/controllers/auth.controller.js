@@ -50,13 +50,42 @@ const login = async (req,res) => {
     
 }
 
-const authAdmin = async (req,res,next) => {
-    if(! (jwt.verify(req.body.token, ('secreto_de_prueba_temporal') ).rol === 'ADMIN_IT')){
-        res.status(401).json({
-            message:"No tiene permiso para realizar esta acción"
-        })
+const authAdmin = async (req, res, next) => {
+    try {
+        const decoded = jwt.verify(req.body.token, process.env.JWT_SECRET || 'secreto_de_prueba_temporal');
+        if (decoded.rol !== 'ADMIN_IT') {
+            return res.status(403).json({ message: "No tiene permiso para realizar esta accion. Se requiere rol de Administrador." });
+        }
+        req.usuario = decoded;
+        next();
+    } catch (error) {
+        return res.status(401).json({ message: "Token inválido, expirado o no proporcionado" });
     }
+};
 
-    next();
-}
-export { login,authAdmin };
+const authDefault = async (req, res, next) => {
+    try {
+        const decoded = jwt.verify(req.body.token, process.env.JWT_SECRET || 'secreto_de_prueba_temporal');
+        // Permite el paso si el rol incluye 'IT' Ej. ADMIN_IT, SOPORTE_IT, PASANTE_IT)
+        if (!decoded.rol.includes('IT')) {
+            return res.status(403).json({ message: "Acceso denegado. Se requiere ser empleado de TI." });
+        }
+        req.usuario = decoded;
+        next();
+    } catch (error) {
+        return res.status(401).json({ message: "Token inválido, expirado o no proporcionado" });
+    }
+};
+
+const authView = async (req, res, next) => {
+    try {
+        // El permiso de vista solo requiere que el token sea válido (cualquier usuario logueado)
+        const decoded = jwt.verify(req.body.token, process.env.JWT_SECRET || 'secreto_de_prueba_temporal');
+        req.usuario = decoded;
+        next();
+    } catch (error) {
+        return res.status(401).json({ message: "Token inválido, expirado o no proporcionado" });
+    }
+};
+
+export { login, authAdmin, authDefault, authView };
