@@ -6,9 +6,6 @@ info:
 http:
   method: POST
   url: http://localhost:3000/api/usuario/nuevo
-  headers:
-    - name: Authorization
-      value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwicm9sIjoiQURNSU5fSVQiLCJpYXQiOjE3OTI1Mzk2MDYsImV4cCI6MTc5MjU2ODQwNn0.4maC1V9uRnvz-s6CLPw0TnlYHi5elFSxIRUBmSrZyZ0
   body:
     type: json
     data: "{\r

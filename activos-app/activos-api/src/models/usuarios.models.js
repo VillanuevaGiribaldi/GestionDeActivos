@@ -44,6 +44,7 @@ class Usuario {
         (
             'CALL sp_buscarUsuario( ? );', [username]
         )
+        console.log(result)
         return result[0][0]
     }
 

@@ -8,13 +8,11 @@ http:
   url: http://localhost:3000/api/login
   body:
     type: json
-    data: "{\r
-
-      \    \"username\": \"jperez\",\r
-
-      \    \"password\": \"contrasenia1\"\r
-
-      }"
+    data: |-
+      {
+          "username": "jperez",
+          "password": "contrasenia1"
+      }
   auth: inherit
 
 settings:

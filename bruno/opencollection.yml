@@ -2,6 +2,23 @@ opencollection: 1.0.0
 
 info:
   name: activos
+config:
+  proxy:
+    inherit: true
+    config:
+      protocol: http
+      hostname: ""
+      port: ""
+      auth:
+        username: ""
+        password: ""
+      bypassProxy: ""
+
+request:
+  headers:
+    - name: Authorization
+      value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwicm9sIjoiQURNSU5fSVQiLCJpYXQiOjE3OTI1Mzk2MDYsImV4cCI6MTc5MjU2ODQwNn0.4maC1V9uRnvz-s6CLPw0TnlYHi5elFSxIRUBmSrZyZ0
+      description: Token recibido al usar el post /auth/login
 bundled: false
 extensions:
   bruno:

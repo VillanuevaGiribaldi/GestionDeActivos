@@ -11,14 +11,10 @@ const login = async (req,res) => {
     try {
 
         const usuarioData = (await Usuario.buscar(username))[0]
-        console.log(usuarioData)
-        const usuario = Usuario.fromObject(usuarioData)
-        console.log(usuario)
-
-        if (!usuarioData || usuarioData.length > 1) {
+        if (!usuarioData || usuarioData.length > 1 || usuarioData.username != password) {
             return res.status(401).json({ mensaje: 'Credenciales inválidas' });
         }
-        
+        const usuario = Usuario.fromObject(usuarioData)
         const passwordValida = await usuario.compararContrasenia(password);
         console.log(passwordValida)
         if (!passwordValida) {
@@ -52,7 +48,6 @@ const login = async (req,res) => {
 
 const authAdmin = async (req, res, next) => {
     try {
-        console.log(req.headers.authorization.split(" ")[1])
         const decoded = jwt.verify(req.headers.authorization.split(" ")[1], process.env.JWT_SECRET || 'secreto_de_prueba_temporal');
         if (decoded.rol !== 'ADMIN_IT') {
             console.log(decoded)
@@ -67,8 +62,7 @@ const authAdmin = async (req, res, next) => {
 
 const authDefault = async (req, res, next) => {
     try {
-        console.log("autenticando admin")
-        const decoded = jwt.verify(req.headers.authorization, process.env.JWT_SECRET || 'secreto_de_prueba_temporal');
+        const decoded = jwt.verify(req.headers.authorization.split(" ")[1], process.env.JWT_SECRET || 'secreto_de_prueba_temporal');
         // Permite el paso si el rol incluye 'IT' Ej. ADMIN_IT, SOPORTE_IT, PASANTE_IT)
         if (!decoded.rol.includes('IT')) {
             return res.status(403).json({ message: "Acceso denegado. Se requiere ser empleado de TI." });
