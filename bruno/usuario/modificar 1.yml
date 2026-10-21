@@ -1,0 +1,29 @@
+info:
+  name: modificar
+  type: http
+  seq: 4
+
+http:
+  method: PUT
+  url: http://localhost:3000/api/usuario/4
+  body:
+    type: json
+    data: |-
+      {
+          "usuario":{
+              "idUsuario": 4,
+              "idPersona": 4,
+              "username": "pepe",
+              "password":"1234",
+              "rol": "ADMIN_IT",
+              "estado": "A"
+          }
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

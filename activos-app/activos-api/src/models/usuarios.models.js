@@ -9,17 +9,7 @@ class Usuario {
         this.passwordHash=password,
         this.rol=rol,
         this.estado=estado
-        /*
-        this.username = username
-        this._password = password;
-        this.rol = rol;
-        this.nombre = nombre;
-        this.apellido = apellido;
-        this.dni = dni;
- //       this.email = email;
-        this.cargo = cargo;
-        this._id = null;
-        */
+        
     }
 
 
@@ -32,25 +22,30 @@ class Usuario {
 
 
 
-    static async buscar(username) {
+    static async buscarPorUsername(username) {
 /*
          execute de un procedimiento devuelve algo así:
-        [[usuario][metadata del select]]
+        [[lista de usuarios][metadata del select]]
         [metadata del procedimiento]
 
-        por eso se hace result[0][0], para acceder solo a usuario
+        por eso se hace result[0][0], para acceder solo a la lista de usuarios recibidos, de esta accedemos al usuario 0
 */
         const result = await pool.execute
         (
-            'CALL sp_buscarUsuario( ? );', [username]
+            'CALL sp_buscarUsernameUsuario( ? );', [username]
         )
-        console.log(result)
-        return result[0][0]
+        return result[0][0][0]
+    }
+    static async buscarPorId(id) {
+        const result = await pool.execute
+        (
+            'CALL sp_buscarIdUsuario( ? );', [id]
+        )
+        return result[0][0][0]
     }
 
     async compararContrasenia(password){
         if (!password || !this.passwordHash) return false;
-        console.log(await bcrypt.hash(password,10))
         return await bcrypt.compare(password, this.passwordHash);
     }
 
@@ -59,6 +54,14 @@ class Usuario {
         const result = await pool.execute
         (
             'CALL sp_nuevoUsuario( ?, ?, ?, ?, ?,? );', [this.idPersona,this.username,(await bcrypt.hash(this.passwordHash,10)), this.rol, this.estado, outId]
+        )
+        console.log(outId)
+        return
+    }
+    async modificar(){
+        const result = await pool.execute
+        (
+            'CALL sp_modificarUsuario( ?, ?, ?, ?, ?,? );', [this.idPersona,this.username,(await bcrypt.hash(this.passwordHash,10)), this.rol, this.estado, outId]
         )
         console.log(outId)
         return

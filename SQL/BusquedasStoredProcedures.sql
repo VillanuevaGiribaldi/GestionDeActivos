@@ -501,10 +501,10 @@ BEGIN
 END//
 DELIMITER ;
 
-DROP PROCEDURE IF EXISTS sp_buscarUsuario;
+DROP PROCEDURE IF EXISTS sp_buscarUsernameUsuario;
 DELIMITER //
 
-CREATE PROCEDURE sp_buscarUsuario(
+CREATE PROCEDURE sp_buscarUsernameUsuario(
     IN pUsername VARCHAR(45)
 )
 BEGIN
@@ -522,5 +522,29 @@ BEGIN
     FROM `Usuarios` u
     LEFT JOIN `Personas` p ON u.`idPersona` = p.`idPersona`
     WHERE u.username = pUsername AND u.estado = 'A';
+END//
+DELIMITER ;
+
+DROP PROCEDURE IF EXISTS sp_buscarIdUsuario;
+DELIMITER //
+
+CREATE PROCEDURE sp_buscarIdUsuario(
+    IN pId INT
+)
+BEGIN
+    SELECT
+        u.idUsuario,
+        u.idPersona, 
+        u.username, 
+        u.password, 
+        u.rol, 
+        u.estado, 
+        p.nombre, 
+        p.apellido, 
+        p.dni, 
+        p.cargo 
+    FROM `Usuarios` u
+    LEFT JOIN `Personas` p ON u.`idPersona` = p.`idPersona`
+    WHERE u.`idUsuario` = pId;
 END//
 DELIMITER ;

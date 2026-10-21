@@ -1,0 +1,26 @@
+info:
+  name: modificar
+  type: http
+  seq: 3
+
+http:
+  method: PUT
+  url: http://localhost:3000/api/usuario/:id
+  headers:
+    - name: Authorization
+      value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwicm9sIjoiQURNSU5fSVQiLCJpYXQiOjE3OTI1OTEzODUsImV4cCI6MTc5MjYyMDE4NX0.lR1hl1mYOnO4OQwC_FnCJq6qNQAgyPCbE6bJTIRkgwU
+  params:
+    - name: id
+      value: "1"
+      type: path
+  body:
+    type: json
+    data: "{}"
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

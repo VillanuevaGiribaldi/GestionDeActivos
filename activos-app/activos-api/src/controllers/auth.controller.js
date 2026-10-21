@@ -3,20 +3,21 @@ import jwt from 'jsonwebtoken';
 
 
 const login = async (req,res) => {
-    console.log("Entró al controlador real") 
+
+    
     const {username, password} = req.body 
+    console.log(`El usuario [${username}] está intentando loguearse`) 
     if (!username || !password) {
         return res.status(400).json({ mensaje: 'Por favor, ingrese usuario y contraseña' });
     }
     try {
 
-        const usuarioData = (await Usuario.buscar(username))[0]
-        if (!usuarioData || usuarioData.length > 1 || usuarioData.username != password) {
+        const usuarioData = (await Usuario.buscarPorUsername(username))
+        if (!usuarioData || usuarioData.length > 1 || usuarioData.username != username) {
             return res.status(401).json({ mensaje: 'Credenciales inválidas' });
         }
         const usuario = Usuario.fromObject(usuarioData)
         const passwordValida = await usuario.compararContrasenia(password);
-        console.log(passwordValida)
         if (!passwordValida) {
             return res.status(401).json({ mensaje: 'Credenciales inválidas' });
         }
@@ -42,6 +43,9 @@ const login = async (req,res) => {
         });
     } catch (error) {
         console.log(error)
+        res.status(500).json({
+            mensaje: 'error al buscar'
+        })
     }  
     
 }
@@ -56,7 +60,7 @@ const authAdmin = async (req, res, next) => {
         req.usuario = decoded;
         next();
     } catch (error) {
-        return res.status(401).json({ message: "Token inválido, expirado o no proporcionado" });
+        return res.status(401).json({ message: "Token no proporcionado o sesión expirada, vueva a iniciar sesión" });
     }
 };
 
@@ -70,7 +74,7 @@ const authDefault = async (req, res, next) => {
         req.usuario = decoded;
         next();
     } catch (error) {
-        return res.status(401).json({ message: "Token inválido, expirado o no proporcionado" });
+        return res.status(401).json({ message: "Token no proporcionado o sesión expirada, vueva a iniciar sesión" });
     }
 };
 
@@ -81,7 +85,7 @@ const authView = async (req, res, next) => {
         req.usuario = decoded;
         next();
     } catch (error) {
-        return res.status(401).json({ message: "Token inválido, expirado o no proporcionado" });
+        return res.status(401).json({ message: "Token no proporcionado o sesión expirada, vueva a iniciar sesión" });
     }
 };
 

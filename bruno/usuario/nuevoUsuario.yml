@@ -25,9 +25,7 @@ http:
       \    }\r
 
       }"
-  auth:
-    type: bearer
-    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwicm9sIjoiQURNSU5fSVQiLCJpYXQiOjE3OTI1Mzc4NjcsImV4cCI6MTc5MjU2NjY2N30.SIWC7NFmbNHiklCvB-YHkHEOqTweBXJe0LyUUJmpiA0
+  auth: inherit
 
 settings:
   encodeUrl: true

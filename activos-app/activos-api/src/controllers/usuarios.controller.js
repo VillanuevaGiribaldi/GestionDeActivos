@@ -28,6 +28,35 @@ const nuevoUsuario = async (req, res) => {
         });
     }
 }
+
+const modificarUsuario = async (req,res) => {
+    
+    try {
+        
+        console.log(`Modificando el usuario ${req.params.id}`)
+        if (req.params.id!=req.body.usuario.idUsuario) {
+             res.status(500).json({
+                message:"los ids no se corresponden"
+            })
+        }
+        const usuario = Usuario.fromObject(req.body.usuario);
+
+        
+        usuario.modificar()
+        
+        
+
+        res.status(200).json({
+            message: "ok"
+        })
+
+    } catch (error) {
+        res.status(500).json({
+            message:"error al modificar el usuario"
+        })
+    }
+}
+
 const encriptar = async (req, res) => {
     // Corrección: Validación estricta y respuesta válida de Express
     if (process.env.NODE_ENV !== "development") {
@@ -47,5 +76,6 @@ const encriptar = async (req, res) => {
 
 export {
     nuevoUsuario,
+    modificarUsuario,
     encriptar
 }
