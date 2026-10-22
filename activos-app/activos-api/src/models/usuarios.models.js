@@ -2,8 +2,9 @@ import { pool } from "../config/mysql.js";
 import bcrypt from "bcrypt"
 
 class Usuario {
-    //constructor(username, passwordHash, rol , nombre, apellido, dni, cargo ) {
-    constructor({idPersona,  username, password, rol,estado }) {
+
+    constructor({idUsuario, idPersona,  username, password, rol,estado }) {
+        this.idUsuario=idUsuario,
         this.idPersona=idPersona,
         this.username=username,
         this.passwordHash=password,
@@ -14,6 +15,7 @@ class Usuario {
 
 
     static fromObject(data) {
+
         const user = new Usuario(
            data
         );
@@ -28,7 +30,8 @@ class Usuario {
         [[lista de usuarios][metadata del select]]
         [metadata del procedimiento]
 
-        por eso se hace result[0][0], para acceder solo a la lista de usuarios recibidos, de esta accedemos al usuario 0
+        por eso se hace result[0][0], para acceder solo a la lista de usuarios recibidos, 
+        de esta accedemos al usuario 0
 */
         const result = await pool.execute
         (
@@ -58,26 +61,47 @@ class Usuario {
         console.log(outId)
         return
     }
-    async modificar(idUsuario){
-        // sp_modificarUsuario pide: pIdUsuario, pIdPersona, pUsername, pPassword, pRol, pEstado
+
+    async modificar(){
+        // sp_modificarUsuario pide: pthis.idUsuario, pIdPersona, pUsername, pPassword, pRol, pEstado
+        // Creo que esto puede dar problemas a futuro, yo agregaría uno para modificar la contraseña especificamente
+        
+        //agrego esto para evitar que si no se modifica la contraseña se hashee 2 veces
+        var hashedPassword = null;
+        if(!this.passwordHash){
+            hashedPassword = (await pool.execute(
+            'CALL  sp_buscarIdUsuario( ? );', [this.idUsuario]
+        ))[0][0][0].password
+        }else{
+            hashedPassword = (await bcrypt.hash(this.passwordHash, 10))
+        }
         const result = await pool.execute
         (
             'CALL sp_modificarUsuario( ?, ?, ?, ?, ?, ? );', 
             [
-                idUsuario, 
+                this.idUsuario, 
                 this.idPersona, 
                 this.username, 
-                (await bcrypt.hash(this.passwordHash, 10)), 
+                hashedPassword, 
                 this.rol, 
                 this.estado
             ]
         );
         return result;
     }
+
+/*
+    async cambiarContraseña(nuevaContraseña) {
+        if (!nuevaContraseña||nuevaContraseña=="") {
+            throw new Error("No se puede cambiar la contraseña a un valor vacío");
+        }
+        this.passwordHash=nuevaContraseña
+    }
+*/
     static async encriptar(username){
         
         const datos = (await pool.execute(
-            'CALL  sp_buscarUsuario( ? );', [username]
+            'CALL  sp_buscarUsernameUsuario( ? );', [username]
         ))[0][0][0]
         console.log(datos)
         return await pool.execute(

@@ -1,5 +1,5 @@
 info:
-  name: modificarUsuario
+  name: modificar sin pass
   type: http
   seq: 5
 
@@ -13,8 +13,7 @@ http:
           "usuario":{
               "idUsuario": 4,
               "idPersona": 4,
-              "username": "pepe_modificado",
-              "password": "nueva_password123",
+              "username": "pepe_modificado1",
               "rol": "ADMIN_IT",
               "estado": "A"
           }

@@ -1,21 +1,24 @@
 info:
   name: modificar
   type: http
-  seq: 3
+  seq: 4
 
 http:
   method: PUT
-  url: http://localhost:3000/api/usuario/:id
-  headers:
-    - name: Authorization
-      value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwicm9sIjoiQURNSU5fSVQiLCJpYXQiOjE3OTI1OTEzODUsImV4cCI6MTc5MjYyMDE4NX0.lR1hl1mYOnO4OQwC_FnCJq6qNQAgyPCbE6bJTIRkgwU
-  params:
-    - name: id
-      value: "1"
-      type: path
+  url: http://localhost:3000/api/usuario/4
   body:
     type: json
-    data: "{}"
+    data: |-
+      {
+          "usuario":{
+              "idUsuario": 4,
+              "idPersona": 4,
+              "username": "pepe_modificado1",
+              "password": "nueva_password123",
+              "rol": "ADMIN_IT",
+              "estado": "A"
+          }
+      }
   auth: inherit
 
 settings:

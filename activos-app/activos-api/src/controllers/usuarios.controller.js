@@ -32,7 +32,7 @@ const nuevoUsuario = async (req, res) => {
 const modificarUsuario = async (req, res) => {
     try {
         const idUrl = parseInt(req.params.id);
-        console.log(`Modificando el usuario ${idUrl}`);
+        
         
         // Validación de correspondencia de IDs
         if (idUrl !== parseInt(req.body.usuario.idUsuario)) {
@@ -40,12 +40,13 @@ const modificarUsuario = async (req, res) => {
                 message: "Los IDs de la URL y del cuerpo no se corresponden"
             });
         }
+        console.log(`Modificando el usuario ${idUrl}`);
         
         // Instanciación del usuario a partir del cuerpo
         const usuario = Usuario.fromObject(req.body.usuario);
         
         // Ejecución de la modificación en BD
-        await usuario.modificar(idUrl);
+        await usuario.modificar();
         
         return res.status(200).json({
             message: "Usuario modificado exitosamente"
