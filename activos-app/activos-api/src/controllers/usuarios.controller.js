@@ -29,31 +29,34 @@ const nuevoUsuario = async (req, res) => {
     }
 }
 
-const modificarUsuario = async (req,res) => {
-    
+const modificarUsuario = async (req, res) => {
     try {
+        const idUrl = parseInt(req.params.id);
+        console.log(`Modificando el usuario ${idUrl}`);
         
-        console.log(`Modificando el usuario ${req.params.id}`)
-        if (req.params.id!=req.body.usuario.idUsuario) {
-             res.status(500).json({
-                message:"los ids no se corresponden"
-            })
+        // Validación de correspondencia de IDs
+        if (idUrl !== parseInt(req.body.usuario.idUsuario)) {
+            return res.status(400).json({
+                message: "Los IDs de la URL y del cuerpo no se corresponden"
+            });
         }
+        
+        // Instanciación del usuario a partir del cuerpo
         const usuario = Usuario.fromObject(req.body.usuario);
-
         
-        usuario.modificar()
+        // Ejecución de la modificación en BD
+        await usuario.modificar(idUrl);
         
-        
-
-        res.status(200).json({
-            message: "ok"
-        })
+        return res.status(200).json({
+            message: "Usuario modificado exitosamente"
+        });
 
     } catch (error) {
-        res.status(500).json({
-            message:"error al modificar el usuario"
-        })
+        console.error('Error al modificar el usuario:', error);
+        return res.status(500).json({
+            message: "Error al modificar el usuario",
+            error: error.message
+        });
     }
 }
 
@@ -74,8 +77,29 @@ const encriptar = async (req, res) => {
     }
 }
 
+const bajaUsuario = async (req, res) => {
+    try {
+        const idUrl = parseInt(req.params.id);
+        console.log(`Dando de baja al usuario ${idUrl}`);
+        
+        await Usuario.darDeBaja(idUrl);
+        
+        return res.status(200).json({
+            message: "Usuario dado de baja exitosamente"
+        });
+
+    } catch (error) {
+        console.error('Error al dar de baja el usuario:', error);
+        return res.status(500).json({
+            message: "Error al dar de baja el usuario",
+            error: error.message
+        });
+    }
+}
+
 export {
     nuevoUsuario,
     modificarUsuario,
+    bajaUsuario,
     encriptar
 }

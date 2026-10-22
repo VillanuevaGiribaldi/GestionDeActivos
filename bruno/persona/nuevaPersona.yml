@@ -1,0 +1,28 @@
+info:
+  name: nuevaPersona
+  type: http
+  seq: 1
+
+http:
+  method: POST
+  url: http://localhost:3000/api/persona/nueva
+  body:
+    type: json
+    data: |-
+      {
+          "persona":{
+              "nombre": "Juan",
+              "apellido": "García",
+              "dni": "45678912",
+              "cargo": "Pasante",
+              "estado": "A"
+          }
+        }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

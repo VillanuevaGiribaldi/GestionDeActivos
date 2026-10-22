@@ -58,13 +58,21 @@ class Usuario {
         console.log(outId)
         return
     }
-    async modificar(){
+    async modificar(idUsuario){
+        // sp_modificarUsuario pide: pIdUsuario, pIdPersona, pUsername, pPassword, pRol, pEstado
         const result = await pool.execute
         (
-            'CALL sp_modificarUsuario( ?, ?, ?, ?, ?,? );', [this.idPersona,this.username,(await bcrypt.hash(this.passwordHash,10)), this.rol, this.estado, outId]
-        )
-        console.log(outId)
-        return
+            'CALL sp_modificarUsuario( ?, ?, ?, ?, ?, ? );', 
+            [
+                idUsuario, 
+                this.idPersona, 
+                this.username, 
+                (await bcrypt.hash(this.passwordHash, 10)), 
+                this.rol, 
+                this.estado
+            ]
+        );
+        return result;
     }
     static async encriptar(username){
         
@@ -76,6 +84,13 @@ class Usuario {
             'CALL sp_modificarUsuario(?,?,?,?,?,?)',[datos.idUsuario,datos.idPersona,datos.username,await bcrypt.hash(datos.password,10),datos.rol,datos.estado]
         )
         
+    }
+
+    static async darDeBaja(idUsuario) {
+        const result = await pool.execute(
+            'CALL sp_bajaUsuario( ? );', [idUsuario]
+        );
+        return result;
     }
 
 }

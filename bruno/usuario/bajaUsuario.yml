@@ -1,11 +1,11 @@
 info:
-  name: nueva
+  name: bajaUsuario
   type: http
-  seq: 1
+  seq: 6
 
 http:
-  method: POST
-  url: ""
+  method: DELETE
+  url: http://localhost:3000/api/usuario/4
   auth: inherit
 
 settings:
