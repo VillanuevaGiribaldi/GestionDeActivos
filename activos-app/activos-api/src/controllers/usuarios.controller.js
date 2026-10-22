@@ -31,9 +31,9 @@ const nuevoUsuario = async (req, res) => {
 
 const modificarUsuario = async (req, res) => {
     try {
+
+
         const idUrl = parseInt(req.params.id);
-        
-        
         // Validación de correspondencia de IDs
         if (idUrl !== parseInt(req.body.usuario.idUsuario)) {
             return res.status(400).json({
@@ -41,7 +41,10 @@ const modificarUsuario = async (req, res) => {
             });
         }
         console.log(`Modificando el usuario ${idUrl}`);
-        
+        if(req.body.usuario.estado=='B'){
+
+        }
+
         // Instanciación del usuario a partir del cuerpo
         const usuario = Usuario.fromObject(req.body.usuario);
         
@@ -98,9 +101,31 @@ const bajaUsuario = async (req, res) => {
     }
 }
 
+const altaUsuario = async (req, res) => {
+    try {
+        const idUrl = parseInt(req.params.id);
+        console.log(`Dando de alta al usuario ${idUrl}`);
+        
+        await Usuario.darDealta(idUrl);
+        
+        return res.status(200).json({
+            message: "Usuario dado de alta exitosamente"
+        });
+
+    } catch (error) {
+        console.error('Error al dar de alta el usuario:', error);
+        return res.status(500).json({
+            message: "Error al dar de alta el usuario",
+            error: error.message
+        });
+    }
+}
+
+
 export {
     nuevoUsuario,
     modificarUsuario,
     bajaUsuario,
+    altaUsuario,
     encriptar
 }

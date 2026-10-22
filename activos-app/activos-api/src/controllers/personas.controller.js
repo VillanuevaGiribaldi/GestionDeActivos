@@ -5,7 +5,7 @@ const nuevaPersona = async (req, res) => {
 
         const persona = Persona.fromObject(req.body.persona);
         const resultado = await persona.save();
-
+        
         return res.status(201).json({
             mensaje: 'Persona creada exitosamente',
             datos: resultado

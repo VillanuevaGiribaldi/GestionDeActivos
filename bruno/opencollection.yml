@@ -21,7 +21,7 @@ request:
       description: Token recibido al usar el post /auth/login
   auth:
     type: bearer
-    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NCwicm9sIjoiQURNSU5fSVQiLCJpYXQiOjE3OTI2ODAyMDQsImV4cCI6MTc5MjcwOTAwNH0.HA3a3iH2WdA_XZ4OVH-0L-fuVF-ImUzlGwkiXithCLs
+    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwicm9sIjoiQURNSU5fSVQiLCJpYXQiOjE3OTI3MTAxNjksImV4cCI6MTgyNDI0NjE2OX0.ur-75Z3Tz_6CjpgMVOSJUfT93CkWaHCJXFJq1Az5Yk0
 bundled: false
 extensions:
   bruno:

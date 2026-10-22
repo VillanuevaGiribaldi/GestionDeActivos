@@ -28,7 +28,7 @@ const login = async (req,res) => {
                 rol: usuarioData.rol 
             },
             process.env.JWT_SECRET || 'secreto_de_prueba_temporal', 
-            { expiresIn: '8h' }
+            { expiresIn: process.env.TOKEN_DURATION }
         );
 
         // Respuesta

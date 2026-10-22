@@ -2242,8 +2242,7 @@ CREATE PROCEDURE sp_modificarUsuario(
     IN pIdPersona INT,
     IN pUsername VARCHAR(45),
     IN pPassword VARCHAR(255),
-    IN pRol VARCHAR(45),
-    IN pEstado CHAR(1)
+    IN pRol VARCHAR(45)
 )
 BEGIN
     DECLARE vEstadoPersona CHAR(1);
@@ -2286,10 +2285,11 @@ BEGIN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El rol del usuario es obligatorio';
     END IF;
 
-    IF pEstado IS NULL OR pEstado NOT IN ('A', 'I') THEN
-        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El estado ingresado no es válido';
-    END IF;
-
+--
+--    IF pEstado = 'A' AND pEstado <> select estado from `Usuarios` where `idUsuario`=pIdUsuario THEN
+--        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Use la función dar de baja';
+--    END IF;
+--
     -- 4. Validación de integridad de la Persona (debe existir y estar activa)
     SELECT estado INTO vEstadoPersona FROM Personas WHERE idPersona = pIdPersona;
 
@@ -2356,6 +2356,35 @@ BEGIN
 END//
 DELIMITER ;
 
+DROP PROCEDURE IF EXISTS sp_altaUsuario;
+DELIMITER //
+CREATE PROCEDURE sp_altaUsuario(
+    IN pIdUsuario INT
+)
+BEGIN
+    DECLARE vEstadoUsuario CHAR(1);
+    DECLARE vIdPersona INT;
+
+    SELECT estado, idPersona INTO vEstadoUsuario, vIdPersona
+    FROM Usuarios WHERE idUsuario = pIdUsuario;
+
+    IF vEstadoUsuario IS NULL THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El usuario indicado no existe';
+    END IF;
+    IF vEstadoUsuario = 'A' THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El usuario ya se encuentra activo';
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM Personas WHERE idPersona = vIdPersona AND estado = 'A') THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'No se puede reactivar el usuario porque su persona está dada de baja';
+    END IF;
+    IF EXISTS (SELECT 1 FROM Usuarios WHERE idPersona = vIdPersona AND estado = 'A') THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'La persona ya posee otro usuario activo';
+    END IF;
+
+    UPDATE Usuarios SET estado = 'A' WHERE idUsuario = pIdUsuario;
+
+END//
+DELIMITER ;
 -- =====================================================
 -- MANTENIMIENTOS
 -- =====================================================

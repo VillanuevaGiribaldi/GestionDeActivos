@@ -4,13 +4,12 @@ import bcrypt from "bcrypt"
 class Usuario {
 
     constructor({idUsuario, idPersona,  username, password, rol,estado }) {
-        this.idUsuario=idUsuario,
+        this.idUsuario=idUsuario ?? null,
         this.idPersona=idPersona,
         this.username=username,
         this.passwordHash=password,
         this.rol=rol,
         this.estado=estado
-        
     }
 
 
@@ -53,12 +52,12 @@ class Usuario {
     }
 
     async save(){
-        var outId=null;
+        //var outId=1;
         const result = await pool.execute
         (
-            'CALL sp_nuevoUsuario( ?, ?, ?, ?, ?,? );', [this.idPersona,this.username,(await bcrypt.hash(this.passwordHash,10)), this.rol, this.estado, outId]
+            'CALL sp_nuevoUsuario( ?, ?, ?, ?, ?,@outId );', [this.idPersona,this.username,(await bcrypt.hash(this.passwordHash,10)), this.rol, this.estado]
         )
-        console.log(outId)
+        console.log()
         return
     }
 
@@ -75,6 +74,10 @@ class Usuario {
         }else{
             hashedPassword = (await bcrypt.hash(this.passwordHash, 10))
         }
+        const estado = (await pool.execute(
+            'CALL  sp_buscarIdUsuario( ? );', [this.idUsuario]
+        ))[0][0][0].estado
+
         const result = await pool.execute
         (
             'CALL sp_modificarUsuario( ?, ?, ?, ?, ?, ? );', 
@@ -84,7 +87,7 @@ class Usuario {
                 this.username, 
                 hashedPassword, 
                 this.rol, 
-                this.estado
+                estado
             ]
         );
         return result;
@@ -113,6 +116,12 @@ class Usuario {
     static async darDeBaja(idUsuario) {
         const result = await pool.execute(
             'CALL sp_bajaUsuario( ? );', [idUsuario]
+        );
+        return result;
+    }
+    static async darDealta(idUsuario) {
+        const result = await pool.execute(
+            'CALL sp_altaUsuario( ? );', [idUsuario]
         );
         return result;
     }
