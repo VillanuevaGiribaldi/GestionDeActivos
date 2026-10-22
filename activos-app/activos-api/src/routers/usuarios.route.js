@@ -10,6 +10,6 @@ router.route('/test/encriptar').put(encriptar)
 //router.route('/:id').get()
 router.route('/:id').put(authAdmin, modificarUsuario)
 
-router.route('/:id').delete(authAdmin, bajaUsuario)
+router.route('/:id','/:id/baja').delete(authAdmin, bajaUsuario)
 router.route('/:id/alta').put(authAdmin, altaUsuario)
 export default router

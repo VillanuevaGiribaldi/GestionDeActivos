@@ -2033,8 +2033,8 @@ CREATE PROCEDURE sp_modificarPersona(
     IN pNombre VARCHAR(45),
     IN pApellido VARCHAR(45),
     IN pDni VARCHAR(45),
-    IN pCargo VARCHAR(100),
-    IN pEstado CHAR(1)
+    IN pCargo VARCHAR(100)
+
 )
 BEGIN
     -- Manejador de errores (Transacciones ACID)
@@ -2049,7 +2049,7 @@ BEGIN
     IF pApellido IS NOT NULL THEN SET pApellido = TRIM(pApellido); END IF;
     IF pDni IS NOT NULL THEN SET pDni = TRIM(pDni); END IF;
     IF pCargo IS NOT NULL THEN SET pCargo = TRIM(pCargo); END IF;
-    IF pEstado IS NOT NULL THEN SET pEstado = TRIM(pEstado); END IF;
+   
 
     -- 2. Validaciones iniciales
     IF pIdPersona IS NULL THEN
@@ -2073,9 +2073,6 @@ BEGIN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El cargo de la persona es obligatorio';
     END IF;
 
-    IF pEstado IS NULL OR pEstado = '' THEN
-        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El estado de la persona es obligatorio';
-    END IF;
 
     -- 4. Validación de DNI duplicado (Excluyendo a la persona actual)
     IF pDni IS NOT NULL AND pDni != '' AND EXISTS (SELECT 1 FROM Personas WHERE dni = pDni AND idPersona != pIdPersona) THEN
@@ -2093,8 +2090,7 @@ BEGIN
         nombre = pNombre,
         apellido = pApellido,
         dni = pDni,
-        cargo = pCargo,
-        estado = pEstado
+        cargo = pCargo
     WHERE idPersona = pIdPersona;
 
     COMMIT;
