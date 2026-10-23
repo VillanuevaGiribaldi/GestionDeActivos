@@ -1,7 +1,3 @@
-
-DROP PROCEDURE IF EXISTS sp_;
-DELIMITER //
-
 -- =====================================================
 -- TIPOS
 -- =====================================================
@@ -53,8 +49,7 @@ DELIMITER //
 CREATE PROCEDURE sp_modificarTipo(
     IN pIdTipo INT,
     IN pNombre VARCHAR(45),
-    IN pDescripcion VARCHAR(100),
-    IN pEstado CHAR(1)
+    IN pDescripcion VARCHAR(100)
 )
 BEGIN
     -- Manejador de errores (Transacciones ACID)
@@ -67,7 +62,6 @@ BEGIN
     -- 1. Sanitización de entradas
     IF pNombre IS NOT NULL THEN SET pNombre = TRIM(pNombre); END IF;
     IF pDescripcion IS NOT NULL THEN SET pDescripcion = TRIM(pDescripcion); END IF;
-    IF pEstado IS NOT NULL THEN SET pEstado = TRIM(pEstado); END IF;
 
     -- 2. Validaciones iniciales
     IF pIdTipo IS NULL THEN
@@ -81,10 +75,6 @@ BEGIN
     -- 3. Validación de campos obligatorios
     IF pNombre IS NULL OR pNombre = '' THEN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El nombre del tipo de activo es obligatorio';
-    END IF;
-
-    IF pEstado IS NULL OR pEstado = '' THEN
-        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El estado del tipo de activo es obligatorio';
     END IF;
 
     -- 4. Validación de Nombre duplicado (Excluyendo el tipo actual)
@@ -101,8 +91,7 @@ BEGIN
     UPDATE Tipos 
     SET 
         nombre = pNombre,
-        descripcion = pDescripcion,
-        estado = pEstado
+        descripcion = pDescripcion
     WHERE idTipo = pIdTipo;
 
     COMMIT;
@@ -154,6 +143,16 @@ BEGIN
 END//
 DELIMITER ;
 
+-- ======================================== Alta Tipos
+DROP PROCEDURE IF EXISTS sp_altaTipo;
+DELIMITER //
+CREATE PROCEDURE sp_altaTipo(IN pIdTipo INT)
+BEGIN
+    IF pIdTipo IS NULL THEN SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Debe indicar el tipo a dar de alta'; END IF;
+    IF NOT EXISTS (SELECT 1 FROM Tipos WHERE idTipo = pIdTipo) THEN SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El tipo indicado no existe'; END IF;
+    UPDATE Tipos SET estado = 'A' WHERE idTipo = pIdTipo;
+END//
+DELIMITER ;
 
 -- =====================================================
 -- ATRIBUTOS
@@ -1515,15 +1514,13 @@ CREATE PROCEDURE sp_modificarMarca(
 
     -- todos los valores reemplazan a los actuales
     IN pNombre VARCHAR(100),
-    IN pDescripcion VARCHAR(45),
-    IN pEstado CHAR(1)
+    IN pDescripcion VARCHAR(45)
 )
 BEGIN
 
     -- 1. Sanitización de entradas
     SET pNombre = TRIM(pNombre);
     SET pDescripcion = TRIM(pDescripcion);
-    SET pEstado = TRIM(pEstado);
 
     -- 2. Validación de parámetro obligatorio
     IF pIdMarca IS NULL THEN
@@ -1547,13 +1544,7 @@ BEGIN
             SET MESSAGE_TEXT = 'El nombre de la marca no puede estar vacío';
     END IF;
 
-    -- 5. Validación de estado
-    IF pEstado IS NULL OR pEstado NOT IN ('A', 'I') THEN
-        SIGNAL SQLSTATE '45000'
-            SET MESSAGE_TEXT = 'El estado ingresado no es valido';
-    END IF;
-
-    -- 6. Validación de nombre duplicado
+    -- 5. Validación de nombre duplicado
     IF EXISTS (
         SELECT 1
         FROM Marcas
@@ -1565,18 +1556,17 @@ BEGIN
                 'El nuevo nombre ingresado ya pertenece a otra marca registrada';
     END IF;
 
-    -- 7. Actualización mediante PUT
+    -- 6. Actualización mediante PUT
     UPDATE Marcas
     SET
         nombre = pNombre,
-        descripcion = pDescripcion,
-        estado = pEstado
+        descripcion = pDescripcion
     WHERE idMarca = pIdMarca;
 
 END//
 
 DELIMITER ;
--- ==========================================
+-- ========================================== Baja Marca
 
 DROP PROCEDURE IF EXISTS sp_bajaMarca;
 DELIMITER //
@@ -1602,6 +1592,17 @@ BEGIN
 END//
 DELIMITER ;
 
+-- ========================================== Alta Marca
+
+DROP PROCEDURE IF EXISTS sp_altaMarca;
+DELIMITER //
+CREATE PROCEDURE sp_altaMarca(IN pIdMarca INT)
+BEGIN
+    IF pIdMarca IS NULL THEN SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Debe indicar la marca a dar de alta'; END IF;
+    IF NOT EXISTS (SELECT 1 FROM Marcas WHERE idMarca = pIdMarca) THEN SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'La marca indicada no existe'; END IF;
+    UPDATE Marcas SET estado = 'A' WHERE idMarca = pIdMarca;
+END//
+DELIMITER ;
 -- =====================================================
 -- UBICACIONES
 -- =====================================================
@@ -1666,17 +1667,13 @@ CREATE PROCEDURE sp_modificarUbicacion(
     -- Esto ahora recibe el id (no nombre) de la ubicacion padre ya que podemos tener más de una ubicacion con el mismo nombre (Imaginate dos piso 1 de dos edificios distintos)
     IN  vIdUbicacionPadre INT,
     IN pNombre VARCHAR(45),
-    IN pDescripcion VARCHAR(100),
-    IN pEstado CHAR(1)
+    IN pDescripcion VARCHAR(100)
 )
 SALIR: BEGIN
-
 
     -- 1. Sanitización de entradas
     SET pNombre = TRIM(pNombre);
     SET pDescripcion = TRIM(pDescripcion);
-    SET pEstado = TRIM(pEstado);
-
 
     -- 2. Validación de parámetro obligatorio
     IF pIdUbicacion IS NULL THEN
@@ -1684,13 +1681,6 @@ SALIR: BEGIN
             SET MESSAGE_TEXT = 'Debe incluir una ubicacion a modificar';
         LEAVE SALIR;
     END IF;
-
-    IF pEstado IS NULL OR pEstado NOT IN ('A', 'I') THEN
-        SIGNAL SQLSTATE '45000'
-            SET MESSAGE_TEXT = 'El estado ingresado no es valido';
-        LEAVE SALIR;
-    END IF;
-
 
     -- 3. Validación de existencia de la ubicación
     IF NOT EXISTS (
@@ -1711,18 +1701,9 @@ SALIR: BEGIN
         LEAVE SALIR;
     END IF;
 
-
-    -- 5. Validación del estado
-    IF pEstado IS NOT NULL AND pEstado NOT IN ('A', 'I') THEN
-        SIGNAL SQLSTATE '45000'
-            SET MESSAGE_TEXT = 'El estado ingresado no es valido';
-        LEAVE SALIR;
-    END IF;
-
-
-    -- 6. Obtener la ubicación padre
+    -- 5. Obtener la ubicación padre
     IF vIdUbicacionPadre IS NOT NULL THEN
-        -- 7. Verificar que la ubicación padre exista
+        -- 6. Verificar que la ubicación padre exista
         IF NOT EXISTS (SELECT 1 FROM `Ubicaciones` WHERE `idUbicacion`=vIdUbicacionPadre) THEN
             SIGNAL SQLSTATE '45000'
                 SET MESSAGE_TEXT = 'La ubicacion padre no existe';
@@ -1730,7 +1711,7 @@ SALIR: BEGIN
         END IF;
 
 
-        -- 8. Una ubicación no puede ser padre de sí misma
+        -- 7. Una ubicación no puede ser padre de sí misma
         IF vIdUbicacionPadre = pIdUbicacion THEN
             SIGNAL SQLSTATE '45000'
                 SET MESSAGE_TEXT =
@@ -1739,7 +1720,7 @@ SALIR: BEGIN
         END IF;
 
 
-        -- 9. Verificar que no se genere un ciclo
+        -- 8. Verificar que no se genere un ciclo
         IF EXISTS (
             WITH RECURSIVE Ancestros AS (
                 SELECT idUbicacion, idUbicacionPadre
@@ -1764,14 +1745,12 @@ SALIR: BEGIN
 
     END IF;
 
-
-    -- 10. Actualización mediante PUT
+    -- 9. Actualización mediante PUT
     UPDATE Ubicaciones
     SET
         idUbicacionPadre = vIdUbicacionPadre,
         nombre = pNombre,
-        descripcion = pDescripcion,
-        estado = COALESCE(pEstado,'A')
+        descripcion = pDescripcion
     WHERE idUbicacion = pIdUbicacion;
 
 END//
@@ -1827,6 +1806,29 @@ BEGIN
 END//
 DELIMITER ;
 
+-- ========================================== Alta Ubicacion
+DROP PROCEDURE IF EXISTS sp_altaUbicacion;
+DELIMITER //
+CREATE PROCEDURE sp_altaUbicacion(IN pIdUbicacion INT)
+BEGIN
+    DECLARE vIdUbicacionPadre INT;
+    DECLARE vEstadoPadre CHAR(1);
+
+    IF pIdUbicacion IS NULL THEN SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Debe indicar la ubicación a dar de alta'; END IF;
+    SELECT idUbicacionPadre INTO vIdUbicacionPadre FROM Ubicaciones WHERE idUbicacion = pIdUbicacion;
+    
+    -- Validamos jerarquía: el padre no puede estar inactivo
+    IF vIdUbicacionPadre IS NOT NULL THEN
+        SELECT estado INTO vEstadoPadre FROM Ubicaciones WHERE idUbicacion = vIdUbicacionPadre;
+        IF vEstadoPadre = 'I' THEN
+            SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'No puede reactivar esta ubicación porque la ubicación padre se encuentra dada de baja';
+        END IF;
+    END IF;
+
+    UPDATE Ubicaciones SET estado = 'A' WHERE idUbicacion = pIdUbicacion;
+END//
+DELIMITER ;
+
 -- =====================================================
 -- PROVEEDORES
 -- =====================================================
@@ -1872,7 +1874,7 @@ BEGIN
 END//
 
 DELIMITER ;
--- =====================================
+-- ===================================== Modificar Proveedor
 DROP PROCEDURE IF EXISTS sp_modificarProveedor;
 DELIMITER //
 
@@ -1933,7 +1935,7 @@ END//
 
 DELIMITER ;
 
--- ===============================================
+-- =============================================== Baja Proveedor
 DROP PROCEDURE IF EXISTS sp_bajaProveedor;
 DELIMITER //
 
@@ -1966,6 +1968,18 @@ BEGIN
     SET estado = 'I' -- 'I' representa Inactivo / Dado de baja
     WHERE idProveedor = pIdProveedor;
 
+END//
+DELIMITER ;
+
+-- ========================================== Alta Proveedor
+
+DROP PROCEDURE IF EXISTS sp_altaProveedor;
+DELIMITER //
+CREATE PROCEDURE sp_altaProveedor(IN pIdProveedor INT)
+BEGIN
+    IF pIdProveedor IS NULL THEN SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Debe indicar el proveedor a dar de alta'; END IF;
+    IF NOT EXISTS (SELECT 1 FROM Proveedores WHERE idProveedor = pIdProveedor) THEN SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El proveedor indicado no existe'; END IF;
+    UPDATE Proveedores SET estado = 'A' WHERE idProveedor = pIdProveedor;
 END//
 DELIMITER ;
 
@@ -2140,10 +2154,20 @@ BEGIN
 END//
 DELIMITER ;
 
+-- ========================================== Alta Persona
+DROP PROCEDURE IF EXISTS sp_altaPersona;
+DELIMITER //
+CREATE PROCEDURE sp_altaPersona(IN pIdPersona INT)
+BEGIN
+    IF pIdPersona IS NULL THEN SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Debe indicar la persona a dar de alta'; END IF;
+    IF NOT EXISTS (SELECT 1 FROM Personas WHERE idPersona = pIdPersona) THEN SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'La persona indicada no existe'; END IF;
+    UPDATE Personas SET estado = 'A' WHERE idPersona = pIdPersona;
+END//
+DELIMITER ;
+
 -- =====================================================
 -- USUARIOS
 -- =====================================================
-
 -- ============================================== Nuevo Usuario
 DROP PROCEDURE IF EXISTS sp_nuevoUsuario;
 DELIMITER //
@@ -2253,7 +2277,7 @@ BEGIN
     -- 1. Sanitización de entradas
     IF pUsername IS NOT NULL THEN SET pUsername = TRIM(pUsername); END IF;
     IF pRol IS NOT NULL THEN SET pRol = TRIM(pRol); END IF;
-    IF pEstado IS NOT NULL THEN SET pEstado = TRIM(pEstado); END IF;
+
 
     -- 2. Validaciones iniciales de existencia del Usuario
     IF pIdUsuario IS NULL THEN
@@ -2351,6 +2375,8 @@ BEGIN
 
 END//
 DELIMITER ;
+
+-- ========================================== Alta Usuario
 
 DROP PROCEDURE IF EXISTS sp_altaUsuario;
 DELIMITER //
@@ -2945,6 +2971,17 @@ BEGIN
 END//
 DELIMITER ;
 
+-- ========================================== Alta Factura
+DROP PROCEDURE IF EXISTS sp_altaFactura;
+DELIMITER //
+CREATE PROCEDURE sp_altaFactura(IN pIdFactura INT)
+BEGIN
+    IF pIdFactura IS NULL THEN SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Debe indicar la factura a dar de alta'; END IF;
+    IF NOT EXISTS (SELECT 1 FROM Facturas WHERE idFactura = pIdFactura) THEN SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'La factura indicada no existe'; END IF;
+    UPDATE Facturas SET estado = 'A' WHERE idFactura = pIdFactura;
+END//
+DELIMITER ;
+
 -- =====================================================
 -- ESTADOS	
 -- =====================================================
@@ -2995,8 +3032,7 @@ DELIMITER //
 CREATE PROCEDURE sp_modificarEstado(
     IN pIdEstado INT,
     IN pNombre VARCHAR(45),
-    IN pDescripcion VARCHAR(200),
-    IN pEstado CHAR(1)
+    IN pDescripcion VARCHAR(200)
 )
 BEGIN
     -- Manejador de errores (Transacciones ACID)
@@ -3009,7 +3045,6 @@ BEGIN
     -- 1. Sanitización de entradas
     IF pNombre IS NOT NULL THEN SET pNombre = TRIM(pNombre); END IF;
     IF pDescripcion IS NOT NULL THEN SET pDescripcion = TRIM(pDescripcion); END IF;
-    IF pEstado IS NOT NULL THEN SET pEstado = TRIM(pEstado); END IF;
 
     -- 2. Validaciones iniciales
     IF pIdEstado IS NULL THEN
@@ -3023,10 +3058,6 @@ BEGIN
     -- 3. Validación de campos obligatorios
     IF pNombre IS NULL OR pNombre = '' THEN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El nombre del estado es obligatorio';
-    END IF;
-
-    IF pEstado IS NULL OR pEstado = '' THEN
-        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El estado (Activo/Inactivo) es obligatorio';
     END IF;
 
     -- 4. Validación de Nombre duplicado (Excluyendo el estado actual)
@@ -3043,8 +3074,7 @@ BEGIN
     UPDATE Estados 
     SET 
         nombre = pNombre,
-        descripcion = pDescripcion,
-        estado = pEstado
+        descripcion = pDescripcion
     WHERE idEstado = pIdEstado;
 
     COMMIT;
@@ -3093,6 +3123,17 @@ BEGIN
 
     COMMIT;
 
+END//
+DELIMITER ;
+
+-- ========================================== Alta Estado
+DROP PROCEDURE IF EXISTS sp_altaEstado;
+DELIMITER //
+CREATE PROCEDURE sp_altaEstado(IN pIdEstado INT)
+BEGIN
+    IF pIdEstado IS NULL THEN SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Debe indicar el estado a dar de alta'; END IF;
+    IF NOT EXISTS (SELECT 1 FROM Estados WHERE idEstado = pIdEstado) THEN SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El estado indicado no existe'; END IF;
+    UPDATE Estados SET estado = 'A' WHERE idEstado = pIdEstado;
 END//
 DELIMITER ;
 
@@ -3159,7 +3200,6 @@ CREATE PROCEDURE sp_modificarImagen(
     IN pIdActivo INT,
     IN pRuta VARCHAR(255),
     IN pDescripcion VARCHAR(100),
-    IN pEstado CHAR(1),
     IN pFecha DATETIME
 )
 BEGIN
@@ -3173,7 +3213,6 @@ BEGIN
     -- 1. Sanitización de entradas
     IF pRuta IS NOT NULL THEN SET pRuta = TRIM(pRuta); END IF;
     IF pDescripcion IS NOT NULL THEN SET pDescripcion = TRIM(pDescripcion); END IF;
-    IF pEstado IS NOT NULL THEN SET pEstado = TRIM(pEstado); END IF;
 
     -- 2. Validaciones iniciales de existencia de la imagen
     IF pIdImagen IS NULL THEN
@@ -3191,10 +3230,6 @@ BEGIN
 
     IF pRuta IS NULL OR pRuta = '' THEN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'La ruta de la imagen es obligatoria';
-    END IF;
-
-    IF pEstado IS NULL OR pEstado = '' THEN
-        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El estado de la imagen es obligatorio';
     END IF;
 
     -- 4. Validación de Integridad (Existencia del Activo asignado)
@@ -3260,6 +3295,15 @@ BEGIN
 END//
 DELIMITER ;
 
-
+-- ========================================== Alta Imagen
+DROP PROCEDURE IF EXISTS sp_altaImagen;
+DELIMITER //
+CREATE PROCEDURE sp_altaImagen(IN pIdImagen INT)
+BEGIN
+    IF pIdImagen IS NULL THEN SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Debe indicar la imagen a dar de alta'; END IF;
+    IF NOT EXISTS (SELECT 1 FROM Imagenes WHERE idImagen = pIdImagen) THEN SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'La imagen indicada no existe'; END IF;
+    UPDATE Imagenes SET estado = 'A' WHERE idImagen = pIdImagen;
+END//
+DELIMITER ;
 
 
