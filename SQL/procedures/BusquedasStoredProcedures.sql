@@ -566,3 +566,21 @@ BEGIN
     WHERE p.`idPersona` = pId;
 END//
 DELIMITER ;
+
+-- ============================================= Buscar Id Marca
+DROP PROCEDURE IF EXISTS sp_buscarIdMarca;
+DELIMITER //
+
+CREATE PROCEDURE sp_buscarIdMarca(
+    IN pId INT
+)
+BEGIN
+    SELECT 
+        idMarca, 
+        nombre, 
+        descripcion, 
+        estado 
+    FROM Marcas
+    WHERE idMarca = pId;
+END//
+DELIMITER ;

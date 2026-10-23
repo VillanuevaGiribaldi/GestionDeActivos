@@ -1,0 +1,26 @@
+info:
+  name: Alta Marca - Exitosa
+  type: http
+  seq: 2
+
+http:
+  method: POST
+  url: http://localhost:3000/api/marca/nueva
+  body:
+    type: json
+    data: |-
+      {
+        "marca":{
+                "nombre": "ASUS ROG",
+                "descripcion": "Linea Republic of Gamers",
+                "estado": "A"
+            }
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false
