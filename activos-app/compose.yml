@@ -33,9 +33,11 @@ services:
       watch:
         - path: ./activos-api/package.json
           action: rebuild
+          initial_sync: true
         - path: ./activos-api/
           target: /usr/src/activos-api/
           action: sync
+          initial_sync: true
           ignore:
             - node_modules/ 
   activos-frontend:
@@ -56,5 +58,6 @@ services:
         - path: ./activos-frontend/
           target: /usr/src/activos-frontend/
           action: sync
+          initial_sync: true
           ignore:
             - node_modules/ 
