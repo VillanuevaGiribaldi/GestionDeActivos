@@ -1,7 +1,7 @@
 info:
   name: modificar sin pass
   type: http
-  seq: 5
+  seq: 4
 
 http:
   method: PUT
@@ -13,7 +13,7 @@ http:
           "usuario":{
               "idUsuario": 4,
               "idPersona": 4,
-              "username": "pepe_modificado1",
+              "username": "alopez2",
               "rol": "ADMIN_IT",
               "estado": "A"
           }

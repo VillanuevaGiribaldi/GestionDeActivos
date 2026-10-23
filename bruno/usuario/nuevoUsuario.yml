@@ -8,23 +8,16 @@ http:
   url: http://localhost:3000/api/usuario/nuevo
   body:
     type: json
-    data: "{\r
-
-      \    \"usuario\":{\r
-
-      \        \"idPersona\": 4,\r
-
-      \        \"username\": \"pepe\",\r
-
-      \        \"password\":\"1234\",\r
-
-      \        \"rol\": \"ADMIN_IT\",\r
-
-      \        \"estado\": \"A\"\r
-
-      \    }\r
-
-      }"
+    data: |-
+      {
+          "usuario":{
+              "idPersona":100,
+              "username": "pepe",
+              "password":"1234",
+              "rol": "ADMIN_IT",
+              "estado": "A"
+          }
+      }
   auth: inherit
 
 settings:

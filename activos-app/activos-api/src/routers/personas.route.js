@@ -6,5 +6,6 @@ const router = Router();
 
 // Protegemos la ruta para que solo empleados de TI logueados puedan crear personas
 router.route('/nueva').post(authDefault, nuevaPersona);
+//router.route('/:id').get(authDefault, nuevaPersona);
 
 export default router;

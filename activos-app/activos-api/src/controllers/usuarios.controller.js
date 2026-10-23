@@ -1,5 +1,5 @@
 import Usuario  from '../models/usuarios.models.js'
-import jwt from 'jsonwebtoken';
+import catchSQL45000 from '../utils/error.handler.js';
 
 
 /*
@@ -20,11 +20,10 @@ const nuevoUsuario = async (req, res) => {
         });
     } catch (error) {
         console.error('Error al guardar el usuario:', error);
-        
+        catchSQL45000(res, error,"No se pudo crear el usuario")
         // 3. Devolvemos el error a Postman si algo falla en la BD
         return res.status(500).json({ 
-            mensaje: 'Hubo un error al crear el usuario',
-            error: error.message 
+            mensaje: 'Hubo un error interno al crear el usuario'
         });
     }
 }
@@ -41,9 +40,6 @@ const modificarUsuario = async (req, res) => {
             });
         }
         console.log(`Modificando el usuario ${idUrl}`);
-        if(req.body.usuario.estado=='B'){
-
-        }
 
         // Instanciación del usuario a partir del cuerpo
         const usuario = Usuario.fromObject(req.body.usuario);
@@ -57,9 +53,9 @@ const modificarUsuario = async (req, res) => {
 
     } catch (error) {
         console.error('Error al modificar el usuario:', error);
+        catchSQL45000(res, error,"No se pudo modificar el usuario")
         return res.status(500).json({
-            message: "Error al modificar el usuario",
-            error: error.message
+            message: "Error interno al modificar el usuario"
         });
     }
 }
@@ -77,6 +73,7 @@ const encriptar = async (req, res) => {
         });
     } catch (error) {
         console.error('Error en encriptación:', error);
+        catchSQL45000(res, error,"No se pudo modificar el usuario")
         return res.status(500).json({ mensaje: 'Error interno', error: error.message });
     }
 }
@@ -94,9 +91,9 @@ const bajaUsuario = async (req, res) => {
 
     } catch (error) {
         console.error('Error al dar de baja el usuario:', error);
+        catchSQL45000(res, error,"No se pudo dar de baja el usuario")
         return res.status(500).json({
-            message: "Error al dar de baja el usuario",
-            error: error.message
+            message: "Error interno al dar de baja el usuario"
         });
     }
 }
@@ -108,24 +105,46 @@ const altaUsuario = async (req, res) => {
         
         await Usuario.darDealta(idUrl);
         
-        return res.status(200).json({
+        return res.status(201).json({
             message: "Usuario dado de alta exitosamente"
         });
 
     } catch (error) {
         console.error('Error al dar de alta el usuario:', error);
-        return res.status(500).json({
-            message: "Error al dar de alta el usuario",
-            error: error.message
-        });
+        catchSQL45000(res, error,"No se pudo dar de alta el usuario")
+        res.status(500).json({
+            message: "error interno al buscar dar de alta el usuario"
+        })
     }
 }
 
+const getUsuario = async (req, res) => {
+
+    try {
+        const usuarioData = await Usuario.buscarPorId(req.params.id)
+        if (!usuarioData) {
+            res.status(404).json({
+                message: "No existe el usuario indicado"
+            })
+        }
+        delete usuarioData.password
+        res.status(200).json({
+            usuario: usuarioData,
+            message: "Se encontró el usuario indicado"
+        })
+    } catch (error) {
+        catchSQL45000(res, error,"No se pudo encontrar el usuario")
+        res.status(500).json({
+            message: "error interno al buscar el usuario"
+        })
+    }
+}
 
 export {
     nuevoUsuario,
     modificarUsuario,
     bajaUsuario,
     altaUsuario,
+    getUsuario,
     encriptar
 }
