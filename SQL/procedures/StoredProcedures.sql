@@ -2089,7 +2089,7 @@ BEGIN
 
 
     -- 4. Validación de DNI duplicado (Excluyendo a la persona actual)
-    IF pDni IS NOT NULL AND pDni != '' AND EXISTS (SELECT 1 FROM Personas WHERE dni = pDni AND idPersona != pIdPersona) THEN
+    IF pDni IS NOT NULL AND pDni != '' AND EXISTS (SELECT 1 FROM Personas pe WHERE pe.dni = pDni AND pe.idPersona != pIdPersona) THEN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El DNI ingresado ya pertenece a otra persona registrada';
     END IF;
 
@@ -2325,7 +2325,7 @@ BEGIN
     END IF;
 
     -- 6. REGLA DE NEGOCIO: Evitar que una misma persona tenga más de un usuario activo
-    IF pEstado = 'A' AND EXISTS (
+    IF EXISTS (
         SELECT 1 FROM Usuarios 
         WHERE idPersona = pIdPersona AND estado = 'A' AND idUsuario != pIdUsuario
     ) THEN
@@ -2343,8 +2343,7 @@ BEGIN
         idPersona = pIdPersona,
         username = pUsername,
         password = pPassword,
-        rol = pRol,
-        estado = pEstado
+        rol = pRol
     WHERE idUsuario = pIdUsuario;
 
     COMMIT;

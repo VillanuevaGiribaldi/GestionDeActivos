@@ -13,7 +13,7 @@ const nuevoUsuario = async (req, res) => {
         console.log(usuario)
         const resultado = await usuario.save();
         
-        // 2. Respondemos a Postman para que no se quede colgado
+        // 2. Respondemos
         return res.status(201).json({ 
             mensaje: 'Usuario creado exitosamente', 
             datos: resultado 
@@ -103,7 +103,7 @@ const altaUsuario = async (req, res) => {
         const idUrl = parseInt(req.params.id);
         console.log(`Dando de alta al usuario ${idUrl}`);
         
-        await Usuario.darDealta(idUrl);
+        await Usuario.darDeAlta(idUrl);
         
         return res.status(201).json({
             message: "Usuario dado de alta exitosamente"

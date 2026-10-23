@@ -38,6 +38,7 @@ class Usuario {
         )
         return result[0][0][0]
     }
+
     static async buscarPorId(id) {
         const result = await pool.execute
         (
@@ -74,20 +75,15 @@ class Usuario {
         }else{
             hashedPassword = (await bcrypt.hash(this.passwordHash, 10))
         }
-        const estado = (await pool.execute(
-            'CALL  sp_buscarIdUsuario( ? );', [this.idUsuario]
-        ))[0][0][0].estado
-
         const result = await pool.execute
         (
-            'CALL sp_modificarUsuario( ?, ?, ?, ?, ?, ? );', 
+            'CALL sp_modificarUsuario( ?, ?, ?, ?, ?);', 
             [
                 this.idUsuario, 
                 this.idPersona, 
                 this.username, 
                 hashedPassword, 
-                this.rol, 
-                estado
+                this.rol
             ]
         );
         return result;
@@ -119,7 +115,7 @@ class Usuario {
         );
         return result;
     }
-    static async darDealta(idUsuario) {
+    static async darDeAlta(idUsuario) {
         const result = await pool.execute(
             'CALL sp_altaUsuario( ? );', [idUsuario]
         );

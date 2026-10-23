@@ -548,3 +548,21 @@ BEGIN
     WHERE u.`idUsuario` = pId;
 END//
 DELIMITER ;
+
+DROP PROCEDURE IF EXISTS sp_buscarIdPersona;
+DELIMITER //
+
+CREATE PROCEDURE sp_buscarIdPersona(
+    IN pId INT
+)
+BEGIN
+    SELECT
+        p.nombre, 
+        p.apellido, 
+        p.dni, 
+        p.cargo,
+        p.estado 
+    FROM `Personas` p
+    WHERE p.`idPersona` = pId;
+END//
+DELIMITER ;

@@ -1,0 +1,42 @@
+info:
+  name: alta
+  type: http
+  seq: 8
+
+http:
+  method: PUT
+  url: http://localhost:3000/api/persona/:id/alta
+  params:
+    - name: id
+      value: "2"
+      type: path
+  body:
+    type: json
+    data: ""
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false
+
+examples:
+  - name: inexistente
+    request:
+      url: http://localhost:3000/api/persona/:id/alta
+      method: PUT
+      params:
+        - name: id
+          value: "100"
+          type: path
+      body:
+        type: json
+        data: ""
+    response:
+      status: 200
+      statusText: OK
+      body:
+        type: text
+        data: ""

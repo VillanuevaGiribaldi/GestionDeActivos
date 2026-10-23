@@ -3,13 +3,15 @@
     se devulve el mensaje definido en SQL.
     Si no quieres que se devuelva ese mensaje, no es obligatorio usarla.
 */
-const catchSQL45000 = async (res, error,mensaje ="error al realizar la acción") => {
+const catchSQL45000 = (res, error,mensaje ="error al realizar la acción") => {
     if (error?.sqlState === '45000') {
-        return res.status(422).json({
+        res.status(422).json({
             message: mensaje,
             error: error.sqlMessage
         });
+        return true
     }
+    return false
 };
 
 export default catchSQL45000;

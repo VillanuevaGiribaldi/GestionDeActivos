@@ -13,8 +13,8 @@ http:
           "usuario":{
               "idUsuario": 4,
               "idPersona": 4,
-              "username": "pepe2",
-              "password":"1234",
+              "username": "alopez",
+              "password":"contrasenia4",
               "rol": "ADMIN_IT",
               "estado": "A"
           }

@@ -1,0 +1,33 @@
+info:
+  name: modificar
+  type: http
+  seq: 8
+
+http:
+  method: PUT
+  url: http://localhost:3000/api/persona/:id
+  params:
+    - name: id
+      value: "2"
+      type: path
+  body:
+    type: json
+    data: |-
+      {
+          "persona": {
+          "idPersona": 2,
+          "nombre": "María",
+          "apellido": "Gómez modificada",
+          "dni": "32987654",
+          "cargo": "Gerente de Ventas",
+          "estado": "I"
+        }
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false
