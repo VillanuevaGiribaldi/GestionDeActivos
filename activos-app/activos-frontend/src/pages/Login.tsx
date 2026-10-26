@@ -39,7 +39,7 @@ export default function Login() {
 
             navigate("/", { replace: true });
         } catch (error) {
-            setError("Could not connect to the server");
+            setError("No se pudo acceder al servidor");
         }
     }
 

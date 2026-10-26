@@ -5,11 +5,7 @@ info:
 
 http:
   method: GET
-  url: "{{host}}{{ruta}}?estado=I"
-  params:
-    - name: estado
-      value: I
-      type: query
+  url: "{{host}}{{ruta}}"
   auth: inherit
 
 settings:

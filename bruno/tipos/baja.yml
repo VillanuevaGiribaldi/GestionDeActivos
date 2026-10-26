@@ -4,11 +4,11 @@ info:
   seq: 4
 
 http:
-  method: GET
+  method: DELETE
   url: "{{host}}{{ruta}}/:id"
   params:
     - name: id
-      value: "1"
+      value: "11"
       type: path
   auth: inherit
 

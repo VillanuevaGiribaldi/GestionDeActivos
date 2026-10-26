@@ -9,7 +9,7 @@ export default defineConfig({
     port: 5173,
     proxy: {
         "/api": {
-            target: "http://activos-api:3000",
+            target: `http://${process.env.API_HOST}:3000`,
             changeOrigin: false,
         },
     },
