@@ -1,0 +1,27 @@
+info:
+  name: nuevo
+  type: http
+  seq: 6
+
+http:
+  method: POST
+  url: "{{host}}{{ruta}}/nuevo"
+  body:
+    type: json
+    data: |-
+      {
+        "tipo": {
+          "idTipo": 1,
+          "nombre": "nuevo tipo",
+          "descripcion": "tipp de prueba sin activos",
+          "estado": "A"
+        }
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

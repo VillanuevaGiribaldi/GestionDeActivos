@@ -363,7 +363,22 @@ BEGIN
     ORDER BY nombre ASC;
 END//
 DELIMITER ;
+DROP PROCEDURE IF EXISTS sp_buscarIdTipo;
+DELIMITER //
 
+CREATE PROCEDURE sp_buscarIdTipo(
+    IN pId INT
+)
+BEGIN
+    SELECT
+        idTipo,
+        nombre,
+        descripcion,
+        estado
+    FROM Tipos
+    WHERE idTipo = pId;
+END//
+DELIMITER ;
 -- ===========================================  LISTAR UBICACIONES
 DROP PROCEDURE IF EXISTS sp_listarUbicaciones;
 DELIMITER //
