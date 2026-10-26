@@ -7,8 +7,8 @@ import catchSQL45000 from '../utils/error.handler.js';
     
 */
 const nuevoUsuario = async (req, res) => {
-    const usuario = Usuario.fromObject(req.body.usuario);
     try {
+        const usuario = Usuario.fromObject(req.body.usuario);
         // 1. Agregamos await para esperar que la BD termine la inserción
         console.log(usuario)
         const resultado = await usuario.save();

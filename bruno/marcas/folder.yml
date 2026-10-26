@@ -4,4 +4,7 @@ info:
   seq: 4
 
 request:
+  headers:
+    - name: ruta
+      value: marca/
   auth: inherit

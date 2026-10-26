@@ -88,4 +88,19 @@ const altaMarca = async (req, res) => {
     }
 }
 
-export { nuevaMarca, getMarca, modificarMarca, bajaMarca, altaMarca };
+
+const listarMarcas = async (req,res) => {
+    try {
+        const estado = req.body?.estado || null
+        console.log(estado)
+        const result = await Marca.listarMarcas(estado)
+        res.status(200).json({ message: "operación exitosa",
+            marcas: result
+         });
+    } catch (error) {
+        console.error('Error al buscar las marcas guardadas:', error);
+        catchSQL45000(res, error, "No se pudo buscar las marcas guardadas");
+        res.status(500).json({ message: "Error interno al buscar las marcas guardadas" });
+    }
+}
+export { nuevaMarca, getMarca, modificarMarca, bajaMarca, altaMarca, listarMarcas };
