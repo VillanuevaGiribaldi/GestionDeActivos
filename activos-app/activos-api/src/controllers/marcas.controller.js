@@ -91,8 +91,12 @@ const altaMarca = async (req, res) => {
 
 const listarMarcas = async (req,res) => {
     try {
-        const estado = req.body?.estado || null
-        console.log(estado)
+        const estado = req.query.estado || null;
+        if (estado !== null && !['A', 'I'].includes(estado)) {
+            return res.status(400).json({
+                message: "Estado no valido"
+            });
+        }
         const result = await Marca.listarMarcas(estado)
         res.status(200).json({ message: "operación exitosa",
             marcas: result

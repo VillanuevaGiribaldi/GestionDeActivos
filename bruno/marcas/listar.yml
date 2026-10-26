@@ -5,7 +5,11 @@ info:
 
 http:
   method: GET
-  url: "{{host}}{{ruta}}"
+  url: "{{host}}{{ruta}}?estado=I"
+  params:
+    - name: estado
+      value: I
+      type: query
   auth: inherit
 
 settings:
@@ -18,14 +22,12 @@ settings:
 examples:
   - name: dados de baja
     request:
-      url: "{{host}}{{ruta}}"
+      url: "{{host}}{{ruta}}?estado=I"
       method: GET
-      body:
-        type: json
-        data: |-
-          {
-            "estado": "I"
-          }
+      params:
+        - name: estado
+          value: I
+          type: query
     response:
       status: 200
       statusText: OK

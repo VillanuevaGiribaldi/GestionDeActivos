@@ -111,7 +111,7 @@ const listarTipos = async (req, res) => {
         const estado = req.query.estado || null;
         if (estado !== null && !['A', 'I'].includes(estado)) {
             return res.status(400).json({
-                message: "El estado debe ser 'A' o 'I'"
+                message: "Estado no valido"
             });
         }
 
