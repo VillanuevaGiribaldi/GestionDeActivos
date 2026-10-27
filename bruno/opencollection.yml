@@ -26,7 +26,7 @@ request:
     - name: host
       value: http://localhost:3000/api/
     - name: ruta
-      value: marca/
+      value: proveedor
 bundled: false
 extensions:
   bruno:

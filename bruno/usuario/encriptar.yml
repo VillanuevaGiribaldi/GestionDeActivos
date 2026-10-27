@@ -8,11 +8,10 @@ http:
   url: http://localhost:3000/api/usuario/test/encriptar
   body:
     type: json
-    data: "{\r
-
-      \    \"username\": \"jperez\"\r
-
-      }"
+    data: |-
+      {
+          "username": "mgomez"
+      }
   auth: inherit
 
 settings:

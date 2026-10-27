@@ -1,0 +1,31 @@
+info:
+  name: "nueva "
+  type: http
+  seq: 6
+
+http:
+  method: POST
+  url: "{{host}}{{ruta}}/nuevo"
+  body:
+    type: json
+    data: |2-
+      
+        {
+          "proveedor":{
+          "idProveedor": 6,
+          "nombre": "Computer C",
+          "direccion": "José Colombres 247",
+          "telefono": "381-12345",
+          "mail": "ventas@computerc.com",
+          "descripcion": "Comercio de Productos de Electrónica",
+          "estado": "A"
+          }
+        }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

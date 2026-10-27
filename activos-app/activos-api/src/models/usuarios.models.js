@@ -104,7 +104,7 @@ class Usuario {
         ))[0][0][0]
         console.log(datos)
         return await pool.execute(
-            'CALL sp_modificarUsuario(?,?,?,?,?,?)',[datos.idUsuario,datos.idPersona,datos.username,await bcrypt.hash(datos.password,10),datos.rol,datos.estado]
+            'CALL sp_modificarUsuario(?,?,?,?,?)',[datos.idUsuario,datos.idPersona,datos.username,await bcrypt.hash(datos.password,10),datos.rol]
         )
         
     }

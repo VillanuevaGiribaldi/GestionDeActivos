@@ -363,6 +363,8 @@ BEGIN
     ORDER BY nombre ASC;
 END//
 DELIMITER ;
+
+-- ============================================= Buscar Id Tipo
 DROP PROCEDURE IF EXISTS sp_buscarIdTipo;
 DELIMITER //
 
@@ -597,5 +599,25 @@ BEGIN
         estado 
     FROM Marcas
     WHERE idMarca = pId;
+END//
+DELIMITER ;
+
+-- ============================================= Buscar Id Proveedor
+DROP PROCEDURE IF EXISTS sp_buscarIdProveedor;
+DELIMITER //
+CREATE PROCEDURE sp_buscarIdProveedor(
+    IN pId INT
+)
+BEGIN
+    SELECT 
+        idProveedor, 
+        nombre, 
+        direccion, 
+        telefono, 
+        mail, 
+        descripcion, 
+        estado 
+    FROM Proveedores
+    WHERE idProveedor = pId;
 END//
 DELIMITER ;
