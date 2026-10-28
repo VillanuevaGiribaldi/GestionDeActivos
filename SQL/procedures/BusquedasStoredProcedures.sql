@@ -297,7 +297,8 @@ CREATE VIEW vw_resumenInventario AS
         m.nombre, 
         a.modelo, 
         u.nombre, 
-        e.nombre;
+        e.nombre asc;
+    
 END//
 
 SELECT * FROM `vw_resumenInventario`;
@@ -619,5 +620,25 @@ BEGIN
         estado 
     FROM Proveedores
     WHERE idProveedor = pId;
+END//
+DELIMITER ;
+
+-- ============================================= Buscar Id Ubicacion
+
+DROP PROCEDURE IF EXISTS sp_buscarIdUbicacion;
+DELIMITER //
+CREATE PROCEDURE sp_buscarIdUbicacion(
+    IN pId INT
+)
+BEGIN
+    SELECT
+        idUbicacion,
+        idUbicacionPadre,
+        nombre,
+        descripcion,
+        estado
+    FROM Ubicaciones
+    WHERE idUbicacion = pId
+    ORDER BY `idUbicacionPadre` ASC;
 END//
 DELIMITER ;

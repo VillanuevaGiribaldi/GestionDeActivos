@@ -10,13 +10,14 @@ import personasRouter from './routers/personas.route.js';
 import marcasRouter from "./routers/marcas.route.js";
 import tiposRouter from "./routers/tipos.route.js";
 import proveedoresRouter from "./routers/proveedores.route.js";
-
+import ubicacionesRouter from "./routers/ubicaciones.route.js";
 // declarar las rutas
 app.use("/api/usuario", userRouter)
 app.post("/api/login", login)
-app.use('/api/persona', personasRouter);
+app.use('/api/persona', personasRouter)
 app.use('/api/marca', marcasRouter)
 app.use('/api/tipo',tiposRouter)
 app.use('/api/proveedor', proveedoresRouter)
+app.use('/api/ubicacion', ubicacionesRouter);
 export default app
 

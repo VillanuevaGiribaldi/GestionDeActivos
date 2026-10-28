@@ -1,7 +1,7 @@
 info:
   name: "nueva "
   type: http
-  seq: 6
+  seq: 3
 
 http:
   method: POST
@@ -12,7 +12,6 @@ http:
       
         {
           "proveedor":{
-          "idProveedor": 6,
           "nombre": "Computer C",
           "direccion": "José Colombres 247",
           "telefono": "381-12345",

@@ -1,14 +1,14 @@
 info:
   name: "alta "
   type: http
-  seq: 5
+  seq: 6
 
 http:
   method: PUT
   url: "{{host}}{{ruta}}/:id/alta"
   params:
     - name: id
-      value: "1"
+      value: "6"
       type: path
   auth: inherit
 

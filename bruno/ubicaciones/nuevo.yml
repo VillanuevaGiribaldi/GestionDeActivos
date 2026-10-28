@@ -1,0 +1,27 @@
+info:
+  name: nuevo
+  type: http
+  seq: 6
+
+http:
+  method: POST
+  url: "{{host}}{{ruta}}/nueva"
+  body:
+    type: json
+    data: |-
+      {
+        "ubicacion": {
+          "nombre": "Subsuelo",
+          "descripcion": "subsuelo del edificio principal",
+          "estado": "A",
+          "idUbicacionPadre": null
+        }
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

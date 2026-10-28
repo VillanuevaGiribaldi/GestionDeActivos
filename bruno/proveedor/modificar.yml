@@ -1,25 +1,28 @@
 info:
   name: modificar
   type: http
-  seq: 4
+  seq: 5
 
 http:
   method: PUT
   url: "{{host}}{{ruta}}/:id"
   params:
     - name: id
-      value: "1"
+      value: "6"
       type: path
   body:
     type: json
     data: |-
       {
-        "marca": {
-          "idMarca": 1,
-          "nombre": "Dell modificada",
-          "descripcion": "Marca de equipos informáticos",
+        "proveedor":{
+          "idProveedor": 6,
+          "nombre": "Computer C modificado",
+          "direccion": "José Colombres 247",
+          "telefono": "381-12345",
+          "mail": "ventas@computerc.com",
+          "descripcion": "Comercio de Productos de Electrónica",
           "estado": "A"
-        }
+          }
       }
   auth: inherit
 
