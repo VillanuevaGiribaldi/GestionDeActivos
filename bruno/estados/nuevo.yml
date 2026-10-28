@@ -1,0 +1,27 @@
+info:
+  name: nuevo
+  type: http
+  seq: 6
+
+http:
+  method: POST
+  url: "{{host}}{{ruta}}/nuevo"
+  body:
+    type: json
+    data: |-
+      {
+        "estado": {
+          "nombre": "para donar",
+          "descripcion": "Activo separado para donar",
+          "estado": "A",
+          "idUbicacionPadre": null
+        }
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

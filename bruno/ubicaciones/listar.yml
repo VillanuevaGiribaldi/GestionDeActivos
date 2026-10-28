@@ -18,19 +18,3 @@ settings:
   followRedirects: true
   maxRedirects: 5
   forwardAuthorizationHeader: false
-
-examples:
-  - name: ubicaciones activas
-    request:
-      url: "{{host}}{{ruta}}?estado=I"
-      method: GET
-      params:
-        - name: estado
-          value: I
-          type: query
-    response:
-      status: 200
-      statusText: OK
-      body:
-        type: text
-        data: ""

@@ -639,6 +639,24 @@ BEGIN
         estado
     FROM Ubicaciones
     WHERE idUbicacion = pId
-    ORDER BY `idUbicacionPadre` ASC;
+    ;
+END//
+DELIMITER ;
+
+-- ============================================= Buscar Id Estados
+
+DROP PROCEDURE IF EXISTS sp_buscarIdEstado;
+DELIMITER //
+CREATE PROCEDURE sp_buscarIdEstado(
+    IN pId INT
+)
+BEGIN
+    SELECT
+        idEstado,
+        nombre,
+        descripcion,
+        estado
+    FROM Estados
+    WHERE idEstado = pId;
 END//
 DELIMITER ;

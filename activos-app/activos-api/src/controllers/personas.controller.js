@@ -13,10 +13,11 @@ const nuevaPersona = async (req, res) => {
 
     } catch (error) {
         console.error('Error al guardar la persona:', error);
-        catchSQL45000(res, error, "No se pudo crear la persona")
-        return res.status(500).json({
-            mensaje: 'error al crear la persona'
-        });
+        if (!catchSQL45000(res, error, "No se pudo crear la persona")) {
+            return res.status(500).json({
+                message: 'error al crear la persona'
+            });
+        }
     }
 }
 
@@ -34,10 +35,11 @@ const getPersona = async (req,res) => {
         })
     } catch (error) {
         catchSQL45000(res, error,"No se pudo encontrar la persona")
-        console.log("error al buscar la persona: "+error)
-        res.status(500).json({
-            message: "error interno al buscar la persona"
-        })
+        if (!catchSQL45000(res, error, "No se pudo encontrar la persona")) {
+            return res.status(500).json({
+                message: "Error interno al buscar a la persona"
+            });
+        }
     }
 }
 
@@ -54,10 +56,11 @@ const bajaPersona = async (req, res) => {
 
     } catch (error) {
         console.error('Error al dar de baja la Persona:', error);
-        catchSQL45000(res, error,"No se pudo dar de baja la Persona")
-        return res.status(500).json({
-            message: "Error interno al dar de baja la Persona"
-        });
+        if (!catchSQL45000(res, error, "No se pudo dar de baja la persona")) {
+            return res.status(500).json({
+                message: 'error al dar de baja la persona'
+            });
+        }
     }
 }
 
@@ -74,10 +77,11 @@ const altaPersona = async (req, res) => {
 
     } catch (error) {
         console.error('Error al dar de alta la persona:', error);
-        catchSQL45000(res, error,"No se pudo dar de alta la persona")
-        res.status(500).json({
-            message: "error interno al buscar dar de alta la persona"
-        })
+        if (!catchSQL45000(res, error, "No se pudo dar de alta la persona")) {
+            return res.status(500).json({
+                message: 'error al dar de alta la persona'
+            });
+        }
     }
 }
 
