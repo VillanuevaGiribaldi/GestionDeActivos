@@ -705,3 +705,40 @@ BEGIN
     ORDER BY i.fecha DESC;
 END//
 DELIMITER ;
+
+DROP PROCEDURE IF EXISTS sp_listarAtributos;
+DELIMITER //
+CREATE PROCEDURE sp_listarAtributos(
+    IN pIdTipo CHAR(1)
+)
+BEGIN
+    SELECT 
+        a.`idAtributo`,
+        a.`idTipo`,
+        a.nombre,
+        a.obligatorio,
+        a.`porDefecto` 
+    FROM `Atributos` a
+    WHERE (a.`idTipo`=pIdTipo OR pIdTipo IS NULL) ;
+END//
+DELIMITER ;
+-- ============================================= Buscar Id Atributos
+
+DROP PROCEDURE IF EXISTS sp_buscarIdAtributo;
+DELIMITER //
+CREATE PROCEDURE sp_buscarIdAtributo(
+    IN pId INT
+)
+BEGIN
+    SELECT
+        a.idAtributo,
+        a.nombre,
+        a.`idTipo`,
+        t.nombre as "tipo",
+        a.obligatorio,
+        a.`porDefecto`
+    FROM `Atributos` a
+    INNER JOIN `Tipos` t
+    WHERE idAtributo = pId;
+END//
+DELIMITER ;

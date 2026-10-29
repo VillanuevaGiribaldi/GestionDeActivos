@@ -269,15 +269,15 @@ BEGIN
 
     -- 5. Validación de Duplicados en la plantilla (UX_tipoNombre) excluyendo a sí mismo
     IF EXISTS (
-        SELECT 1 FROM Atributos 
-        WHERE idTipo = pIdTipo 
-        AND nombre = pNombre 
-        AND idAtributo != pIdAtributo
+        SELECT 1 FROM Atributos a
+        WHERE a.idTipo = pIdTipo 
+        AND a.nombre = pNombre 
+        AND a.idAtributo != pIdAtributo
     ) THEN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Este tipo de activo ya posee otro atributo registrado con ese mismo nombre';
     END IF;
     
-    SELECT idTipo INTO vIdTipoOld FROM `Tipos`t
+    SELECT a.idTipo INTO vIdTipoOld FROM `Tipos`t
     INNER join `Atributos` a ON a.`idTipo`=t.`idTipo`
     where a.`idAtributo`= pIdAtributo;
 

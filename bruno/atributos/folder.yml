@@ -1,0 +1,10 @@
+info:
+  name: atributos
+  type: folder
+  seq: 11
+
+request:
+  auth: inherit
+  variables:
+    - name: ruta
+      value: atributo
