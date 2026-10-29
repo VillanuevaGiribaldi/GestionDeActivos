@@ -3293,7 +3293,6 @@ BEGIN
         idActivo = pIdActivo,
         ruta = pRuta,
         descripcion = pDescripcion,
-        estado = pEstado,
         fecha = pFecha
     WHERE idImagen = pIdImagen;
 
@@ -3352,47 +3351,3 @@ END//
 DELIMITER ;
 
 
--- ========================================== Buscar Id Imagen
-DROP PROCEDURE IF EXISTS sp_buscarIdImagen;
-DELIMITER //
-CREATE PROCEDURE sp_buscarIdImagen(
-    IN pIdImagen INT
-)
-BEGIN
-    SELECT 
-        i.idImagen, 
-        i.idActivo, 
-        i.ruta, 
-        i.estado, 
-        i.fecha, 
-        i.descripcion,
-        a.nombre AS nombreActivo 
-    FROM Imagenes i
-    LEFT JOIN Activos a ON i.idActivo = a.idActivo
-    WHERE i.idImagen = pIdImagen;
-END//
-DELIMITER ;
-
--- ========================================== Listar imagenes
-DROP PROCEDURE IF EXISTS sp_listarImagenes;
-DELIMITER //
-CREATE PROCEDURE sp_listarImagenes(
-    IN pEstado CHAR(1),
-    IN pIdActivo INT
-)
-BEGIN
-    SELECT 
-        i.idImagen, 
-        i.idActivo, 
-        i.ruta, 
-        i.estado, 
-        i.fecha, 
-        i.descripcion,
-        a.nombre AS nombreActivo
-    FROM Imagenes i
-    LEFT JOIN Activos a ON i.idActivo = a.idActivo
-    WHERE (pEstado IS NULL OR i.estado = pEstado)
-      AND (pIdActivo IS NULL OR i.idActivo = pIdActivo)
-    ORDER BY i.fecha DESC;
-END//
-DELIMITER ;

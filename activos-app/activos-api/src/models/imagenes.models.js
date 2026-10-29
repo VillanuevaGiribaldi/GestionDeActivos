@@ -4,6 +4,8 @@ class Imagen {
     constructor({ idImagen, idActivo, ruta, estado, fecha, descripcion }) {
         this.idImagen = idImagen ?? null;
         this.idActivo = idActivo;
+        this.descripcion = descripcion;
+        this.fecha = fecha;
         this.ruta = ruta;
         this.estado = estado;
         
@@ -35,13 +37,12 @@ class Imagen {
 
     async modificar() {
         const result = await pool.execute(
-            'CALL sp_modificarImagen( ?, ?, ?, ?, ?, ? );', 
+            'CALL sp_modificarImagen( ?, ?, ?, ?, ? );', 
             [
                 this.idImagen,
                 this.idActivo,
                 this.ruta,
                 this.descripcion,
-                this.estado,
                 this.fecha
             ]
         );

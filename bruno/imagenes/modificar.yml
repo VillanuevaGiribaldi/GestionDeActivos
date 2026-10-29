@@ -8,23 +8,19 @@ http:
   url: "{{host}}{{ruta}}/:id"
   params:
     - name: id
-      value: "2"
+      value: "1"
       type: path
   body:
     type: json
     data: |-
-      
       {
-        "factura": {
-          "idFactura": 2,
-          "idProveedor": 5,
-          "nombreProveedor": "Movil",
-          "fecha": "2026-08-20T11:00:00.000Z",
-          "monto": "1500.00",
-          "moneda": "USD",
-          "numero": "FC-A-0001-00000002",
-          "ruta": "/docs/facturas/fc-celulares-0001.pdf",
-          "estado": "A"
+        "imagen": {
+          "idImagen": 1,
+          "idActivo": 1,
+          "ruta":"/img/activo1.png",
+          "descripcion":"pc de escritorio modificada",
+          "estado":"A",
+          "fecha": "2026-08-20T11:00:00.000Z"
         }
           
       }

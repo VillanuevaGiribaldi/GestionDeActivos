@@ -81,10 +81,11 @@ const authDefault = async (req, res, next) => {
 const authView = async (req, res, next) => {
     try {
         // El permiso de vista solo requiere que el token sea válido (cualquier usuario logueado)
-        const decoded = jwt.verify(req.body.token, process.env.JWT_SECRET || 'secreto_de_prueba_temporal');
-        req.usuario = decoded;
+        const decoded = jwt.verify(req.headers.authorization.split(" ")[1], process.env.JWT_SECRET || 'secreto_de_prueba_temporal');
+        //req.usuario = decoded;
         next();
     } catch (error) {
+        console.log(error)
         return res.status(401).json({ message: "Token no proporcionado o sesión expirada, vueva a iniciar sesión" });
     }
 };

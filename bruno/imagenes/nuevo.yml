@@ -10,15 +10,12 @@ http:
     type: json
     data: |-
       {
-        "factura": {
-          "idProveedor": 5,
-          "nombreProveedor": "MovilTech",
-          "fecha": "2026-08-20T11:00:00.000Z",
-          "monto": "1580.00",
-          "moneda": "ARS",
-          "numero": "FC-A-0001-00000005",
-          "ruta": "/docs/facturas/fc-celulares-0002.pdf",
-          "estado": "A"
+        "imagen": {
+          "idActivo": 1,
+          "ruta":"/img/activo1.png",
+          "descripcion":"pc de escritorio",
+          "estado":"A",
+          "fecha": "2026-08-20T11:00:00.000Z"
         }
           
       }

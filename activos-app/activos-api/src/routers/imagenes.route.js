@@ -14,7 +14,7 @@ const router = Router();
 router.route('/').get(authView, listarImagenes);
 
 // Escritura restringida a IT
-router.route('/nuevo').post(authDefault, nuevaImagen);
+router.route('/nueva').post(authDefault, nuevaImagen);
 router.route('/:id').get(authView, getImagen);
 router.route('/:id').put(authDefault, modificarImagen);
 
