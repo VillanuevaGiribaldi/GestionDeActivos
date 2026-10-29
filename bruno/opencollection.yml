@@ -21,7 +21,7 @@ request:
       description: Token recibido al usar el post /auth/login
   auth:
     type: bearer
-    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwicm9sIjoiQURNSU5fSVQiLCJpYXQiOjE3OTI3MTAxNjksImV4cCI6MTgyNDI0NjE2OX0.ur-75Z3Tz_6CjpgMVOSJUfT93CkWaHCJXFJq1Az5Yk0
+    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwicm9sIjoiQURNSU5fSVQiLCJpYXQiOjE3OTMyMzcyMTMsImV4cCI6MTgyNDc3MzIxM30.XpDxccZtFLG1Maz6kaw24Y5lWfChp2hGzd1BK0CsryQ
   variables:
     - name: host
       value: http://localhost:3000/api/

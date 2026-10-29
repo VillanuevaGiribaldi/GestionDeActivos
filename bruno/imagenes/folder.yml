@@ -1,0 +1,10 @@
+info:
+  name: imagenes
+  type: folder
+  seq: 10
+
+request:
+  auth: inherit
+  variables:
+    - name: ruta
+      value: imagen

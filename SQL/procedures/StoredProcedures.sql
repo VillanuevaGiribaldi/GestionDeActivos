@@ -2981,6 +2981,52 @@ BEGIN
 END//
 DELIMITER ;
 
+-- ========================================== Buscar Id Factura
+DROP PROCEDURE IF EXISTS sp_buscarIdFactura;
+DELIMITER //
+CREATE PROCEDURE sp_buscarIdFactura(
+    IN pIdFactura INT
+)
+BEGIN
+    SELECT 
+        f.idFactura, 
+        f.idProveedor,
+        p.nombre AS nombreProveedor, -- Dato extraído del JOIN
+        f.fecha, 
+        f.monto, 
+        f.moneda, 
+        f.numero, 
+        f.ruta, 
+        f.estado 
+    FROM Facturas f
+    LEFT JOIN Proveedores p ON f.idProveedor = p.idProveedor
+    WHERE f.idFactura = pIdFactura;
+END//
+DELIMITER ;
+
+-- ========================================== Listar Facturas
+DROP PROCEDURE IF EXISTS sp_listarFacturas;
+DELIMITER //
+CREATE PROCEDURE sp_listarFacturas(
+    IN pEstado CHAR(1)
+)
+BEGIN
+    SELECT 
+        f.idFactura, 
+        f.idProveedor,
+        p.nombre AS nombreProveedor,
+        f.fecha, 
+        f.monto, 
+        f.moneda, 
+        f.numero, 
+        f.ruta, 
+        f.estado 
+    FROM Facturas f
+    LEFT JOIN Proveedores p ON f.idProveedor = p.idProveedor
+    WHERE (pEstado IS NULL OR f.estado = pEstado)
+    ORDER BY f.fecha DESC; -- de la mas reciente a la más antigua
+END//
+DELIMITER ;
 -- =====================================================
 -- ESTADOS	
 -- =====================================================
@@ -3306,3 +3352,47 @@ END//
 DELIMITER ;
 
 
+-- ========================================== Buscar Id Imagen
+DROP PROCEDURE IF EXISTS sp_buscarIdImagen;
+DELIMITER //
+CREATE PROCEDURE sp_buscarIdImagen(
+    IN pIdImagen INT
+)
+BEGIN
+    SELECT 
+        i.idImagen, 
+        i.idActivo, 
+        i.ruta, 
+        i.estado, 
+        i.fecha, 
+        i.descripcion,
+        a.nombre AS nombreActivo 
+    FROM Imagenes i
+    LEFT JOIN Activos a ON i.idActivo = a.idActivo
+    WHERE i.idImagen = pIdImagen;
+END//
+DELIMITER ;
+
+-- ========================================== Listar imagenes
+DROP PROCEDURE IF EXISTS sp_listarImagenes;
+DELIMITER //
+CREATE PROCEDURE sp_listarImagenes(
+    IN pEstado CHAR(1),
+    IN pIdActivo INT
+)
+BEGIN
+    SELECT 
+        i.idImagen, 
+        i.idActivo, 
+        i.ruta, 
+        i.estado, 
+        i.fecha, 
+        i.descripcion,
+        a.nombre AS nombreActivo
+    FROM Imagenes i
+    LEFT JOIN Activos a ON i.idActivo = a.idActivo
+    WHERE (pEstado IS NULL OR i.estado = pEstado)
+      AND (pIdActivo IS NULL OR i.idActivo = pIdActivo)
+    ORDER BY i.fecha DESC;
+END//
+DELIMITER ;

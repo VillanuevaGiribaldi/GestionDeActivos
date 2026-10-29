@@ -1,0 +1,10 @@
+info:
+  name: facturas
+  type: folder
+  seq: 9
+
+request:
+  auth: inherit
+  variables:
+    - name: ruta
+      value: factura
