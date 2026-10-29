@@ -742,3 +742,37 @@ BEGIN
     WHERE idAtributo = pId;
 END//
 DELIMITER ;
+
+-- ===========================================  LISTAR MANTENIMIENTOS
+DROP PROCEDURE IF EXISTS sp_listarMantenimientos;
+DELIMITER //
+
+CREATE PROCEDURE sp_listarMantenimientos(
+--    IN pEstado CHAR(1),
+    IN pIdActivo INT
+)
+BEGIN
+    SELECT
+        m.idMantenimiento,
+        m.idActivo,
+        a.nombre AS nombreActivo,
+        a.numeroSerie,
+        m.idProveedor,
+        p.nombre AS nombreProveedor,
+        m.fallaReportada,
+        m.reparacionRealizada,
+        m.fechaEnvio,
+        m.fechaDevolucion,
+        m.costoTotal,
+        CASE
+            WHEN m.fechaDevolucion IS NULL THEN 'En curso'
+            ELSE 'Finalizado'
+        END AS situacion
+    FROM Mantenimientos m
+    INNER JOIN Activos a ON a.idActivo = m.idActivo
+    INNER JOIN Proveedores p ON p.idProveedor = m.idProveedor
+    WHERE (true)
+      AND (pIdActivo IS NULL OR m.idActivo = pIdActivo)
+    ORDER BY m.fechaEnvio DESC, m.idMantenimiento DESC;
+END//
+DELIMITER ;

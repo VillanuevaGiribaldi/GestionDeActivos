@@ -15,6 +15,8 @@ import estadosRouter from './routers/estados.route.js';
 import facturasRouter from "./routers/facturas.route.js";
 import imagenesRouter from './routers/imagenes.route.js';
 import atributosRouter from './routers/atributos.route.js';
+import mantenimientosRouter from './routers/mantenimientos.route.js';
+
 // declarar las rutas
 app.use("/api/usuario", userRouter)
 app.post("/api/login", login)
@@ -27,6 +29,7 @@ app.use('/api/estado', estadosRouter);
 app.use('/api/factura', facturasRouter);
 app.use('/api/imagen', imagenesRouter)
 app.use('/api/atributo', atributosRouter)
+app.use('/api/mantenimiento', mantenimientosRouter);
 
 export default app
 

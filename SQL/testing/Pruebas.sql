@@ -7,6 +7,7 @@ select * from Ubicaciones;
 select * from Estados;
 select * from `Usuarios`;
 select * from `Personas`;
+SELECT * FROM `Facturas`
     
 -- Probando sp_nuevoActivo
 CALL sp_nuevoActivo(
