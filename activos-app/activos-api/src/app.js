@@ -15,8 +15,12 @@ import estadosRouter from './routers/estados.route.js';
 import facturasRouter from "./routers/facturas.route.js";
 import imagenesRouter from './routers/imagenes.route.js';
 import atributosRouter from './routers/atributos.route.js';
+
 import composicionRouter from './routers/composicionTipos.route.js'
 import activosRouter from './routers/activos.router.js'
+
+import mantenimientosRouter from './routers/mantenimientos.route.js';
+
 
 // declarar las rutas
 app.use("/api/usuario", userRouter)
@@ -28,10 +32,16 @@ app.use('/api/proveedor', proveedoresRouter)
 app.use('/api/ubicacion', ubicacionesRouter);
 app.use('/api/estado', estadosRouter);
 app.use('/api/factura', facturasRouter);
+
 app.use('/api/imagen', imagenesRouter);
 app.use('/api/atributo', atributosRouter);
 app.use('/api/composicion', composicionRouter);
 app.use('/api/activo', activosRouter);
+
+app.use('/api/imagen', imagenesRouter)
+app.use('/api/atributo', atributosRouter)
+app.use('/api/mantenimiento', mantenimientosRouter);
+
 
 export default app
 

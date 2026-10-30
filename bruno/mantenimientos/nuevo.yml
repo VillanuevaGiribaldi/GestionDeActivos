@@ -1,0 +1,32 @@
+info:
+  name: nuevo
+  type: http
+  seq: 6
+
+http:
+  method: POST
+  url: "{{host}}{{ruta}}/nueva"
+  body:
+    type: json
+    data: |-
+      {
+        "factura": {
+          "idProveedor": 5,
+          "nombreProveedor": "MovilTech",
+          "fecha": "2026-08-20T11:00:00.000Z",
+          "monto": "1580.00",
+          "moneda": "ARS",
+          "numero": "FC-A-0001-00000005",
+          "ruta": "/docs/facturas/fc-celulares-0002.pdf",
+          "estado": "A"
+        }
+          
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

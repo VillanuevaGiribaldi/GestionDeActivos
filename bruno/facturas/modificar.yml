@@ -22,7 +22,7 @@ http:
           "fecha": "2026-08-20T11:00:00.000Z",
           "monto": "1500.00",
           "moneda": "USD",
-          "numero": "FC-A-0001-00000002",
+          "numero": "FC-A-0001-00000002 modificada",
           "ruta": "/docs/facturas/fc-celulares-0001.pdf",
           "estado": "A"
         }
