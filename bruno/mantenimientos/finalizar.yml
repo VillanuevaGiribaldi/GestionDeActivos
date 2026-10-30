@@ -1,0 +1,31 @@
+info:
+  name: finalizar
+  type: http
+  seq: 8
+
+http:
+  method: PUT
+  url: "{{host}}{{ruta}}/:id/finalizar"
+  params:
+    - name: id
+      value: "1"
+      type: path
+  body:
+    type: json
+    data: |-
+      { 
+        "mantenimiento": {
+          "reparacionRealizada": "Cambio de fuente",
+          "fechaDevolucion": "2026-09-15",
+          "costoTotal": 100.5,
+          "idEstadoPostReparacion": 1 
+        }
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

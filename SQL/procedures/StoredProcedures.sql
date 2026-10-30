@@ -2521,8 +2521,8 @@ BEGIN
     START TRANSACTION;
 
     -- 5. Insertar el registro base del mantenimiento (sin costo ni reparación realizada aún)
-    INSERT INTO Mantenimientos (idActivo, idProveedor, fallaReportada, fechaEnvio)
-    VALUES (pIdActivo, pIdProveedor, pFallaReportada, pFechaEnvio);
+    INSERT INTO Mantenimientos (idActivo, idProveedor, fallaReportada, fechaEnvio, estado)
+    VALUES (pIdActivo, pIdProveedor, pFallaReportada, pFechaEnvio, 'A');
 
     -- Capturar el ID generado
     SET pIdMantenimiento = LAST_INSERT_ID();
@@ -2763,6 +2763,122 @@ BEGIN
 
 END//
 DELIMITER ;
+
+
+-- ========================================== Baja Mantenimiento
+DROP PROCEDURE IF EXISTS sp_bajaMantenimiento;
+DELIMITER //
+
+CREATE PROCEDURE sp_bajaMantenimiento(
+    IN pIdMantenimiento INT
+)
+BEGIN
+    DECLARE vEstado CHAR(1);
+    DECLARE vFechaDevolucion DATE;
+
+    -- Manejador de errores (Transacciones ACID)
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        RESIGNAL;
+    END;
+
+    -- 1. Validaciones iniciales
+    IF pIdMantenimiento IS NULL THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Debe indicar el mantenimiento a dar de baja';
+    END IF;
+
+    SELECT estado, fechaDevolucion INTO vEstado, vFechaDevolucion
+    FROM Mantenimientos
+    WHERE idMantenimiento = pIdMantenimiento;
+
+    IF vEstado IS NULL THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El mantenimiento indicado no existe en el sistema';
+    END IF;
+
+    IF vEstado = 'I' THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El mantenimiento ya se encuentra dado de baja';
+    END IF;
+
+    -- =========================================================================
+    -- INICIO DE TRANSACCIÓN
+    -- =========================================================================
+    START TRANSACTION;
+
+    -- 3. Baja Lógica
+    UPDATE Mantenimientos
+    SET estado = 'I'
+    WHERE idMantenimiento = pIdMantenimiento;
+
+    COMMIT;
+END//
+DELIMITER ;
+
+-- ========================================== Alta Mantenimiento
+DROP PROCEDURE IF EXISTS sp_altaMantenimiento;
+DELIMITER //
+
+CREATE PROCEDURE sp_altaMantenimiento(
+    IN pIdMantenimiento INT
+)
+BEGIN
+    DECLARE vEstado CHAR(1);
+    DECLARE vIdActivo INT;
+    DECLARE vFechaDevolucion DATE;
+
+    -- Manejador de errores (Transacciones ACID)
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        RESIGNAL;
+    END;
+
+    -- 1. Validaciones iniciales
+    IF pIdMantenimiento IS NULL THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Debe indicar el mantenimiento a dar de alta';
+    END IF;
+
+    SELECT estado, idActivo, fechaDevolucion INTO vEstado, vIdActivo, vFechaDevolucion
+    FROM Mantenimientos
+    WHERE idMantenimiento = pIdMantenimiento;
+
+    IF vEstado IS NULL THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El mantenimiento indicado no existe en el sistema';
+    END IF;
+
+    IF vEstado = 'A' THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El mantenimiento ya se encuentra activo';
+    END IF;
+
+    -- 2. Coherencia: si el mantenimiento reactivado estuviera "en curso" (sin devolución),
+    -- no puede haber otro mantenimiento en curso para el mismo activo
+    IF vFechaDevolucion IS NULL AND EXISTS (
+        SELECT 1 FROM Mantenimientos
+        WHERE idActivo = vIdActivo
+          AND fechaDevolucion IS NULL
+          AND estado = 'A'
+          AND idMantenimiento <> pIdMantenimiento
+    ) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'No se puede reactivar: el activo ya tiene otro mantenimiento en curso';
+    END IF;
+
+    -- =========================================================================
+    -- INICIO DE TRANSACCIÓN
+    -- =========================================================================
+    START TRANSACTION;
+
+    -- 3. Alta Lógica
+    UPDATE Mantenimientos
+    SET estado = 'A'
+    WHERE idMantenimiento = pIdMantenimiento;
+
+    COMMIT;
+END//
+DELIMITER ;
+
+
+
+
 -- =====================================================
 -- FACTURAS
 -- =====================================================

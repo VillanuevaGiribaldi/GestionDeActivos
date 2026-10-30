@@ -11,10 +11,10 @@ http:
     data: |-
       {
           "usuario":{
-              "idPersona":100,
-              "username": "pepe",
-              "password":"1234",
-              "rol": "ADMIN_IT",
+              "idPersona":3,
+              "username": "crodriguez",
+              "password":"contrasenia3",
+              "rol": "SOPORTE_IT",
               "estado": "A"
           }
       }

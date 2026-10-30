@@ -342,6 +342,7 @@ CREATE TABLE IF NOT EXISTS `GestionDeActivos`.`Mantenimientos` (
   `fechaEnvio` DATE NULL,
   `fechaDevolucion` DATE NULL,
   `costoTotal` DECIMAL(12,2) NULL,
+  `estado` CHAR(1) NOT NULL,
   PRIMARY KEY (`idMantenimiento`),
   INDEX `fk_Mantenimientos_Activos1_idx` (`idActivo` ASC) VISIBLE,
   INDEX `fk_Mantenimientos_Proveedores1_idx` (`idProveedor` ASC) VISIBLE,

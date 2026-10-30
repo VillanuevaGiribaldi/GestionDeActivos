@@ -88,7 +88,7 @@ class Activo {
 
     static async buscarPorId(idActivo) {
         // sp_obtenerDetalleActivo empaqueta la tabla Valores de vuelta a un JSON
-        const result = await pool.execute('CALL sp_obtenerDetalleActivo( ? );', [idActivo]);
+        const result = await pool.execute('CALL sp_buscarIdActivo( ? );', [idActivo]);
         return result[0][0][0]; 
     }
 

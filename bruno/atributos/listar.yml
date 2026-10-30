@@ -5,10 +5,10 @@ info:
 
 http:
   method: GET
-  url: "{{host}}{{ruta}}/?idTipo=1"
+  url: "{{host}}{{ruta}}/?idTipo=4"
   params:
     - name: idTipo
-      value: "1"
+      value: "4"
       type: query
   auth: inherit
 

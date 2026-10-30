@@ -8,3 +8,6 @@ request:
     - name: ruta
       value: marca
   auth: inherit
+  variables:
+    - name: ruta
+      value: marca

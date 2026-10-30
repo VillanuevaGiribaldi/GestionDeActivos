@@ -8,7 +8,7 @@ http:
   url: http://localhost:3000/api/persona/:id
   params:
     - name: id
-      value: "2"
+      value: "3"
       type: path
   auth: inherit
 

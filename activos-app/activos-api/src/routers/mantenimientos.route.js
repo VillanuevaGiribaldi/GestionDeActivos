@@ -19,7 +19,7 @@ router.route('/:id').get(authDefault, getMantenimiento);
 router.route('/:id').put(authDefault, modificarMantenimiento);
 router.route('/:id').delete(authDefault, bajaMantenimiento);
 
-router.route('/:id/fin').put(authDefault, finMantenimiento);
+router.route('/:id/finalizar').put(authDefault, finMantenimiento);
 router.route('/:id/alta').put(authDefault, altaMantenimiento);
 
 export default router;

@@ -1,0 +1,40 @@
+info:
+  name: nuevo
+  type: http
+  seq: 6
+
+http:
+  method: POST
+  url: "{{host}}{{ruta}}/nuevo"
+  body:
+    type: json
+    data: |-
+      {
+        "activo": {
+          "idMarca": 2,
+          "marca": "dell",
+          "idUbicacion": 2,
+          "idTipo": 4,
+          "idEstado": 1,
+          "idFactura": 10,
+          "idPersona": null,
+          "compone": null,
+          "nombre": "PC Oficina Administrativa",
+          "fechaRegistro": null,
+          "valoresAtributos": {
+            "7": "10.0.0.10",
+            "6": "Windows"
+          },
+          "precioUnitario": 850000.00,
+          "numeroSerie": "SN-PC-2026-001",
+          "modelo": "Dell OptiPlex 7090"
+        }
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

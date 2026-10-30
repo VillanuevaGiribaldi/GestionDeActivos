@@ -32,6 +32,8 @@ CHECK (monto > 0);
 ALTER TABLE `Activos` ADD CONSTRAINT ck_precioActivos
 CHECK (precioUnitario >= 0);
 
+ALTER TABLE `Mantenimientos` ADD CONSTRAINT ck_estadoMantenimientos
+CHECK( estado = 'A' or estado = 'I');
 ALTER TABLE `Mantenimientos` ADD CONSTRAINT ck_costoMantenimientos
 CHECK (costoTotal >= 0);
 

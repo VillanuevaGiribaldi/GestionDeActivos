@@ -1,14 +1,14 @@
 info:
   name: baja
   type: http
-  seq: 4
+  seq: 5
 
 http:
   method: DELETE
   url: "{{host}}{{ruta}}/:id"
   params:
     - name: id
-      value: "3"
+      value: "1"
       type: path
   auth: inherit
 

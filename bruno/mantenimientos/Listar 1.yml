@@ -1,0 +1,23 @@
+info:
+  name: Listar
+  type: http
+  seq: 2
+
+http:
+  method: GET
+  url: "{{host}}{{ruta}}/?estado=A&idActivo=1"
+  params:
+    - name: estado
+      value: A
+      type: query
+    - name: idActivo
+      value: "1"
+      type: query
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

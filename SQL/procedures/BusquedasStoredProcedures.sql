@@ -264,6 +264,47 @@ BEGIN
 END//
 DELIMITER ;
 
+DROP PROCEDURE IF EXISTS sp_buscarIdActivo;
+DELIMITER //
+
+CREATE PROCEDURE sp_buscarIdActivo(
+    IN pId INT
+)
+BEGIN
+    SELECT
+        a.idActivo,
+        a.nombre AS `nombre del activo`,
+        a.numeroSerie,
+        a.modelo,
+        a.precioUnitario,
+        a.fechaRegistro,
+        
+        
+        -- Nombres legibles de los catálogos para el frontend
+        t.nombre AS tipo,
+        a.idTipo,
+        m.nombre AS marca,
+        a.idMarca,
+        u.nombre AS ubicacion,
+        a.idUbicacion,
+        e.nombre AS estado,
+        a.idEstado,
+        CONCAT(p.nombre, ' ', p.apellido) AS personaAsignada
+        
+        -- JSON completo de características extra
+        -- a.atributosExtra       
+    FROM Activos a
+    -- INNER JOIN para los catálogos obligatorios 
+    INNER JOIN Tipos t ON a.idTipo = t.idTipo
+    INNER JOIN Marcas m ON a.idMarca = m.idMarca
+    INNER JOIN Ubicaciones u ON a.idUbicacion = u.idUbicacion 
+    INNER JOIN Estados e ON a.idEstado = e.idEstado
+    -- LEFT JOIN para el catálogo opcional
+    LEFT JOIN Personas p ON a.idPersona = p.idPersona
+    WHERE a.`idActivo`=pId;
+END//
+DELIMITER ;
+
 -- =========================================================
 -- PRUEBAS DEL PROCEDIMIENTO DE HISTORIAL
 -- =========================================================
@@ -748,7 +789,7 @@ DROP PROCEDURE IF EXISTS sp_listarMantenimientos;
 DELIMITER //
 
 CREATE PROCEDURE sp_listarMantenimientos(
---    IN pEstado CHAR(1),
+    IN pEstado CHAR(1),
     IN pIdActivo INT
 )
 BEGIN
@@ -764,6 +805,7 @@ BEGIN
         m.fechaEnvio,
         m.fechaDevolucion,
         m.costoTotal,
+        m.estado,
         CASE
             WHEN m.fechaDevolucion IS NULL THEN 'En curso'
             ELSE 'Finalizado'
@@ -771,8 +813,38 @@ BEGIN
     FROM Mantenimientos m
     INNER JOIN Activos a ON a.idActivo = m.idActivo
     INNER JOIN Proveedores p ON p.idProveedor = m.idProveedor
-    WHERE (true)
+    WHERE (m.estado = pEstado OR pEstado IS NULL)
       AND (pIdActivo IS NULL OR m.idActivo = pIdActivo)
     ORDER BY m.fechaEnvio DESC, m.idMantenimiento DESC;
+END//
+DELIMITER ;
+
+DROP PROCEDURE IF EXISTS sp_buscarIdMantenimiento;
+DELIMITER //
+CREATE PROCEDURE sp_buscarIdMantenimiento(
+    IN pIdMantenimiento INT
+)
+BEGIN
+    SELECT 
+        m.idMantenimiento,
+        m.idActivo,
+        a.nombre AS nombreActivo,
+        a.numeroSerie,
+        m.idProveedor,
+        p.nombre AS nombreProveedor,
+        m.fallaReportada,
+        m.reparacionRealizada,
+        m.fechaEnvio,
+        m.fechaDevolucion,
+        m.costoTotal,
+        m.estado,
+        CASE
+            WHEN m.fechaDevolucion IS NULL THEN 'En curso'
+            ELSE 'Finalizado'
+        END AS situacion
+    FROM Mantenimientos m
+    LEFT JOIN Activos a ON m.idActivo = a.idActivo
+    LEFT JOIN `Proveedores` p ON m.`idProveedor` = p.`idProveedor`
+    WHERE m.idMantenimiento = pIdMantenimiento;
 END//
 DELIMITER ;

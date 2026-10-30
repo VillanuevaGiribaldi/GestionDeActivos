@@ -1,26 +1,23 @@
 info:
   name: nuevo
   type: http
-  seq: 6
+  seq: 7
 
 http:
   method: POST
-  url: "{{host}}{{ruta}}/nueva"
+  url: "{{host}}{{ruta}}/nuevo"
   body:
     type: json
     data: |-
-      {
-        "factura": {
-          "idProveedor": 5,
-          "nombreProveedor": "MovilTech",
-          "fecha": "2026-08-20T11:00:00.000Z",
-          "monto": "1580.00",
-          "moneda": "ARS",
-          "numero": "FC-A-0001-00000005",
-          "ruta": "/docs/facturas/fc-celulares-0002.pdf",
-          "estado": "A"
-        }
-          
+      { 
+        "mantenimiento": 
+        {
+          "idActivo": 1,
+         "idProveedor": 2,
+          "fallaReportada": "No enciende",
+        "fechaEnvio": "2026-09-10",
+          "idEstadoEnReparacion": 2 
+        } 
       }
   auth: inherit
 
@@ -30,3 +27,28 @@ settings:
   followRedirects: true
   maxRedirects: 5
   forwardAuthorizationHeader: false
+
+examples:
+  - name: otro
+    request:
+      url: "{{host}}{{ruta}}/nuevo"
+      method: POST
+      body:
+        type: json
+        data: |-
+          { 
+            "mantenimiento": 
+            {
+              "idActivo": 2,
+             "idProveedor": 1,
+              "fallaReportada": "Se apaga",
+            "fechaEnvio": "2026-09-30",
+              "idEstadoEnReparacion": 2 
+            } 
+          }
+    response:
+      status: 200
+      statusText: OK
+      body:
+        type: text
+        data: ""

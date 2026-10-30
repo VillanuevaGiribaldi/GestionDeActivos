@@ -21,12 +21,10 @@ request:
       description: Token recibido al usar el post /auth/login
   auth:
     type: bearer
-    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwicm9sIjoiQURNSU5fSVQiLCJpYXQiOjE3OTMyODE4OTIsImV4cCI6MTgyNDgxNzg5Mn0.GwILOzJ0ts2bpmv2LElpixUkis-NtbZ1jwHdBGuvNHk
+    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwicm9sIjoiQURNSU5fSVQiLCJpYXQiOjE3OTMzNjMzNjQsImV4cCI6MTgyNDg5OTM2NH0.c26iC1RA0C1aJZ88z-TACyY4Bfu1o4ZCi6vjUz9hvhI
   variables:
     - name: host
       value: http://localhost:3000/api/
-    - name: ruta
-      value: proveedor
 bundled: false
 extensions:
   bruno:

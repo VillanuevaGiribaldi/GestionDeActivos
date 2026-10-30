@@ -12,7 +12,7 @@ http:
       {
         "composicion": {
           "nombreTipoPadre": "PC",
-          "nombreTipoComponente": "Disco",
+          "nombreTipoComponente": "nuevo tipo",
           "cantidadComponentesMaxima": 1
         }
       }

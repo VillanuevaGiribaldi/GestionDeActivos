@@ -11,7 +11,7 @@ http:
       value: "4"
       type: path
     - name: idTipoComponente
-      value: "5"
+      value: "11"
       type: path
   auth: inherit
 

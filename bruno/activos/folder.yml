@@ -1,0 +1,10 @@
+info:
+  name: activos
+  type: folder
+  seq: 14
+
+request:
+  auth: inherit
+  variables:
+    - name: ruta
+      value: activo
