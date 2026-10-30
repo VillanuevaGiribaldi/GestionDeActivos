@@ -517,6 +517,25 @@ BEGIN
 END//
 DELIMITER ;
 
+-- =========================================== Listar Componentes de
+DROP PROCEDURE IF EXISTS sp_listarComponentesDe;
+DELIMITER //
+
+CREATE PROCEDURE sp_listarComponentesDe(
+    IN pIdTipoPadre INT
+)
+BEGIN
+    SELECT 
+        ct.idTipoComponente, 
+        t.nombre AS nombreComponente, 
+        ct.cantidadComponentesMaxima 
+    FROM ComposicionTipos ct
+    INNER JOIN Tipos t ON ct.idTipoComponente = t.idTipo
+    WHERE ct.idTipoPadre = pIdTipoPadre
+      AND t.estado = 'A'; -- Solo traemos componentes que sigan activos en el sistema
+END//
+DELIMITER ;
+
 -- =====================================================
 -- ACTIVOS
 -- =====================================================
