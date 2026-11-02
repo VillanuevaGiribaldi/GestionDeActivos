@@ -1,7 +1,7 @@
 info:
   name: nuevo
   type: http
-  seq: 6
+  seq: 5
 
 http:
   method: POST
@@ -12,11 +12,10 @@ http:
       {
         "activo": {
           "idMarca": 2,
-          "marca": "dell",
           "idUbicacion": 2,
           "idTipo": 4,
           "idEstado": 1,
-          "idFactura": 10,
+          "idFactura": 1,
           "idPersona": null,
           "compone": null,
           "nombre": "PC Oficina Administrativa",

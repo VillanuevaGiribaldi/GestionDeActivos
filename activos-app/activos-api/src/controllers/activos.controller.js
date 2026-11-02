@@ -42,7 +42,7 @@ const getActivo = async (req, res) => {
 
 const listarActivos = async (req, res) => {
     try {
-        const result = await Activo.listarAvanzado(req.query);
+        const result = await Activo.listarAvanzado(req.body.filtros);
         
         res.status(200).json({ 
             message: "Operación exitosa",
@@ -76,17 +76,39 @@ const modificarActivo = async (req, res) => {
         }
     }
 }
-
-const bajaActivo = async (req, res) => {
+const modificarValorActivo = async (req, res) => {
     try {
         const idUrl = parseInt(req.params.id);
         const idUsuario = req.usuario.id;
-        const idEstadoBaja = parseInt(req.body.idEstadoBaja); 
-        const comentario = req.body.comentario || 'Baja lógica del sistema';
         
-        if (!idEstadoBaja) {
+        
+        if (!req.body.valor.idAtributo){
+            return res.status(400).json({ message: "Indique el atributo que desea modificar" });
+        }
+        console.log(idUsuario )
+
+        await Activo.modificarValor(idUrl, idUsuario ,req.body.valor?.idAtributo, req.body.valor?.valor ?? null )
+
+        return res.status(200).json({ message: "Activo modificado exitosamente" });
+
+    } catch (error) {
+        console.error('Error al modificar el activo:', error);
+        if (!catchSQL45000(res, error, "No se pudo modificar el activo")) {
+            return res.status(500).json({ message: "Error interno al modificar el activo" });
+        }
+    }
+}
+const bajaActivo = async (req, res) => {
+    try {
+        const idUrl = parseInt(req.params.id);
+        const idUsuario = parseInt(req.usuario.id);
+         
+        const comentario = req.body?.comentario || 'Baja lógica del sistema';
+        
+        if (!req.body?.idEstadoBaja) {
             return res.status(400).json({ message: "Debe indicar un estado de baja (idEstadoBaja) en el cuerpo de la petición" });
         }
+        const idEstadoBaja = parseInt(req.body.idEstadoBaja);
 
         await Activo.darDeBaja(idUrl, idEstadoBaja, idUsuario, comentario);
         return res.status(200).json({ message: "Activo dado de baja exitosamente" });
@@ -98,4 +120,4 @@ const bajaActivo = async (req, res) => {
     }
 }
 
-export { nuevoActivo, getActivo, listarActivos, modificarActivo, bajaActivo };
+export { nuevoActivo, getActivo, listarActivos, modificarActivo,modificarValorActivo, bajaActivo };

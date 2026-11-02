@@ -8,8 +8,15 @@ http:
   url: "{{host}}{{ruta}}/:id"
   params:
     - name: id
-      value: "8"
+      value: "33"
       type: path
+  body:
+    type: json
+    data: |-
+      {
+        "idEstadoBaja":3,
+        "comentario":"baja de prueba"
+      }
   auth: inherit
 
 settings:

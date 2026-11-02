@@ -3,7 +3,8 @@ import {
     nuevoActivo, 
     getActivo, 
     listarActivos, 
-    modificarActivo, 
+    modificarActivo,
+    modificarValorActivo, 
     bajaActivo 
 } from '../controllers/activos.controller.js';
 import { authDefault, authView } from "../controllers/auth.controller.js";
@@ -15,8 +16,11 @@ router.route('/:id').get(authView, getActivo);
 
 router.route('/nuevo').post(authDefault, nuevoActivo);
 router.route('/:id').put(authDefault, modificarActivo);
+router.route('/:id/valor').put(authDefault, modificarValorActivo);
 
 // Borrado Lógico con Historial
 router.route('/:id').delete(authDefault, bajaActivo);
+
+
 
 export default router;

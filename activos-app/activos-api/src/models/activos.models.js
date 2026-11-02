@@ -57,7 +57,7 @@ class Activo {
 
     async modificar(idUsuarioModificador) {
         const result = await pool.execute(
-            `CALL sp_modificarActivo( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? );`, 
+            `CALL sp_modificarActivo( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? );`, 
             [
                 this.idActivo,
                 idUsuarioModificador, // Extraído del JWT
@@ -69,7 +69,7 @@ class Activo {
                 this.idPersona,
                 this.compone,
                 this.nombre,
-                JSON.stringify(this.valoresAtributos),
+//                JSON.stringify(this.valoresAtributos),
                 this.precioUnitario,
                 this.numeroSerie,
                 this.modelo
@@ -77,14 +77,27 @@ class Activo {
         );
         return result;
     }
+    static async modificarValor(idActivo, idUsuarioModificador, idAtributo, valor) {
+        const result = await pool.execute(
+            `CALL sp_setValor( ?, ?, ?, ?);`, 
+            [
+                idActivo,
+                idUsuarioModificador, // Extraído del JWT
+                idAtributo,
+                valor               
+            ]
+        );
+        return result;
+    }
 
     static async darDeBaja(idActivo, idEstadoBaja, idUsuarioModificador, comentario) {
         const result = await pool.execute(
-            'CALL sp_darDeBajaActivo( ?, ?, ?, ? );', 
+            'CALL sp_bajaActivo( ?, ?, ?, ? );', 
             [idActivo, idEstadoBaja, idUsuarioModificador, comentario]
         );
         return result;
     }
+
 
     static async buscarPorId(idActivo) {
         // sp_obtenerDetalleActivo empaqueta la tabla Valores de vuelta a un JSON
@@ -98,7 +111,7 @@ class Activo {
             idPersona, atributoClave, atributoValor, 
             ordenColumna, ordenDireccion, limit, offset 
         } = filtros;
-
+        console.log(filtros)
         const result = await pool.execute(
             `CALL sp_buscarActivosAvanzado( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? );`, 
             [

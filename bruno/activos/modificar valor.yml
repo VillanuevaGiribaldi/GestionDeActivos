@@ -1,18 +1,24 @@
 info:
-  name: alta
+  name: modificar valor
   type: http
-  seq: 5
+  seq: 6
 
 http:
   method: PUT
-  url: "{{host}}{{ruta}}/:id/alta"
+  url: "{{host}}{{ruta}}/:id/valor"
   params:
     - name: id
-      value: "8"
+      value: "33"
       type: path
   body:
     type: json
-    data: ""
+    data: |-
+      {
+        "valor":{
+          "idAtributo":6,
+          "valor": "10.10.10.10"
+        }
+      }
   auth: inherit
 
 settings:

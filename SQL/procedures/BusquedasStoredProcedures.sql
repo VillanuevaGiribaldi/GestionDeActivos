@@ -119,9 +119,9 @@ BEGIN
         OR EXISTS (
             SELECT 1 FROM Valores v
             INNER JOIN `Atributos` atr ON v.`idAtributo`=atr.`idAtributo`
-            WHERE atr.nombre=pAtributoClave AND atr.`idTipo`=a.idTipo AND valor LIKE pAtributoValor
+            WHERE atr.nombre LIKE CONCAT('%',pAtributoClave,'%') AND v.`idActivo`=a.`idActivo` AND v.valor LIKE CONCAT('%',pAtributoValor,'%')
             )
-        )
+        ) 
         
     -- =========================================================================
     -- 4. ORDENAMIENTO DINÁMICO SEGURO (Anti-Inyección SQL)

@@ -8,24 +8,30 @@ http:
   url: "{{host}}{{ruta}}/:id"
   params:
     - name: id
-      value: "2"
+      value: "33"
       type: path
   body:
     type: json
     data: |-
       {
         "activo": {
-          "idActivo": 2,
-          "nombre del activo": "PC-IT-002",
-          "numeroSerie": "LEN-PC-002",
-          "modelo": "ThinkCentre M70",
-          "precioUnitario": "1000.00",
-          "fechaRegistro": "2026-10-30T12:28:50.000Z",
-          "idTipo": 4,
+          "idActivo":33,
           "idMarca": 2,
           "idUbicacion": 2,
+          "idTipo": 4,
           "idEstado": 1,
-          "personaAsignada": null
+          "idFactura": 1,
+          "idPersona": null,
+          "compone": null,
+          "nombre": "PC Oficina Administrativa modificada",
+          "fechaRegistro": null,
+          "valoresAtributos": {
+            "7": "10.0.0.10",
+            "6": "Windows"
+          },
+          "precioUnitario": 850000.00,
+          "numeroSerie": "SN-PC-2026-001",
+          "modelo": "Dell OptiPlex 7090"
         }
       }
   auth: inherit

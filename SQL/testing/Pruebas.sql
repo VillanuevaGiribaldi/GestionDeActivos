@@ -7,7 +7,8 @@ select * from Ubicaciones;
 select * from Estados;
 select * from `Usuarios`;
 select * from `Personas`;
-SELECT * FROM `Facturas`
+SELECT * FROM `Facturas`;
+SELECT * FROM `Valores` WHERE `idAtributo`=7;
     
 -- Probando sp_nuevoActivo
 CALL sp_nuevoActivo(

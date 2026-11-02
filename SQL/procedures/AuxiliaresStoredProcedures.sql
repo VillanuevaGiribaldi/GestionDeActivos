@@ -120,8 +120,8 @@ DROP PROCEDURE IF EXISTS sp_setValor;
 DELIMITER //
 
 CREATE PROCEDURE sp_setValor(
-    IN pIdUsuario INT,
     IN pIdActivo INT,
+    IN pIdUsuario INT,    
     IN pIdAtributo INT,
     IN pValor VARCHAR(100)
 )
