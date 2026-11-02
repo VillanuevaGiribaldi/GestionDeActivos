@@ -29,6 +29,10 @@ const getActivo = async (req, res) => {
         if (!activoData) {
             return res.status(404).json({ message: "No existe el activo indicado" });
         }
+        const valoresData = await Activo.obtenerValoresActivo(parseInt(req.params.id))
+        activoData.valores = valoresData
+        const componentesData = await Activo.obtenerComponentesActivo(parseInt(req.params.id))
+        activoData.componentes = componentesData
         res.status(200).json({
             activo: activoData,
             message: "Operación exitosa"
@@ -76,6 +80,7 @@ const modificarActivo = async (req, res) => {
         }
     }
 }
+
 const modificarValorActivo = async (req, res) => {
     try {
         const idUrl = parseInt(req.params.id);

@@ -104,6 +104,14 @@ class Activo {
         const result = await pool.execute('CALL sp_buscarIdActivo( ? );', [idActivo]);
         return result[0][0][0]; 
     }
+    static async obtenerValoresActivo(idActivo) {
+        const result = await pool.execute('CALL sp_listarValoresActivo( ? );', [idActivo]);
+        return result[0][0]
+    }
+    static async obtenerComponentesActivo(idActivo) {
+        const result = await pool.execute('CALL sp_listarComponentesActivo( ? );', [idActivo]);
+        return result[0][0]
+    }
 
     static async listarAvanzado(filtros) {
         const { 

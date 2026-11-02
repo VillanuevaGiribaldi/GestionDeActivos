@@ -25,6 +25,7 @@ CREATE TABLE IF NOT EXISTS `GestionDeActivos`.`Ubicaciones` (
   `idUbicacionPadre` INT NULL,
   `nombre` VARCHAR(45) NOT NULL,
   `descripcion` VARCHAR(100) NULL,
+  `ruta` VARCHAR(100),
   `estado` CHAR(1) NOT NULL,
   PRIMARY KEY (`idUbicacion`),
   INDEX `fk_Ubicaciones_Ubicaciones1_idx` (`idUbicacionPadre` ASC) VISIBLE,

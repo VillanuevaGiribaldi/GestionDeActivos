@@ -204,25 +204,9 @@ SELECT * FROM Valores v
             WHERE atr.nombre='SO'  AND valor LIKE '%Win%')
 
             
-CREATE PROCEDURE sp_rutaUbicacion(
-    IN pIdUbicacion INT,
-    OUT pRuta VARCHAR(500)
-)
-BEGIN
-    DECLARE vIdUbi INT;
-    DECLARE vString VARCHAR(500);
 
-    SET vIdUbi = pIdUbicacion;
-    SELECT nombre INTO vString FROM Ubicaciones WHERE idUbicacion = vIdUbi;
-    SELECT idUbicacionPadre INTO vIdUbi FROM Ubicaciones WHERE idUbicacion = vIdUbi;
 
-    WHILE vIdUbi IS NOT NULL DO
-        SELECT CONCAT(u.nombre, ' > ', vString), u.idUbicacionPadre
-        INTO vString, vIdUbi
-        FROM Ubicaciones u
-        WHERE u.idUbicacion = vIdUbi;
-    END WHILE;
+CALL `sp_rutaUbicacion`(8,@ruta);
+select @ruta
 
-    SET pRuta = vString;
-END//
 DELIMITER ;

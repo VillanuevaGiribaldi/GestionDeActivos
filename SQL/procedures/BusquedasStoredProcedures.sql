@@ -549,8 +549,9 @@ CREATE PROCEDURE sp_listarValoresActivo(
 )
 BEGIN
     SELECT 
-        a.nombre AS nombreActivo,
-        atr.nombre AS nombreAtributo,
+    --    a.nombre AS nombreActivo,
+        atr.nombre AS Atributo,
+        atr.`idAtributo`, 
         v.valor
     FROM Activos a
     INNER JOIN Atributos atr ON a.`idTipo`=atr.`idTipo`
@@ -846,5 +847,40 @@ BEGIN
     LEFT JOIN Activos a ON m.idActivo = a.idActivo
     LEFT JOIN `Proveedores` p ON m.`idProveedor` = p.`idProveedor`
     WHERE m.idMantenimiento = pIdMantenimiento;
+END//
+DELIMITER ;
+
+DROP PROCEDURE IF EXISTS sp_listarComponentesActivo;
+DELIMITER //
+CREATE PROCEDURE sp_listarComponentesActivo(
+    IN pIdActivo INT
+)
+BEGIN
+    SELECT 
+        comp.idActivo,
+        comp.nombre AS `nombre del activo`,
+        comp.numeroSerie,
+        comp.modelo,
+        comp.precioUnitario,
+        comp.fechaRegistro,
+        
+        
+        -- Nombres legibles de los catálogos para el frontend
+        t.nombre AS tipo,
+        comp.idTipo,
+        m.nombre AS marca,
+        comp.idMarca,
+        u.nombre AS ubicacion,
+        comp.idUbicacion,
+        e.nombre AS estado,
+        comp.idEstado
+    FROM `Activos` a
+    INNER JOIN `Activos` comp ON a.`idActivo` = comp.compone
+    INNER JOIN `Tipos` t ON comp.`idTipo` = t.`idTipo`
+    INNER JOIN `Marcas` m ON comp.`idMarca` = m.`idMarca`
+    INNER JOIN `Ubicaciones` u ON comp.`idUbicacion` = u.`idUbicacion`
+    INNER JOIN `Estados` e ON e.`idEstado`=comp.`idEstado`
+    WHERE a.`idActivo` = pIdActivo;
+    
 END//
 DELIMITER ;
