@@ -16,7 +16,7 @@ http:
       {
         "valor":{
           "idAtributo":6,
-          "valor": "10.10.10.10"
+          "valor": "Ubuntu"
         }
       }
   auth: inherit

@@ -1689,11 +1689,15 @@ CREATE PROCEDURE sp_modificarUbicacion(
     IN pDescripcion VARCHAR(100)
 )
 SALIR: BEGIN
-
+    DECLARE cambiosNombre BOOLEAN;
     -- 1. Sanitización de entradas
     SET pNombre = TRIM(pNombre);
     SET pDescripcion = TRIM(pDescripcion);
 
+
+    IF NOT (pNombre <=> (SELECT nombre FROM `Ubicaciones` WHERE `idUbicacion`=pIdUbicacion)) THEN
+        SET cambiosNombre=1;
+    END IF;
     -- 2. Validación de parámetro obligatorio
     IF pIdUbicacion IS NULL THEN
         SIGNAL SQLSTATE '45000'
@@ -1772,6 +1776,25 @@ SALIR: BEGIN
         descripcion = pDescripcion
     WHERE idUbicacion = pIdUbicacion;
 
+    -- 10. Actualizar las rutas de todos los hijos
+    IF (cambiosNombre) THEN
+        UPDATE `Ubicaciones` u
+        INNER JOIN (
+            WITH RECURSIVE Descendientes AS (
+                SELECT `idUbicacion` 
+                FROM `Ubicaciones`
+                WHERE `idUbicacionPadre` = pIdUbicacion
+
+                UNION ALL
+
+                SELECT u.`idUbicacion`
+                FROM `Ubicaciones` u
+                INNER JOIN Descendientes d
+                ON u.`idUbicacionPadre` = d.`idUbicacion`
+            ) SELECT `idUbicacion` FROM Descendientes 
+        ) d ON u.`idUbicacion`=d.`idUbicacion`
+        SET u.`idUbicacion`=u.`idUbicacion`;
+    END IF;
 END//
 DELIMITER ;
 -- ========================================= Baja Ubicacion

@@ -11,10 +11,10 @@ http:
     data: |-
       {
         "filtros":{
-          "filtroTexto":"",
+          "filtroTexto":"00",
           "idTipo": 4,
           "atributoClave": "SO",
-          "atributoValor":"Windows 11"
+          "atributoValor": null
         }
       } 
   auth: inherit

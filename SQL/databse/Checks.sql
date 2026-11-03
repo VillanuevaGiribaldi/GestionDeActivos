@@ -49,3 +49,16 @@ CHECK (obligatorio IN (0, 1));
 ALTER TABLE `ComposicionTipos` ADD CONSTRAINT ck_cantidadMax
 CHECK (cantidadComponentesMaxima >= 1);
 
+DROP TRIGGER IF EXISTS trigg_up_rutaUbicacion;
+DELIMITER //
+CREATE TRIGGER trigg_up_rutaUbicacion
+BEFORE UPDATE ON Ubicaciones
+FOR EACH ROW
+BEGIN
+    DECLARE vRutaNueva VARCHAR(200);
+    -- IF NOT (NEW.idUbicacionPadre <=> OLD.idUbicacionPadre) OR NOT (NEW.nombre <=> OLD.nombre) THEN
+        CALL `sp_rutaUbicacion`(NEW.idUbicacion,NEW.nombre,vRutaNueva);
+        SET NEW.ruta = vRutaNueva;
+    -- END IF;
+END//
+

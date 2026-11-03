@@ -210,3 +210,19 @@ CALL `sp_rutaUbicacion`(8,@ruta);
 select @ruta
 
 DELIMITER ;
+WITH RECURSIVE Descendientes AS (
+                SELECT `idUbicacion` 
+                FROM `Ubicaciones`
+                WHERE `idUbicacionPadre` = 1
+
+                UNION ALL
+
+                SELECT u.`idUbicacion`
+                FROM `Ubicaciones` u
+                INNER JOIN Descendientes d
+                ON u.`idUbicacionPadre` = d.`idUbicacion` AND (u.`idUbicacion`<>1)
+            ) SELECT * FROM Descendientes;
+
+alter table `Ubicaciones`
+add COLUMN ruta VARCHAR(100);
+UPDATE `Ubicaciones` set `idUbicacion`=`idUbicacion`;

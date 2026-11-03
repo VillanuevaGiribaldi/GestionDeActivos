@@ -59,7 +59,8 @@ BEGIN
         -- Nombres legibles de los catálogos para el frontend
         t.nombre AS tipo,
         m.nombre AS marca,
-        u.nombre AS ubicacion,
+        u.nombre AS NombreUbicacion,
+        u.ruta AS Ubicacion,
         e.nombre AS estado,
         CONCAT(p.nombre, ' ', p.apellido) AS personaAsignada,
         
@@ -285,7 +286,8 @@ BEGIN
         a.idTipo,
         m.nombre AS marca,
         a.idMarca,
-        u.nombre AS ubicacion,
+        u.ruta AS ubicacion,
+        u.nombre AS `Nombre ubicacion`,
         a.idUbicacion,
         e.nombre AS estado,
         a.idEstado,
@@ -437,6 +439,7 @@ BEGIN
         u1.descripcion, 
         u1.estado,
         u1.idUbicacionPadre,
+        u1.ruta,
         u2.nombre AS nombreUbicacionPadre
     FROM Ubicaciones u1
     LEFT JOIN Ubicaciones u2 ON u1.idUbicacionPadre = u2.idUbicacion
@@ -678,6 +681,7 @@ BEGIN
         idUbicacionPadre,
         nombre,
         descripcion,
+        ruta,
         estado
     FROM Ubicaciones
     WHERE idUbicacion = pId
