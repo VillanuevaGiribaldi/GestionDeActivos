@@ -27,9 +27,11 @@ CREATE TABLE IF NOT EXISTS `GestionDeActivos`.`Ubicaciones` (
   `descripcion` VARCHAR(100) NULL,
   `ruta` VARCHAR(100),
   `estado` CHAR(1) NOT NULL,
+  `idPadreUnico` INT GENERATED ALWAYS AS  (IF(estado='I', NULL, IFNULL(idUbicacionPadre, 0))) VIRTUAL,
   PRIMARY KEY (`idUbicacion`),
   INDEX `fk_Ubicaciones_Ubicaciones1_idx` (`idUbicacionPadre` ASC) VISIBLE,
-  UNIQUE INDEX `nombre_UNIQUE` (`nombre` ASC) VISIBLE,
+  -- UNIQUE INDEX `nombre_UNIQUE` (`nombre` ASC) VISIBLE,
+  UNIQUE INDEX UX_padreNombre (idPadreUnico, nombre),
   CONSTRAINT `fk_Ubicaciones_Ubicaciones1`
     FOREIGN KEY (`idUbicacionPadre`)
     REFERENCES `GestionDeActivos`.`Ubicaciones` (`idUbicacion`)

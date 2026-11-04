@@ -1653,9 +1653,9 @@ BEGIN
     END IF;
 
     -- 3. Validación de duplicados (UNIQUE INDEX en 'nombre')
-    IF EXISTS (SELECT 1 FROM Ubicaciones WHERE nombre = pNombre) THEN
+    IF EXISTS (SELECT 1 FROM Ubicaciones WHERE nombre = pNombre AND `idPadreUnico`=vIdUbicacionPadre AND estado='A') THEN
         SIGNAL SQLSTATE '45000'
-            SET MESSAGE_TEXT = 'La ubicación ingresada ya existe en el sistema';
+            SET MESSAGE_TEXT = 'No se puede tener dos ubicaciones con el mismo nombre a menos que tengan una ubicacion padre distinta';
     END IF;
 
     -- 4. Búsqueda y validación de la Ubicación Padre
@@ -1690,6 +1690,8 @@ CREATE PROCEDURE sp_modificarUbicacion(
 )
 SALIR: BEGIN
     DECLARE cambiosNombre BOOLEAN;
+    DECLARE cambiosPadre BOOLEAN;
+
     -- 1. Sanitización de entradas
     SET pNombre = TRIM(pNombre);
     SET pDescripcion = TRIM(pDescripcion);
@@ -1697,6 +1699,9 @@ SALIR: BEGIN
 
     IF NOT (pNombre <=> (SELECT nombre FROM `Ubicaciones` WHERE `idUbicacion`=pIdUbicacion)) THEN
         SET cambiosNombre=1;
+    END IF;
+    IF NOT (vIdUbicacionPadre <=> (SELECT `idUbicacionPadre` FROM `Ubicaciones` WHERE `idUbicacion`=pIdUbicacion)) THEN
+        SET cambiosPadre=1;
     END IF;
     -- 2. Validación de parámetro obligatorio
     IF pIdUbicacion IS NULL THEN
@@ -1768,6 +1773,10 @@ SALIR: BEGIN
 
     END IF;
 
+    IF EXISTS (SELECT 1 FROM Ubicaciones WHERE nombre = pNombre AND `idPadreUnico`=vIdUbicacionPadre AND estado='A') THEN
+        SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'No se puede tener dos ubicaciones con el mismo nombre a menos que tengan una ubicacion padre distinta';
+    END IF;
     -- 9. Actualización mediante PUT
     UPDATE Ubicaciones
     SET
@@ -1777,7 +1786,7 @@ SALIR: BEGIN
     WHERE idUbicacion = pIdUbicacion;
 
     -- 10. Actualizar las rutas de todos los hijos
-    IF (cambiosNombre) THEN
+    IF (cambiosNombre OR cambiosPadre) THEN
         UPDATE `Ubicaciones` u
         INNER JOIN (
             WITH RECURSIVE Descendientes AS (
@@ -1859,6 +1868,13 @@ BEGIN
     IF pIdUbicacion IS NULL THEN SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Debe indicar la ubicación a dar de alta'; END IF;
     SELECT idUbicacionPadre INTO vIdUbicacionPadre FROM Ubicaciones WHERE idUbicacion = pIdUbicacion;
     
+    IF EXISTS (
+        SELECT 1 FROM Ubicaciones u1
+        WHERE nombre = (SELECT nombre FROM `Ubicaciones` WHERE `idUbicacion`=pIdUbicacion) AND `idPadreUnico`=vIdUbicacionPadre AND estado='A' AND `idUbicacion` <> pIdUbicacion) THEN
+        SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'Se tiene una ubicacion activa con la misma ubicacion padre y el mismo nombre';
+    END IF;
+
     -- Validamos jerarquía: el padre no puede estar inactivo
     IF vIdUbicacionPadre IS NOT NULL THEN
         SELECT estado INTO vEstadoPadre FROM Ubicaciones WHERE idUbicacion = vIdUbicacionPadre;

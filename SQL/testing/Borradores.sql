@@ -226,3 +226,11 @@ WITH RECURSIVE Descendientes AS (
 alter table `Ubicaciones`
 add COLUMN ruta VARCHAR(100);
 UPDATE `Ubicaciones` set `idUbicacion`=`idUbicacion`;
+
+
+ALTER TABLE Ubicaciones DROP INDEX nombre_UNIQUE;
+ALTER TABLE `Ubicaciones` DROP COLUMN idPadreUnico;
+
+ALTER TABLE Ubicaciones
+  ADD COLUMN idPadreUnico INT GENERATED ALWAYS AS (IFNULL(idUbicacionPadre, 0)) VIRTUAL,
+  ADD UNIQUE INDEX UX_padreNombre (idPadreUnico, nombre);
