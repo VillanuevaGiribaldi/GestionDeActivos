@@ -4,6 +4,8 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 import Login from "./pages/Login.tsx";
 import Main from "./pages/Main.tsx";
+import Activo from "./pages/Activo.tsx";
+
 //import Activo from "./pages/Activo.tsx";
 import ProtectedRoute from "./auth/ProtectedRoute";
 import './App.css'
@@ -19,7 +21,7 @@ function App() {
               {/* Protected */}
               <Route element={<ProtectedRoute />}>
                   <Route path="/" element={<Main />} />
-                
+                  <Route path="/activo/:id" element={<Activo />} />
               </Route>
           </Routes>
       </BrowserRouter>

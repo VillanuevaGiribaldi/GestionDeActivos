@@ -57,8 +57,20 @@ FOR EACH ROW
 BEGIN
     DECLARE vRutaNueva VARCHAR(200);
     -- IF NOT (NEW.idUbicacionPadre <=> OLD.idUbicacionPadre) OR NOT (NEW.nombre <=> OLD.nombre) THEN
-        CALL `sp_rutaUbicacion`(NEW.idUbicacion,NEW.nombre,vRutaNueva);
+        CALL `sp_rutaUbicacion`(NEW.idUbicacion,NEW.nombre,NEW.idUbicacionPadre,vRutaNueva);
         SET NEW.ruta = vRutaNueva;
     -- END IF;
 END//
 
+DROP TRIGGER IF EXISTS trigg_in_rutaUbicacion;
+DELIMITER //
+CREATE TRIGGER trigg_in_rutaUbicacion
+BEFORE INSERT ON Ubicaciones
+FOR EACH ROW
+BEGIN
+    DECLARE vRutaNueva VARCHAR(200);
+    -- IF NOT (NEW.idUbicacionPadre <=> OLD.idUbicacionPadre) OR NOT (NEW.nombre <=> OLD.nombre) THEN
+        CALL `sp_rutaUbicacion`(NEW.idUbicacion,NEW.nombre,NEW.idUbicacionPadre, vRutaNueva);
+        SET NEW.ruta = vRutaNueva;
+    -- END IF;
+END//

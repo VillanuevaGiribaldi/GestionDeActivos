@@ -240,20 +240,24 @@ DELIMITER //
 CREATE PROCEDURE sp_rutaUbicacion(
     IN pIdUbicacion INT,
     IN pNombreNuevo VARCHAR(50),
+    IN pPadreNuevo INT,
     OUT pRuta VARCHAR(500)
 )
 BEGIN
     DECLARE vIdUbi INT;
     DECLARE vString VARCHAR(500);
 
-    SET vIdUbi = pIdUbicacion;
     IF pNombreNuevo IS NULL THEN
-        SELECT nombre INTO vString FROM Ubicaciones WHERE idUbicacion = vIdUbi;
+        SELECT nombre INTO vString FROM Ubicaciones WHERE idUbicacion = pIdUbicacion;
     ELSE
         SET vString=pNombreNuevo;
     END IF;
-
-    SELECT idUbicacionPadre INTO vIdUbi FROM Ubicaciones WHERE idUbicacion = vIdUbi;
+    
+    IF pPadreNuevo is null THEN
+        SELECT idUbicacionPadre INTO vIdUbi FROM Ubicaciones WHERE idUbicacion = pIdUbicacion;
+    ELSE
+        SET vIdUbi=pPadreNuevo;
+    END IF;
 
     WHILE vIdUbi IS NOT NULL DO
         SELECT CONCAT(u.nombre, ' > ', vString), u.idUbicacionPadre
