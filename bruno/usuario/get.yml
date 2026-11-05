@@ -8,7 +8,7 @@ http:
   url: http://localhost:3000/api/usuario/:id
   params:
     - name: id
-      value: "4"
+      value: "1"
       type: path
   auth: inherit
 

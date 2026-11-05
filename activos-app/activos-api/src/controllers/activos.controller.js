@@ -124,5 +124,17 @@ const bajaActivo = async (req, res) => {
         }
     }
 }
+const resumenActivos =async (req,res) => {
+    try {
+        const result = await Activo.resumenActivos()
+        res.status(200).json({ 
+            message: "Operación exitosa",
+            activos: result
+        });
+    } catch (error) {
+        catchSQL45000(res, error, "No se pudo obtener el resumen de activos")
+        if (!res.headersSent) res.status(500).json({ message: "Error interno al obtener el resumen de activos" });
+    }
+}
 
-export { nuevoActivo, getActivo, listarActivos, modificarActivo,modificarValorActivo, bajaActivo };
+export { nuevoActivo, getActivo, listarActivos,resumenActivos, modificarActivo,modificarValorActivo, bajaActivo };

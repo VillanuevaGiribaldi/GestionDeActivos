@@ -14,7 +14,7 @@ http:
           "nombre": "Subsuelo 2",
           "descripcion": "subsuelo del edificio principal",
           "estado": "A",
-          "idUbicacionPadre": null
+          "idUbicacionPadre": 5
         }
       }
   auth: inherit

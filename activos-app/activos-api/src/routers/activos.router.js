@@ -5,6 +5,7 @@ import {
     listarActivos, 
     modificarActivo,
     modificarValorActivo, 
+    resumenActivos,
     bajaActivo 
 } from '../controllers/activos.controller.js';
 import { authDefault, authView } from "../controllers/auth.controller.js";
@@ -12,6 +13,7 @@ import { authDefault, authView } from "../controllers/auth.controller.js";
 const router = Router();
 
 router.route('/').get(authView, listarActivos);
+router.route('/resumen').get(authView, resumenActivos);
 router.route('/:id').get(authView, getActivo);
 
 router.route('/nuevo').post(authDefault, nuevoActivo);

@@ -16,7 +16,7 @@ http:
       {
         "ubicacion": {
           "idUbicacion": 2,
-          "idUbicacionPadre": 1,
+          "idUbicacionPadre": 5,
           "nombre": "Oficina IT modificada",
           "descripcion": "Área de sistemas y servidores",
           "estado": "A"
