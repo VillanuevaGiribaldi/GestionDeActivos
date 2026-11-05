@@ -139,6 +139,12 @@ class Activo {
         );
         return result[0][0]; 
     }
+    static async resumenActivos(){
+        const result = await pool.execute(
+            `SELECT * FROM vw_resumenInventario;`
+        );
+        return result[0];
+    }
 }
 
 export default Activo;
