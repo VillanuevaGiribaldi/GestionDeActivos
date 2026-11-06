@@ -8,7 +8,7 @@ http:
   url: "{{host}}{{ruta}}/:id"
   params:
     - name: id
-      value: "1"
+      value: "100"
       type: path
   body:
     type: json
