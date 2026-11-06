@@ -41,7 +41,7 @@ function Campo({ etiqueta, children }: { etiqueta: string; children: React.React
 }
 
 function Ubicacion({ ruta }: { ruta: string }) {
-    const partes = ruta.split(" > ");
+    const partes = ruta?.split(" > ");
     return (
         <span className="breadcrumb">
             {partes.map((parte, i) => (
