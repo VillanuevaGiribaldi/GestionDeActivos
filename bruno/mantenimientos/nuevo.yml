@@ -12,7 +12,7 @@ http:
       { 
         "mantenimiento": 
         {
-          "idActivo": 1,
+          "idActivo": null,
          "idProveedor": 2,
           "fallaReportada": "No enciende",
         "fechaEnvio": "2026-09-10",

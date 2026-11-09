@@ -1,8 +1,9 @@
 import { use, useEffect, useState } from 'react';
-import type {ActivosResumen} from '../types/activosResumen.tsx'
-import Resumen from '../components/Resumen.tsx';
-import { getToken } from "../auth/auth";
+import type {ActivosResumen } from '../types/activosResumen.tsx'
+import type {apiResponse } from '../types/apiResponse.tsx'
 
+import Resumen from '../components/Resumen.tsx';
+import { getResumen } from '../assets/services/resumenService.tsx';
 
 function Main() {
     const [dataResumen, setDataResumen]=useState<ActivosResumen[]>([])
@@ -10,19 +11,15 @@ function Main() {
     const [errorResumen, setErrorResumen] = useState<string | null>(null)
 
     useEffect(()=>{
-        const controller = new AbortController();
+        //const controller = new AbortController();
         const fetchResumen = async () => {
             try {
-                const fetchResumen = await fetch('/api/activo/resumen', {
-                        headers: { Authorization: `Bearer ${getToken()}` },
-                        signal: controller.signal,
-                    });
-                if (!fetchResumen.ok){
-                    const mensajeError=await fetchResumen.json()
-                    throw new Error("Error al cargar el resumen:"+mensajeError.message);
+                const respuesta = await getResumen()
+                if(respuesta.error){
+                    setErrorResumen(respuesta.error)
+                }else if(!respuesta.error){
+                    setDataResumen(respuesta.data)
                 }
-                const datosResumen = await fetchResumen.json()
-                setDataResumen(datosResumen.activos)
             } catch (error) {
                 setErrorResumen(error instanceof Error ? error.message : "Error desconocido")
             } finally{

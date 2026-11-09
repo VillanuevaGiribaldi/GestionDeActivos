@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { getToken, removeToken } from "../auth/auth";
 import type { Activo, ActivoResponse, Componente, Valor } from "../types/activo.tsx";
 import "../styles/Activo.css";
+import { getActivo } from "../assets/services/activoService.tsx";
 
 /* ---------- helpers ---------- */
 
@@ -131,7 +132,10 @@ export default function ActivoPage() {
             setCargando(true);
             setError("");
             try {
-                const response = await fetch(`/api/activo/${id}`, {
+                if(!id){
+                    throw new Error("id inexistente")
+                }
+                const response = await getActivo(parseInt(id)) /*= await fetch(`/api/activo/${id}`, {
                     headers: { Authorization: `Bearer ${getToken()}` },
                     signal: controller.signal,
                 });
@@ -140,18 +144,17 @@ export default function ActivoPage() {
                     removeToken();
                     navigate("/login", { replace: true });
                     return;
-                }
+                }*/
 
-                const data = await response.json();
-                if (!response.ok) {
-                    setError(data.message ?? "No se pudo obtener el activo");
-                    setActivo(null);
-                    return;
-                }
-                setActivo((data as ActivoResponse).activo);
-            } catch (e) {
-                if ((e as Error).name !== "AbortError") {
-                    setError("No se pudo acceder al servidor");
+                const data =  response.data;
+                
+                setActivo((data as Activo));
+            } catch (error) {
+                if (error instanceof Error) {
+                    console.log(`${error.name}: ${error.message}`);
+                    setError(error.name);
+                } else {
+                    setError("Error desconocido");
                 }
             } finally {
                 if (!controller.signal.aborted) setCargando(false);

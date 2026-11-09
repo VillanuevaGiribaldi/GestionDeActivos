@@ -34,7 +34,7 @@ const getActivo = async (req, res) => {
         const componentesData = await Activo.obtenerComponentesActivo(parseInt(req.params.id))
         activoData.componentes = componentesData
         res.status(200).json({
-            activo: activoData,
+            data: activoData,
             message: "Operación exitosa"
         });
     } catch (error) {
@@ -129,7 +129,7 @@ const resumenActivos =async (req,res) => {
         const result = await Activo.resumenActivos()
         res.status(200).json({ 
             message: "Operación exitosa",
-            activos: result
+            data: result
         });
     } catch (error) {
         catchSQL45000(res, error, "No se pudo obtener el resumen de activos")

@@ -11,10 +11,10 @@ http:
     data: |-
       {
         "ubicacion": {
-          "nombre": "Subsuelo 2",
-          "descripcion": "subsuelo del edificio principal",
+          "nombre": "rack oficina",
+          "descripcion": "rack de la oficina",
           "estado": "A",
-          "idUbicacionPadre": 5
+          "idUbicacionPadre": 2
         }
       }
   auth: inherit

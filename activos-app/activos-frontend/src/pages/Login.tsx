@@ -3,7 +3,7 @@ import type { SubmitEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { setToken } from "../auth/auth";
 import "../styles/Login.css";
-import backgroundImg from '../assets/background.jpg';
+import { login } from "../assets/services/authService";
 
 
 export default function Login() {
@@ -18,28 +18,22 @@ export default function Login() {
         setError("");
 
         try {
-            const response = await fetch("/api/login", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    username,
-                    password,
-                }),
-            });
-            const data = await response.json();
-            if (!response.ok) {
-                setError(data.mensaje);
-                return;
+            const respuesta = await login(username, password)
+            if(!respuesta.token){
+                setError(respuesta.mensaje)
+                return
             }
-
-
-            setToken(data.token);
-
+            
+            setToken(respuesta.token);
             navigate("/", { replace: true });
         } catch (error) {
-            setError("No se pudo acceder al servidor");
+            console.log("error durante el login")
+            if (error instanceof Error) {
+                console.log(`${error.name} - ${error.message}`);
+                setError(error.message);
+            } else {
+                setError("Error desconocido");
+            }
         }
     }
 

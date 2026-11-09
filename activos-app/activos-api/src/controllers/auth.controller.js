@@ -1,5 +1,6 @@
 import Usuario  from '../models/usuarios.models.js'
 import jwt from 'jsonwebtoken';
+import catchSQL45000 from '../utils/error.handler.js';
 
 
 const login = async (req,res) => {
@@ -19,7 +20,9 @@ const login = async (req,res) => {
         const usuario = Usuario.fromObject(usuarioData)
         const passwordValida = await usuario.compararContrasenia(password);
         if (!passwordValida) {
-            return res.status(401).json({ mensaje: 'Credenciales inválidas' });
+            return res.status(401).json({ 
+                error: 'Credenciales inválidas',
+                message: 'contraseña incorrecta' });
         }
         // genero el token
         const token = jwt.sign(
@@ -33,7 +36,7 @@ const login = async (req,res) => {
 
         // Respuesta
         return res.status(200).json({
-            mensaje: 'Autenticación exitosa',
+            message: 'Autenticación exitosa',
             token: token,
             usuario: {
                 id: usuarioData.idUsuario,
@@ -43,8 +46,10 @@ const login = async (req,res) => {
         });
     } catch (error) {
         console.log(error)
+        catchSQL45000(res, error, 'error al buscar el usuario')
         res.status(500).json({
-            mensaje: 'error al buscar'
+            error:'Error al buscar el usuario en la base de datos',
+            message: 'Error al buscar el usuario en la base de datos'
         })
     }  
     
