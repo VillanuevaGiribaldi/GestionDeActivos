@@ -46,7 +46,7 @@ const getActivo = async (req, res) => {
 
 const listarActivos = async (req, res) => {
     try {
-        const result = await Activo.listarAvanzado(req.body.filtros);
+        const result = await Activo.listarAvanzado(req.query);
         
         res.status(200).json({ 
             message: "Operación exitosa",

@@ -19,7 +19,7 @@ export default function Resumen ({data,labels} : DataTableProps){
         return <p>Datos no disponibles</p>;
     }
     
-    const column = Object.keys(data[0]);
+    const columns = Object.keys(data[0]);
     
 
     return(
@@ -29,7 +29,7 @@ export default function Resumen ({data,labels} : DataTableProps){
                 {/* Header */}
                 <TableHead>
                     <TableRow>
-                        {column.map((column) => (
+                        {columns.map((column) => (
                             <TableCell key={column}>
                                 <strong>{labels[column] ?? column}</strong>
                             </TableCell>
@@ -40,10 +40,10 @@ export default function Resumen ({data,labels} : DataTableProps){
                 {/* Rows */}
                 <TableBody>
                     {data.map((row, index) => (
-                        <TableRow key={row.idActivo ?? index}>
-                            {column.map((column) => (
-                                <TableCell key={column}>
-                                    {row[column] ?? "-"}
+                        <TableRow key={`row-${index}`}>
+                            {columns.map((col, colIndex) => (
+                                <TableCell key={`cell-${index}-${colIndex}`}>
+                                    {row[col] ?? "-"}
                                 </TableCell>
                             ))}
                         </TableRow>
@@ -54,3 +54,4 @@ export default function Resumen ({data,labels} : DataTableProps){
         </>
     )
 }
+

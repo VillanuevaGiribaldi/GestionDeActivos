@@ -1,7 +1,14 @@
-import { apiRequest } from "../../api/client";
+/*import { apiRequest } from "../../api/client";
 import type { ActivosResumen } from "../../types/activosResumen";
 import type { apiResponse } from "../../types/apiResponse";
 
 export const getResumen = () => 
     apiRequest<apiResponse<ActivosResumen[]>>(`/activo/resumen`, {method: "GET"})
+*/
+import { apiRequest } from "../../api/client";
+import type { ActivosResumen } from "../../types/activosResumen";
+import type { apiResponse } from "../../types/apiResponse";
 
+export const getResumen = () => {
+  return apiRequest<apiResponse<ActivosResumen[]>>('/activo/resumen', { method: "GET" });
+};
