@@ -6,15 +6,19 @@ import Login from "./pages/Login.tsx";
 import Main from "./pages/Main.tsx";
 import BuscadorActivos from './pages/BuscadorActivos';
 import Activo from "./pages/Activo.tsx";
+import Header from './components/Header.tsx';
 
 //import Activo from "./pages/Activo.tsx";
 import ProtectedRoute from "./auth/ProtectedRoute";
-import './App.css'
+
 
 function App() {
   return (
     <>
+      
+
       <BrowserRouter>
+        <Header/>
           <Routes>
               {/* Public */}
               <Route path="/login" element={<Login />} />

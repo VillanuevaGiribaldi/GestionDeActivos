@@ -1,0 +1,28 @@
+.cabezera{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 20px;
+  background-color: rgba(163, 160, 160, 0.438);
+  box-shadow: 0px 1px 3px 0px rgba(0, 0, 0, 0.10), 0px 1px 2px 0px rgba(0, 0, 0, 0.06);
+  overflow: visible;
+}
+.cabezera > .barraBusqueda{
+  gap: 11px;
+  margin: 2px 50 ;
+  border-radius: 5px;
+  width: 100%;
+  background-color: rgba(180, 180, 180, 0.438);
+  overflow: visible;
+  position: relative;
+
+}
+.sugerenciasBusquedas{
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 100%;
+    z-index: 1300;
+    margin-top: 4px;
+
+}

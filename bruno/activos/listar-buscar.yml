@@ -4,17 +4,15 @@ info:
   seq: 1
 
 http:
-  method: GET
+  method: POST
   url: "{{host}}{{ruta}}/"
   body:
     type: json
     data: |-
       {
         "filtros":{
-          "filtroTexto":"00",
-          "idTipo": 4,
-          "atributoClave": "SO",
-          "atributoValor": null
+          "filtroTexto":"",
+          "idTipo": 4
         }
       } 
   auth: inherit

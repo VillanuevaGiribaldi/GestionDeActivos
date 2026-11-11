@@ -1,14 +1,15 @@
 import { useEffect, useState } from 'react';
 import type { ActivosResumen } from '../types/activosResumen';
-import type { apiResponse } from '../types/apiResponse';
-
 import Resumen from '../components/Resumen';
+import Header from '../components/Header';
+
 import { getResumen } from '../assets/services/resumenService';
 
 function Main() {
     const [dataResumen, setDataResumen] = useState<ActivosResumen[]>([]);
     const [cargandoResumen, setCargandoResumen] = useState(true);
     const [errorResumen, setErrorResumen] = useState<string | null>(null);
+
 
     useEffect(() => {
         const fetchResumen = async () => {
@@ -72,6 +73,7 @@ function Main() {
                 </h1>
                 
                 <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 overflow-hidden">
+                    
                     <Resumen data={dataResumen} labels={columnLabels} />
                 </div>
             </div>
