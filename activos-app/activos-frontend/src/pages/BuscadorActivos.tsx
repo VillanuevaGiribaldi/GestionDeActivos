@@ -21,10 +21,8 @@ export default function BuscadorActivos() {
             setCargando(true);
             try {
                 // Pasamos el texto ingresado como parámetro "filtroTexto" al backend
-                const respuesta = await buscarActivos(
-                    textoBusqueda ? { filtroTexto: textoBusqueda } : undefined
-                );
-                
+                const respuesta = await buscarActivos(textoBusqueda);
+
                 if (respuesta.data) {
                     setActivos(respuesta.data);
                 }

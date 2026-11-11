@@ -59,8 +59,8 @@ BEGIN
         -- Nombres legibles de los catálogos para el frontend
         t.nombre AS tipo,
         m.nombre AS marca,
-        u.nombre AS NombreUbicacion,
-        u.ruta AS Ubicacion,
+        u.nombre AS nombreUbicacion,
+        u.ruta AS ubicacion,
         e.nombre AS estado,
         CONCAT(p.nombre, ' ', p.apellido) AS personaAsignada,
         

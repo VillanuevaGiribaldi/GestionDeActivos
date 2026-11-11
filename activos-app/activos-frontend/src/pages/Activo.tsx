@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { getToken, removeToken } from "../auth/auth";
-import type { Activo, ActivoResponse, Componente, Valor } from "../types/activo.tsx";
+import type { Activo, Componente, Valor } from "../types/activo.tsx";
 import "../styles/Activo.css";
 import { getActivo } from "../assets/services/activoService.tsx";
 
