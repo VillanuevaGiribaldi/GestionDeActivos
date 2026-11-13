@@ -6,6 +6,9 @@ import BuscadorActivos from './pages/BuscadorActivos';
 import Activo from "./pages/Activo.tsx";
 import ProtectedRoute from "./auth/ProtectedRoute";
 import Layout from './components/Layout.tsx';
+import Ubicaciones from './pages/Ubicaciones';
+import Proveedores from './pages/Proveedores';
+import Activos from './pages/Activos';
 
 function App() {
   return (
@@ -21,7 +24,9 @@ function App() {
             <Route path="/activos" element={<BuscadorActivos />} />
             <Route path="/activo/:id" element={<Activo />} />
             {/* Ruta para el nuevo módulo auxiliar */}
-            <Route path="/ubicaciones" element={<h2>Catálogo de Ubicaciones (En construcción)</h2>} />
+            <Route path="/activos" element={<Activos />} />
+            <Route path="/ubicaciones" element={<Ubicaciones />} />
+            <Route path="/proveedores" element={<Proveedores />} />
           </Route>
         </Route> 
       </Routes>

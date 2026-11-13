@@ -11,6 +11,8 @@ import {
 } from "@mui/material";
 import { Link, useLocation } from "react-router-dom";
 import LocationOnIcon from '@mui/icons-material/LocationOn';
+import StoreIcon from '@mui/icons-material/Store';
+import InventoryIcon from '@mui/icons-material/Inventory';
 
 const drawerWidth = 240;
 
@@ -39,7 +41,20 @@ export default function Sidebar() {
             
             <Box sx={{ overflow: 'auto', mt: 2 }}>
                 <List>
-                    {/* Botón del Catálogo de Ubicaciones*/}
+                    {/* Botones del Catálogo*/}
+                    <ListItem disablePadding>
+                        <ListItemButton 
+                            component={Link} 
+                            to="/activos"
+                            selected={location.pathname.startsWith('/activos')}
+                            sx={{ '&.Mui-selected': { backgroundColor: '#334155', borderLeft: '4px solid #3b82f6' }, '&:hover': { backgroundColor: '#334155' } }}
+                        >
+                            <ListItemIcon sx={{ color: 'white' }}>
+                                <InventoryIcon />
+                            </ListItemIcon>
+                            <ListItemText primary="Activos" />
+                        </ListItemButton>
+                    </ListItem>
                     <ListItem disablePadding>
                         <ListItemButton 
                             component={Link} 
@@ -59,6 +74,22 @@ export default function Sidebar() {
                                 <LocationOnIcon />
                             </ListItemIcon>
                             <ListItemText primary="Ubicaciones" />
+                        </ListItemButton>
+                    </ListItem>
+                    <ListItem disablePadding>
+                        <ListItemButton 
+                            component={Link} 
+                            to="/proveedores"
+                            selected={location.pathname.startsWith('/proveedores')}
+                            sx={{
+                                '&.Mui-selected': { backgroundColor: '#334155', borderLeft: '4px solid #3b82f6' },
+                                '&:hover': { backgroundColor: '#334155' }
+                            }}
+                        >
+                            <ListItemIcon sx={{ color: 'white' }}>
+                                <StoreIcon />
+                            </ListItemIcon>
+                            <ListItemText primary="Proveedores" />
                         </ListItemButton>
                     </ListItem>
                 </List>
