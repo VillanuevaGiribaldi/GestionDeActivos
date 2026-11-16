@@ -8,7 +8,7 @@ const nuevaMarca = async (req, res) => {
         
         return res.status(201).json({
             mensaje: 'Marca creada exitosamente',
-            datos: resultado
+            idMarca: resultado
         });
     } catch (error) {
         console.error('Error al guardar la marca:', error);

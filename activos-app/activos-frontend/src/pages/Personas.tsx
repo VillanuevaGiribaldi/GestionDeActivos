@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { getPersonas } from '../assets/services/personaService';
 import type { Persona } from '../types/persona';
 import {
@@ -10,6 +11,7 @@ export default function Personas() {
     const [personas, setPersonas] = useState<Persona[]>([]);
     const [cargando, setCargando] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const navigate = useNavigate();
 
     useEffect(() => {
         const fetchPersonas = async () => {
@@ -73,6 +75,8 @@ export default function Personas() {
                                     key={persona.idPersona}
                                     hover
                                     style={{ cursor: 'pointer' }}
+                                    // Al hacer clic, navega a la vista de detalle dinámico (EAV)
+                                    onClick={() => navigate(`/Persona/${persona.idPersona}`)}
                                 >
                                     <TableCell>{persona.idPersona}</TableCell>
                                     <TableCell className="font-medium text-gray-900">

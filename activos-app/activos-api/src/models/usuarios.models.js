@@ -53,13 +53,18 @@ class Usuario {
     }
 
     async save(){
-        //var outId=1;
-        const result = await pool.execute
-        (
-            'CALL sp_nuevoUsuario( ?, ?, ?, ?, ?,@outId );', [this.idPersona,this.username,(await bcrypt.hash(this.passwordHash,10)), this.rol, this.estado]
-        )
-        console.log()
-        return
+        const connection = await pool.getConnection();
+
+        try {
+            await connection.execute
+            (
+                'CALL sp_nuevoUsuario( ?, ?, ?, ?, ?,@outId );', [this.idPersona,this.username,(await bcrypt.hash(this.passwordHash,10)), this.rol, this.estado]
+            )
+            const [rows] = await connection.query('SELECT @outId AS idUsuario;');
+            return rows[0].idUsuario;            
+        } finally {
+            connection.release();
+        }        
     }
 
     async modificar(){

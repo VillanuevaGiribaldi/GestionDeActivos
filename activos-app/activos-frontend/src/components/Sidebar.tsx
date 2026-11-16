@@ -10,6 +10,7 @@ import {
     Box 
 } from "@mui/material";
 import { Link, useLocation } from "react-router-dom";
+import BallotIcon from '@mui/icons-material/Ballot';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 import StoreIcon from '@mui/icons-material/Store';
 import InventoryIcon from '@mui/icons-material/Inventory';
@@ -18,11 +19,15 @@ import LocalOfferIcon from '@mui/icons-material/LocalOffer';
 import CategoryIcon from '@mui/icons-material/Category';
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 
+import { useNavigate } from 'react-router-dom';
+
+
 const drawerWidth = 240;
 
 export default function Sidebar() {
     const location = useLocation();
-
+    const navigate = useNavigate();
+    {console.log(location.pathname)}
     return (
         <Drawer
             variant="permanent"
@@ -38,14 +43,39 @@ export default function Sidebar() {
             }}
         >
             <Toolbar>
-                <Typography variant="h6" noWrap component="div" sx={{ fontWeight: 'bold' }}>
+                <Typography variant="h6" noWrap component="div" sx={{ fontWeight: 'bold' }} 
+                    onClick={() => navigate(`/`)}
+                    style={{ cursor: 'pointer' }}
+                    >
                     ITAM System
                 </Typography>
             </Toolbar>
             
             <Box sx={{ overflow: 'auto', mt: 2 }}>
                 <List>
+                    
                     {/* Botones del Catálogo*/}
+                    <ListItem disablePadding>
+                        <ListItemButton 
+                            component={Link} 
+                            to="/"
+                            selected={location.pathname==('/')}
+                            sx={{
+                                '&.Mui-selected': {
+                                    backgroundColor: '#334155',
+                                    borderLeft: '4px solid #3b82f6'
+                                },
+                                '&:hover': {
+                                    backgroundColor: '#334155'
+                                }
+                            }}
+                        >
+                            <ListItemIcon sx={{ color: 'white' }}>
+                                <BallotIcon />
+                            </ListItemIcon>
+                            <ListItemText primary="Resumen" />
+                        </ListItemButton>
+                    </ListItem>
                     <ListItem disablePadding>
                         <ListItemButton 
                             component={Link} 

@@ -19,7 +19,9 @@ class Factura {
     }
 
     async save() {
-        const result = await pool.execute(
+        const connection = await pool.getConnection();
+        try {
+            await connection.execute(
             'CALL sp_nuevaFactura( ?, ?, ?, ?, ?, ?, ?, @pIdFactura );',
             [
                 this.idProveedor, 
@@ -30,8 +32,12 @@ class Factura {
                 this.ruta, 
                 this.estado
             ]
-        );
-        return result;
+            );
+            const [rows] = await connection.query('SELECT @pIdFactura AS idFactura;');
+            return rows[0].idFactura;
+        } finally {
+            connection.release();
+        }
     }
 
     async modificar() {

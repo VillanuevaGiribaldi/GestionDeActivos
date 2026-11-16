@@ -8,7 +8,7 @@ const nuevaFactura = async (req, res) => {
         
         return res.status(201).json({
             mensaje: 'Factura registrada exitosamente',
-            datos: resultado
+            idFactura: resultado
         });
     } catch (error) {
         console.error('Error al registrar la factura:', error);

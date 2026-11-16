@@ -16,11 +16,17 @@ class Proveedor {
     }
 
     async save() {
-        const result = await pool.execute(
+        const connection = await pool.getConnection();
+        try {
+            await connection.execute(
             'CALL sp_nuevoProveedor( ?, ?, ?, ?, ?, @pIdProveedor );',
             [this.nombre, this.direccion, this.telefono, this.mail, this.descripcion]
         );
-        return result;
+        const [rows] = await connection.query('SELECT @pIdProveedor AS idProveedor;');
+            return rows[0].idProveedor;
+        } finally {
+            connection.release();
+        }
     }
 
     async modificar() {

@@ -14,11 +14,18 @@ class Marca {
 
     async save() {
         // sp_nuevaMarca requiere: pNombre, pDescripcion, pEstado, OUT pIdMarca
-        const result = await pool.execute(
+        const connection = await pool.getConnection();
+        try {
+            await connection.execute(
             'CALL sp_nuevaMarca( ?, ?, ?, @pIdMarca );',
             [this.nombre, this.descripcion, this.estado]
         );
-        return result;
+        
+            const [rows] = await connection.query('SELECT @pIdMarca AS idMarca;');
+            return rows[0].idMarca;
+        } finally {
+            connection.release();
+        }
     }
 
     async modificar() {

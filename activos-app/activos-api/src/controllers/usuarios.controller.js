@@ -16,13 +16,13 @@ const nuevoUsuario = async (req, res) => {
         // 2. Respondemos
         return res.status(201).json({ 
             mensaje: 'Usuario creado exitosamente', 
-            datos: resultado 
+            idUsuario: resultado 
         });
     } catch (error) {
         console.error('Error al guardar el usuario:', error);
         catchSQL45000(res, error,"No se pudo crear el usuario")
         // 3. Devolvemos el error a Postman si algo falla en la BD
-        return res.status(500).json({ 
+        if(!res.headersSent) res.status(500).json({ 
             mensaje: 'Hubo un error interno al crear el usuario'
         });
     }

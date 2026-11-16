@@ -8,7 +8,7 @@ const nuevaPersona = async (req, res) => {
         
         return res.status(201).json({
             mensaje: 'Persona creada exitosamente',
-            datos: resultado
+            idPersona: resultado
         });
 
     } catch (error) {

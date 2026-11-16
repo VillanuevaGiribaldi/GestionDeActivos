@@ -8,7 +8,7 @@ const nuevoProveedor = async (req, res) => {
         
         return res.status(201).json({
             mensaje: 'Proveedor creado exitosamente',
-            datos: resultado
+            idProveedor: resultado
         });
     } catch (error) {
         console.error('Error al guardar el proveedor:', error);

@@ -16,11 +16,22 @@ class Persona {
 
     async save() {
         // Ejecutamos el Stored Procedure de alta
-        const result = await pool.execute(
-            'CALL sp_nuevaPersona( ?, ?, ?, ?, ?, @pIdPersona );',
-            [this.nombre, this.apellido, this.dni, this.cargo, this.estado]
-        );
-        return result;
+        // const result = await pool.execute(
+        //     'CALL sp_nuevaPersona( ?, ?, ?, ?, ?, @pIdPersona );',
+        //     [this.nombre, this.apellido, this.dni, this.cargo, this.estado]
+        // );
+        // return result;
+        const connection = await pool.getConnection();
+        try {
+            await connection.execute(
+                'CALL sp_nuevaPersona( ?, ?, ?, ?, ?, @pIdPersona );',
+                [this.nombre, this.apellido, this.dni, this.cargo, this.estado]
+            );
+            const [rows] = await connection.query('SELECT @pIdPersona AS idPersona;');
+            return rows[0].idPersona;
+        } finally {
+            connection.release();
+        }
     }
     static async buscarPorId(id) {
         const result = await pool.execute
