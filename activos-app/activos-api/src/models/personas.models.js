@@ -57,6 +57,12 @@ class Persona {
         );
         return result;
     }
+    static async listarPersonas(estado) {
+        const result = await pool.execute(
+            'CALL sp_listarPersonas( ? );', [estado || null]
+        );
+        return result[0][0]; 
+    }
 
 }
 

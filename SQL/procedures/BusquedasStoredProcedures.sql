@@ -888,3 +888,28 @@ BEGIN
     
 END//
 DELIMITER ;
+
+-- ===========================================  LISTAR USUARIOS
+DROP PROCEDURE IF EXISTS sp_listarUsuarios;
+DELIMITER //
+CREATE PROCEDURE sp_listarUsuarios(
+    IN pEstado CHAR(1)
+)
+BEGIN
+    SELECT 
+        u.idUsuario,
+        u.username,
+        u.rol,
+        u.estado,
+        u.idPersona,
+        p.nombre AS nombrePersona,
+        p.apellido AS apellidoPersona,
+        p.dni AS dniPersona,
+        p.cargo AS cargoPersona
+        -- NUNCA devolvemos el password en los listados generales por seguridad
+    FROM Usuarios u
+    INNER JOIN Personas p ON u.idPersona = p.idPersona
+    WHERE pEstado IS NULL OR u.estado = pEstado
+    ORDER BY u.username ASC;
+END//
+DELIMITER ;

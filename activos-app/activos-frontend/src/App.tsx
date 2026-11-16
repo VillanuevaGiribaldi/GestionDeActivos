@@ -9,6 +9,10 @@ import Layout from './components/Layout.tsx';
 import Ubicaciones from './pages/Ubicaciones';
 import Proveedores from './pages/Proveedores';
 import Activos from './pages/Activos';
+import Personas from "./pages/Personas.tsx";
+import Marcas from "./pages/Marcas.tsx";
+import Tipos from "./pages/Tipos.tsx";
+import Usuarios from "./pages/Usuarios.tsx";
 
 function App() {
   return (
@@ -27,6 +31,10 @@ function App() {
             <Route path="/activos" element={<Activos />} />
             <Route path="/ubicaciones" element={<Ubicaciones />} />
             <Route path="/proveedores" element={<Proveedores />} />
+            <Route path="/personas" element={<Personas />} />
+            <Route path="/marcas" element={<Marcas />} />
+            <Route path="/tipos" element={<Tipos />} />
+            <Route path="/usuarios" element={<Usuarios />} />
           </Route>
         </Route> 
       </Routes>

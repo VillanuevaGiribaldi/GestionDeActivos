@@ -1,10 +1,10 @@
 import { Router } from "express";
-import { nuevoUsuario,modificarUsuario, bajaUsuario, altaUsuario, getUsuario, encriptar} from '../controllers/usuarios.controller.js'
+import { nuevoUsuario,modificarUsuario, bajaUsuario, altaUsuario, getUsuario, encriptar, listarUsuarios} from '../controllers/usuarios.controller.js'
 import { authAdmin } from "../controllers/auth.controller.js";
 
 const router = Router();
 
-
+router.route('/').get(authAdmin, listarUsuarios);
 router.route('/nuevo').post(authAdmin, nuevoUsuario)
 router.route('/test/encriptar').put(encriptar)
 

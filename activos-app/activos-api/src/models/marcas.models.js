@@ -48,7 +48,10 @@ class Marca {
         return result[0][0][0]; 
     }
     static async listarMarcas(estado) {
-        return (await pool.execute('CALL sp_listarMarcas( ? );',[estado]))[0][0]
+        const result = await pool.execute(
+            'CALL sp_listarMarcas( ? );', [estado || null]
+        );
+        return result[0][0]; 
     }
 }
 

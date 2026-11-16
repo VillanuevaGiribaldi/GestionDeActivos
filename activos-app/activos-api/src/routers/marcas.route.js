@@ -14,6 +14,6 @@ router.route('/:id', '/:id/baja').delete(authDefault, bajaMarca);
 router.route('/:id/alta').put(authDefault, altaMarca);
 
 // lista completa de marcas
-router.route('').get(authDefault, listarMarcas );
+router.route('/').get(authDefault, listarMarcas );
 
 export default router;

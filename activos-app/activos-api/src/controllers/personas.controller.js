@@ -23,22 +23,36 @@ const nuevaPersona = async (req, res) => {
 
 const getPersona = async (req,res) => {
     try {
-        const personaData = await Persona.buscarPorId(parseInt(req.params.id))
+        const personaData = await Persona.buscarPorId(parseInt(req.params.id));
         if (!personaData) {
-            res.status(404).json({
-                message: "No existe la persona indicada"
-            })
+            return res.status(404).json({ message: "No existe la persona indicada" });
         }
-        res.status(200).json({
+        return res.status(200).json({
             persona: personaData,
             message: "Se encontró la persona indicada"
-        })
+        });
     } catch (error) {
-        catchSQL45000(res, error,"No se pudo encontrar la persona")
+        console.error('Error al buscar la persona:', error);
         if (!catchSQL45000(res, error, "No se pudo encontrar la persona")) {
-            return res.status(500).json({
-                message: "Error interno al buscar a la persona"
-            });
+            return res.status(500).json({ message: "Error interno al buscar a la persona" });
+        }
+    }
+}
+
+// LISTAR TODOS (Plural)
+const listarPersonas = async (req, res) => {
+    try {
+        const { estado } = req.query; 
+        const personas = await Persona.listarPersonas(estado);
+        
+        return res.status(200).json({
+            personas: personas,
+            message: "Listado de personas obtenido exitosamente"
+        });
+    } catch (error) {
+        console.error('Error al listar las personas:', error);
+        if (!catchSQL45000(res, error, "No se pudo obtener el listado")) {
+            return res.status(500).json({ message: "Error interno al listar personas" });
         }
     }
 }
@@ -123,5 +137,6 @@ export {
     bajaPersona,
     altaPersona,
     getPersona,
+    listarPersonas,
     modificarPersona
 }

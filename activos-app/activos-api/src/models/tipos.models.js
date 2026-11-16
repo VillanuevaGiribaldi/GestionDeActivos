@@ -49,8 +49,10 @@ class Tipo {
     }
 
     static async listarTipos(estado) {
-        const result = await pool.execute('CALL sp_listarTipos( ? );', [estado]);
-        return result[0][0];
+        const result = await pool.execute(
+            'CALL sp_listarTipos( ? );', [estado || null]
+        );
+        return result[0][0]; 
     }
 }
 

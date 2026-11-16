@@ -139,6 +139,32 @@ const getUsuario = async (req, res) => {
         })
     }
 }
+const listarUsuarios = async (req, res) => {
+    try {
+        const { estado } = req.query; 
+        
+        // Validación estricta del estado
+        if (estado !== undefined && estado !== null && !['A', 'I'].includes(estado)) {
+            return res.status(400).json({
+                message: "Estado no válido"
+            });
+        }
+
+        const result = await Usuario.listarUsuarios(estado);
+        
+        return res.status(200).json({
+            usuarios: result,
+            message: "Listado de usuarios obtenido exitosamente"
+        });
+    } catch (error) {
+        console.error('Error al listar los usuarios:', error);
+        catchSQL45000(res, error, "No se pudo obtener el listado");
+        if (!res.headersSent) {
+            return res.status(500).json({ message: "Error interno al listar usuarios" });
+        }
+    }
+}
+
 
 export {
     nuevoUsuario,
@@ -146,5 +172,6 @@ export {
     bajaUsuario,
     altaUsuario,
     getUsuario,
-    encriptar
+    encriptar,
+    listarUsuarios
 }

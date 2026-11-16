@@ -121,6 +121,10 @@ class Usuario {
         );
         return result;
     }
+    static async listarUsuarios(estado) {
+    const result = await pool.execute('CALL sp_listarUsuarios( ? );', [estado || null]);
+    return result[0][0]; 
+}
 
 }
 export default Usuario 
