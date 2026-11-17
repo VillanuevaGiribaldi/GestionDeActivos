@@ -22,7 +22,9 @@ class Imagen {
     }
 
     async save() {
-        const result = await pool.execute(
+        const connection = await pool.getConnection();
+        try {
+            await connection.execute(
             'CALL sp_nuevaImagen( ?, ?, ?, ?, ?, @pIdImagen );',
             [
                 this.idActivo, 
@@ -32,7 +34,11 @@ class Imagen {
                 this.fecha
             ]
         );
-        return result;
+        const [rows] = await connection.query('SELECT @pIdImagen AS idImagen;');
+            return rows[0].idOut;
+        } finally {
+            connection.release();
+        }
     }
 
     async modificar() {

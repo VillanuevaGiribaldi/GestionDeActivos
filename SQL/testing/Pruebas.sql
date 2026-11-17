@@ -9,6 +9,7 @@ select * from `Usuarios`;
 select * from `Personas`;
 SELECT * FROM `Facturas`;
 SELECT * FROM `Valores` WHERE `idAtributo`=7;
+SELECT * from `Historial` ORDER BY fecha DESC;
     
 -- Probando sp_nuevoActivo
 CALL sp_nuevoActivo(

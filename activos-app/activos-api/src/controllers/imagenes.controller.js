@@ -8,7 +8,7 @@ const nuevaImagen = async (req, res) => {
         
         return res.status(201).json({
             mensaje: 'Imagen registrada exitosamente',
-            datos: resultado
+            idImagen: resultado
         });
     } catch (error) {
         console.error('Error al registrar la imagen:', error);

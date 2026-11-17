@@ -6,10 +6,9 @@ const nuevoActivo = async (req, res) => {
         const idUsuario = req.usuario.id; // Del middleware authDefault
         
         const activo = Activo.fromObject(req.body.activo);
-        const resultado = await activo.save(idUsuario);
+        const idGenerado = await activo.save(idUsuario);
         
         // MySQL devuelve el row modificado o el OUT dependiendo de tu implementación del SP
-        const idGenerado = resultado[0][0]?.[0]?.idActivo || 'Generado';
 
         return res.status(201).json({
             message: 'Activo registrado exitosamente',

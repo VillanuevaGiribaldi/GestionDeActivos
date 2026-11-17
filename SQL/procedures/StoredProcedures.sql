@@ -545,10 +545,10 @@ DELIMITER //
 
 CREATE PROCEDURE sp_nuevoActivo(
     IN pIdUsuario INT, -- Para historial
-    IN pNombreMarca VARCHAR(45),
-    IN pNombreUbicacion VARCHAR(45),
-    IN pNombreTipo VARCHAR(45),
-    IN pNombreEstado VARCHAR(45),
+    IN pIdMarca INT,
+    IN pIdUbicacion INT,
+    IN pIdTipo INT,
+    IN pIdEstado INT,
     IN pidFactura INT,
     IN pidPersona INT,
     IN pidCompone INT,
@@ -558,7 +558,8 @@ CREATE PROCEDURE sp_nuevoActivo(
 
     IN pPrecioUnitario DECIMAL(12,2),
     IN pNumeroSerie VARCHAR(100),
-    IN pModelo VARCHAR(50)
+    IN pModelo VARCHAR(50),
+    OUT pIdActivo INT
 )
 SALIR:BEGIN
     -- Declaración de variables
@@ -581,10 +582,10 @@ SALIR:BEGIN
     END IF;
 
     -- 1. Búsqueda de IDs (Usamos '=' en lugar de 'LIKE' para búsquedas exactas)
-    SELECT idMarca INTO vIdMarca FROM Marcas WHERE nombre = pNombreMarca LIMIT 1;
-    SELECT idUbicacion INTO vIdUbicacion FROM Ubicaciones WHERE nombre = pNombreUbicacion LIMIT 1;
-    SELECT idTipo INTO vIdTipo FROM Tipos WHERE nombre = pNombreTipo LIMIT 1;
-    SELECT idEstado INTO vIdEstado FROM Estados WHERE nombre = pNombreEstado LIMIT 1;
+    SELECT idMarca INTO vIdMarca FROM Marcas WHERE idMarca = pIdMarca LIMIT 1;
+    SELECT idUbicacion INTO vIdUbicacion FROM Ubicaciones WHERE `idUbicacion` = pIdUbicacion LIMIT 1;
+    SELECT idTipo INTO vIdTipo FROM Tipos WHERE `idTipo` = pIdTipo LIMIT 1;
+    SELECT idEstado INTO vIdEstado FROM Estados WHERE `idEstado` = pIdEstado LIMIT 1;
 
     -- 2. Validaciones de existencia de catálogos
     IF vIdMarca IS NULL THEN
@@ -622,7 +623,7 @@ SALIR:BEGIN
 
     IF pidFactura IS NOT NULL AND NOT EXISTS (SELECT 1 FROM Facturas WHERE idFactura = pidFactura) THEN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'La factura no existe';
-    END IF;
+    END IF; 
 
     IF pidCompone IS NOT NULL AND NOT EXISTS (SELECT 1 FROM Activos WHERE idActivo = pidCompone) THEN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El activo padre no existe';
@@ -666,11 +667,11 @@ SALIR:BEGIN
     );
 
     -- Obtener el ID que se le acaba de asignar al Activo
-    SET vIdActivo = LAST_INSERT_ID();
+    SET pIdActivo = LAST_INSERT_ID();
 
     -- Insertar los Valores de los aributos
     INSERT INTO Valores(idActivo, idAtributo, valor)  
-    SELECT vIdActivo, 
+    SELECT pIdActivo, 
     jt.idAtributo,
     JSON_UNQUOTE(
         JSON_EXTRACT(pValoresAtributos, CONCAT('$."', jt.idAtributo, '"'))
@@ -679,19 +680,18 @@ SALIR:BEGIN
                 JSON_KEYS(pValoresAtributos),
                 '$[*]' COLUMNS (idAtributo INT PATH '$')
             ) AS jt;
-
     -- Insertar el registro de Creacion en el Historial
     CALL `sp_registrarHistorial`(
         pIdUsuario, 
-        vIdActivo, 
+        pIdActivo, 
         'Creacion del activo',
         'A',
         NULL,
             JSON_OBJECT(
-			'Marca', pNombreMarca,
-			'Ubicacion', pNombreUbicacion,
-			'Tipo', pNombreTipo,
-			'Estado', pNombreEstado,
+			'Marca', pIdMarca,
+			'Ubicacion', pIdUbicacion,
+			'Tipo', pIdTipo,
+			'Estado', pIdEstado,
 			'Factura', pidFactura,
 			'Persona', pidPersona,
 			'Compone', pidCompone,
@@ -718,10 +718,10 @@ CREATE procedure sp_modificarActivo(
 	IN pidActivo INT,
     IN pIdUsuario INT, -- 
     -- No pueden ser NULL
-	IN pNombreMarca VARCHAR(45),
-    IN pNombreUbicacion VARCHAR(45),
-    IN pNombreTipo VARCHAR(45),
-    IN pNombreEstado VARCHAR(45),
+	IN pIdMarca INT,
+    IN pIdUbicacion INT,
+    IN pIdTipo INT,
+    IN pIdEstado INT,
     -- Pueden ser NULL
     IN pidFactura INT,
     IN pidPersona INT,
@@ -760,6 +760,12 @@ SALIR:BEGIN
     DECLARE oldNumeroSerie VARCHAR(100);
     DECLARE oldModelo VARCHAR(50);
 
+    DECLARE newNombreMarca VARCHAR(45);
+	DECLARE newNombreUbicacion VARCHAR(45);
+	DECLARE newNombreTipo VARCHAR(45);
+	DECLARE newNombreEstado VARCHAR(45);
+
+
     
     -- Manejador de errores: Si algo falla, deshace los cambios (Rollback)
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
@@ -768,10 +774,10 @@ SALIR:BEGIN
         RESIGNAL; -- Re-lanza el error para que tu backend lo detecte
     END;
     -- TRIM de los parametros
-    SET pNombreMarca = TRIM(pNombreMarca);
-    SET pNombreUbicacion = TRIM(pNombreUbicacion);
-    SET pNombreTipo = TRIM(pNombreTipo);
-    SET pNombreEstado = TRIM(pNombreEstado);
+    SET pIdMarca = TRIM(pIdMarca);
+    SET pIdUbicacion = TRIM(pIdUbicacion);
+    SET pIdTipo = TRIM(pIdTipo);
+    SET pIdEstado = TRIM(pIdEstado);
     SET pNombre = TRIM(pNombre);
     SET pNumeroSerie = TRIM(pNumeroSerie);
     SET pModelo = TRIM(pModelo);
@@ -797,41 +803,41 @@ SALIR:BEGIN
 -- ------------------------------------------------------------------------------ 
 --  verificar que los Nombres de marca, ubicacion, tipo y estado dados se correspondan a uno existente
 -- ------------------------------------------------------------------------------
-        IF pNombreMarca IS NULL  OR pNombreMarca = '' THEN 
+        IF pIdMarca IS NULL  OR pIdMarca = '' THEN 
             SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Se debe ingresar una marca';
         END IF;
 
-        IF pNombreUbicacion IS NULL  OR pNombreUbicacion = '' THEN 
+        IF pIdUbicacion IS NULL  OR pIdUbicacion = '' THEN 
             SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Se debe ingresar una ubicación';
         END IF;
 
-        IF pNombreTipo IS NULL   OR pNombreTipo = '' THEN 
+        IF pIdTipo IS NULL   OR pIdTipo = '' THEN 
             SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Se debe ingresar un tipo'; 
         END IF;
-        IF pNombreEstado IS NULL  OR pNombreEstado = '' THEN
+        IF pIdEstado IS NULL  OR pIdEstado = '' THEN
             SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Se debe ingresar un estado'; 
         END IF;
     
-    SELECT idMarca INTO vIdMarca FROM Marcas WHERE nombre = pNombreMarca LIMIT 1;
-	SELECT idUbicacion INTO vIdUbicacion FROM Ubicaciones WHERE nombre = pNombreUbicacion LIMIT 1;
-	SELECT idTipo INTO vIdTipo FROM Tipos WHERE nombre = pNombreTipo LIMIT 1;
-	SELECT idEstado INTO vIdEstado FROM Estados WHERE nombre = pNombreEstado LIMIT 1;
+    SELECT idMarca, nombre INTO vIdMarca, newNombreMarca FROM Marcas WHERE `idMarca` = pIdMarca LIMIT 1;
+	SELECT idUbicacion, nombre  INTO vIdUbicacion, newNombreUbicacion FROM Ubicaciones WHERE `idUbicacion` = pIdUbicacion LIMIT 1;
+	SELECT idTipo, nombre  INTO vIdTipo, newNombreTipo FROM Tipos WHERE `idTipo` = pIdTipo LIMIT 1;
+	SELECT idEstado, nombre  INTO vIdEstado, newNombreEstado FROM Estados WHERE `idEstado` = pIdEstado LIMIT 1;
 
-        IF vIdMarca IS NULL THEN 
-            SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'La marca no existe';
-        END IF;
+    IF vIdMarca IS NULL THEN 
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'La marca no existe';
+    END IF;
 
-        IF vIdUbicacion IS NULL THEN 
-            SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'La ubicación no existe';
-        END IF;
+    IF vIdUbicacion IS NULL THEN 
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'La ubicación no existe';
+    END IF;
 
-        IF vIdTipo IS NULL THEN 
-            SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El tipo no existe'; 
-        END IF;
+    IF vIdTipo IS NULL THEN 
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El tipo no existe'; 
+    END IF;
 
-        IF vIdEstado IS NULL THEN
-            SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El estado no existe'; 
-        END IF;
+    IF vIdEstado IS NULL THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El estado no existe'; 
+    END IF;
 
 -- ------------------------------------------------------------------------------ 
 --  verificar que los ids de Persona, factura y Activo que compone dados se correspondan a uno existente
@@ -924,22 +930,22 @@ SALIR:BEGIN
         -- Estos no pueden ser NULL
         IF vIdMarca <> oldIdMarca THEN
             SET vEstadoViejo = JSON_SET(vEstadoViejo, '$.Marca', oldNombreMarca);
-            SET vEstadoNuevo = JSON_SET(vEstadoNuevo, '$.Marca', pNombreMarca);
+            SET vEstadoNuevo = JSON_SET(vEstadoNuevo, '$.Marca', newNombreMarca);
         END IF;
 
         IF vIdUbicacion <> oldIdUbicacion THEN
             SET vEstadoViejo = JSON_SET(vEstadoViejo, '$.Ubicacion', oldNombreUbicacion);
-            SET vEstadoNuevo = JSON_SET(vEstadoNuevo, '$.Ubicacion', pNombreUbicacion);
+            SET vEstadoNuevo = JSON_SET(vEstadoNuevo, '$.Ubicacion', newNombreUbicacion);
         END IF;
 
         IF vIdTipo <> oldIdTipo THEN
             SET vEstadoViejo = JSON_SET(vEstadoViejo, '$.Tipo', oldNombreTipo);
-            SET vEstadoNuevo = JSON_SET(vEstadoNuevo, '$.Tipo', pNombreTipo);
+            SET vEstadoNuevo = JSON_SET(vEstadoNuevo, '$.Tipo', newNombreTipo);
         END IF;
 
         IF vIdEstado <> oldIdEstado THEN
             SET vEstadoViejo = JSON_SET(vEstadoViejo, '$.Estado', oldNombreEstado);
-            SET vEstadoNuevo = JSON_SET(vEstadoNuevo, '$.Estado', pNombreEstado);
+            SET vEstadoNuevo = JSON_SET(vEstadoNuevo, '$.Estado', newNombreEstado);
         END IF;
 
         -- Estos pueden ser NULL por lo que se usa <=> 
@@ -1015,7 +1021,6 @@ SALIR:BEGIN
 
     -- Confirmar los cambios
     COMMIT;
-
 END//
 
 DELIMITER ;

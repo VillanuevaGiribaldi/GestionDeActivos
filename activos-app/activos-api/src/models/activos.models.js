@@ -34,8 +34,10 @@ class Activo {
 
     async save(idUsuarioModificador) {
         // Ejecutamos el SP que inserta en Activos y distribuye el JSON en la tabla Valores
-        const result = await pool.execute(
-            `CALL sp_nuevoActivo( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? );`,
+        const connection = await pool.getConnection();
+        try {
+            await connection.execute(
+            `CALL sp_nuevoActivo( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, @pIdActivo );`,
             [
                 idUsuarioModificador, // Extraído del JWT
                 this.idMarca,
@@ -52,7 +54,13 @@ class Activo {
                 this.modelo
             ]
         );
-        return result;
+        const [rows] = await connection.query('SELECT @pIdActivo AS idActivo;');
+        console.log(rows)
+        return rows[0].idActivo;
+
+        } finally {
+            connection.release();
+        }
     }
 
     async modificar(idUsuarioModificador) {

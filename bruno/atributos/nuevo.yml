@@ -10,11 +10,13 @@ http:
     type: json
     data: |-
       {
-        "estado": {
-          "nombre": "para donar",
-          "descripcion": "Activo separado para donar",
-          "estado": "A",
-          "idUbicacionPadre": null
+        "atributo": {
+          "idAtributo": 1,
+          "nombre":"almacenamiento",
+          "idTipo": 1,
+          "tipo": "PC",
+          "obligatorio": 0,
+          "porDefecto": null
         }
       }
   auth: inherit

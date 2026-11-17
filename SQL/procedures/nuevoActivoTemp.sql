@@ -16,7 +16,8 @@ CREATE PROCEDURE sp_nuevoActivo(
 
     IN pPrecioUnitario DECIMAL(12,2),
     IN pNumeroSerie VARCHAR(100),
-    IN pModelo VARCHAR(50)
+    IN pModelo VARCHAR(50),
+    OUT pIdActivo INT
 )
 SALIR:BEGIN
     -- Declaración de variables
@@ -124,7 +125,8 @@ SALIR:BEGIN
     );
 
     -- Obtener el ID que se le acaba de asignar al Activo
-    SET vIdActivo = LAST_INSERT_ID();
+    SET @pIdActivo = LAST_INSERT_ID();
+
 
     -- Insertar los Valores de los aributos
     INSERT INTO Valores(idActivo, idAtributo, valor)  
@@ -480,3 +482,5 @@ SALIR:BEGIN
     COMMIT;
 
 END//
+
+
