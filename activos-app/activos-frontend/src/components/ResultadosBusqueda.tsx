@@ -2,7 +2,7 @@ import {
     Table, TableBody, TableCell, TableContainer,
     TableHead, TableRow, Paper
 } from "@mui/material";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 interface SearchResultsProps<T> {
     results: T[];
@@ -23,7 +23,7 @@ export default function ResultadosBusqueda<T extends {
     results,
     loading,
 }: SearchResultsProps<T>){
-
+    const navigate = useNavigate()
 
     return(
          <TableContainer component={Paper}>
@@ -56,15 +56,12 @@ export default function ResultadosBusqueda<T extends {
                     ) : (
                         results.map((item) => (
                             <TableRow
-                                key={item.idActivo}
+                               key={item.idActivo}
                                 hover
                                 title="ir al Activo..."
-                                component={Link}
-                                to={`/activo/${item.idActivo}`}
-                                sx={{
-                                    cursor: "pointer",
-                                    textDecoration: "none",
-                                }}
+                                onClick={() => navigate(`/activo/${item.idActivo}`)}
+                                sx={{ cursor: "pointer" }}
+                            
                                 
                             >
                                 <TableCell>{item.idActivo}</TableCell>
