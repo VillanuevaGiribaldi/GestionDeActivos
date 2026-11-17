@@ -13,6 +13,10 @@ import Personas from "./pages/Personas.tsx";
 import Marcas from "./pages/Marcas.tsx";
 import Tipos from "./pages/Tipos.tsx";
 import Usuarios from "./pages/Usuarios.tsx";
+import Estados from './pages/Estados';
+import Facturas from "./pages/Factura.tsx";
+import Mantenimientos from "./pages/Mantenimiento.tsx";
+import Imagenes from "./pages/Imagenes.tsx";
 
 function App() {
   return (
@@ -35,6 +39,10 @@ function App() {
             <Route path="/marcas" element={<Marcas />} />
             <Route path="/tipos" element={<Tipos />} />
             <Route path="/usuarios" element={<Usuarios />} />
+            <Route path="/estados" element={<Estados />} />
+            <Route path="/facturas" element={<Facturas />} />
+            <Route path="/mantenimientos" element={<Mantenimientos />} />
+            <Route path="/imagenes" element={<Imagenes />} />
           </Route>
         </Route> 
       </Routes>

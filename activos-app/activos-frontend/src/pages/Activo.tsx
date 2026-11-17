@@ -3,7 +3,7 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import type { Activo, Componente, Valor } from "../types/activo.tsx";
 import "../styles/Activo.css";
 import { getActivo } from "../assets/services/activoService.tsx";
-
+import GaleriaImagenes from "../components/GaleriaImagenes.tsx";
 /* ---------- helpers ---------- */
 
 const formatearFecha = (iso: string) =>
@@ -203,6 +203,10 @@ export default function ActivoPage() {
 
             <Seccion titulo="Componentes" cantidad={activo.componentes.length}>
                 <ListaComponentes componentes={activo.componentes} />
+            </Seccion>
+
+            <Seccion titulo="Imagen">
+                <GaleriaImagenes idActivo={parseInt(id as string)} />
             </Seccion>
         </main>
     );

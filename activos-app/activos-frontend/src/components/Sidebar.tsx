@@ -18,6 +18,10 @@ import PeopleIcon from '@mui/icons-material/People';
 import LocalOfferIcon from '@mui/icons-material/LocalOffer';
 import CategoryIcon from '@mui/icons-material/Category';
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
+import FactCheckIcon from '@mui/icons-material/FactCheck';
+import ReceiptIcon from '@mui/icons-material/Receipt';
+import EngineeringIcon from '@mui/icons-material/Engineering';
+import PhotoLibraryIcon from '@mui/icons-material/PhotoLibrary';
 
 import { useNavigate } from 'react-router-dom';
 
@@ -188,6 +192,70 @@ export default function Sidebar() {
                                 <AdminPanelSettingsIcon />
                             </ListItemIcon>
                             <ListItemText primary="Usuarios" />
+                        </ListItemButton>
+                    </ListItem>
+                    <ListItem disablePadding>
+                        <ListItemButton 
+                            component={Link} 
+                            to="/estados"
+                            selected={location.pathname.startsWith('/estados')}
+                            sx={{
+                                '&.Mui-selected': { backgroundColor: '#334155', borderLeft: '4px solid #3b82f6' },
+                                '&:hover': { backgroundColor: '#334155' }
+                            }}
+                        >
+                            <ListItemIcon sx={{ color: 'white' }}>
+                                <FactCheckIcon />
+                            </ListItemIcon>
+                            <ListItemText primary="Estados" />
+                        </ListItemButton>
+                    </ListItem>
+                    <ListItem disablePadding>
+                        <ListItemButton 
+                            component={Link} 
+                            to="/facturas"
+                            selected={location.pathname.startsWith('/facturas')}
+                            sx={{
+                                '&.Mui-selected': { backgroundColor: '#334155', borderLeft: '4px solid #3b82f6' },
+                                '&:hover': { backgroundColor: '#334155' }
+                            }}
+                        >
+                            <ListItemIcon sx={{ color: 'white' }}>
+                                <ReceiptIcon />
+                            </ListItemIcon>
+                            <ListItemText primary="Facturas" />
+                        </ListItemButton>
+                    </ListItem>
+                    <ListItem disablePadding>
+                        <ListItemButton 
+                            component={Link} 
+                            to="/mantenimientos"
+                            selected={location.pathname.startsWith('/mantenimientos')}
+                            sx={{
+                                '&.Mui-selected': { backgroundColor: '#334155', borderLeft: '4px solid #3b82f6' },
+                                '&:hover': { backgroundColor: '#334155' }
+                            }}
+                        >
+                            <ListItemIcon sx={{ color: 'white' }}>
+                                <EngineeringIcon />
+                            </ListItemIcon>
+                            <ListItemText primary="Mantenimientos" />
+                        </ListItemButton>
+                    </ListItem>
+                    <ListItem disablePadding>
+                        <ListItemButton 
+                            component={Link} 
+                            to="/imagenes"
+                            selected={location.pathname.startsWith('/imagenes')}
+                            sx={{
+                                '&.Mui-selected': { backgroundColor: '#334155', borderLeft: '4px solid #3b82f6' },
+                                '&:hover': { backgroundColor: '#334155' }
+                            }}
+                        >
+                            <ListItemIcon sx={{ color: 'white' }}>
+                                <PhotoLibraryIcon />
+                            </ListItemIcon>
+                            <ListItemText primary="Imágenes" />
                         </ListItemButton>
                     </ListItem>
                 </List>

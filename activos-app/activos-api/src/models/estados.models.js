@@ -50,9 +50,9 @@ class Estado {
     }
 
     static async listarEstados(estado) {
-        const result = await pool.execute('CALL sp_listarEstados( ? );', [estado]);
-        return result[0][0];
-    }
+    const result = await pool.execute('CALL sp_listarEstados( ? );', [estado || null]);
+    return result[0][0]; 
+}
 }
 
 export default Estado;
