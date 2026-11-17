@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { buscarActivos } from '../assets/services/busquedaService';
-import type { ActivoAvanzado } from '../types/activoAvanzado';
+import { buscarActivos } from '../../assets/services/busquedaService';
+import type { ActivoAvanzado } from '../../types/activoAvanzado';
 import {
     Table, TableBody, TableCell, TableContainer,
     TableHead, TableRow, Paper, Chip
@@ -17,7 +17,7 @@ export default function Activos() {
         const fetchActivos = async () => {
             try {
                 // Al no enviar parámetros, el SP listará todo el catálogo por defecto
-                const respuesta = await buscarActivos();
+                const respuesta = await buscarActivos(null);
                 
                 if (respuesta.error) {
                     setError(respuesta.error);

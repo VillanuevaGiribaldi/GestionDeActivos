@@ -1,25 +1,31 @@
 import { useEffect, useState } from 'react';
 //import { useNavigate } from 'react-router-dom';
-import { buscarActivos } from '../assets/services/busquedaService';
-import type { ActivoAvanzado } from '../types/activoAvanzado';
+import { buscarActivos } from '../../assets/services/busquedaService';
+import type { ActivoAvanzado } from '../../types/activoAvanzado';
 
 // Necesitas instalar iconos si no lo has hecho: npm install @mui/icons-material
-import BarraBusqueda from '../components/BarraBusquedaTexto.tsx';
-import ResultadosBusqueda from '../components/ResultadosBusqueda.tsx';
+import BarraBusqueda from '../../components/BarraBusquedaTexto.tsx';
+import ResultadosBusqueda from '../../components/ResultadosBusqueda.tsx';
+import type { FiltrosActivosAvanzado } from '../../types/filtrosActivosAvanzado.tsx';
 export default function BuscadorActivos() {
     const [activos, setActivos] = useState<ActivoAvanzado[]>([]);
     const [cargando, setCargando] = useState(true);
     const [textoBusqueda, setTextoBusqueda] = useState('');
+   
     //const navigate = useNavigate();
 
     // Efecto para buscar. Se dispara al montar o cuando el usuario tipea
     useEffect(() => {
         const fetchActivos = async () => {
+            const filtros: FiltrosActivosAvanzado={};
             setCargando(true);
             try {
+                filtros.filtroTexto=textoBusqueda
+                filtros.idMarca=1
+                
                 // Pasamos el texto ingresado como parámetro "filtroTexto" al backend
-                const respuesta = await buscarActivos(textoBusqueda);
-
+                const respuesta = await buscarActivos(filtros);
+                console.log(respuesta)
                 if (respuesta.data) {
                     setActivos(respuesta.data);
                 }

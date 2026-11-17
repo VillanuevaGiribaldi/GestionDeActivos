@@ -58,7 +58,7 @@ export default function ResultadosBusqueda<T extends {
                             <TableRow
                                 key={item.idActivo}
                                 hover
-                               
+                                title="ir al Activo..."
                                 component={Link}
                                 to={`/activo/${item.idActivo}`}
                                 sx={{
@@ -68,7 +68,9 @@ export default function ResultadosBusqueda<T extends {
                                 
                             >
                                 <TableCell>{item.idActivo}</TableCell>
-                                <TableCell>{item.nombreActivo}</TableCell>
+                                <TableCell>
+                                    {item.nombreActivo}
+                                </TableCell>
                                 <TableCell>{item.tipo}</TableCell>
                                 <TableCell>{item.marca}</TableCell>
                                 <TableCell>{item.numeroSerie || "-"}</TableCell>

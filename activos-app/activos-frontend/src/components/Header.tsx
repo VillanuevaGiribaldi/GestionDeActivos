@@ -4,6 +4,7 @@ import BarraBusqueda from "./BarraBusquedaTexto";
 import SugerenciasBusqueda from "./SugerenciasBusqueda";
 import { buscarActivos } from "../assets/services/busquedaService";
 import '../style.css'
+import type { FiltrosActivosAvanzado } from "../types/filtrosActivosAvanzado";
 
 export default function Header(){
         const MIN_SEARCH = 2
@@ -16,7 +17,8 @@ export default function Header(){
                 if(textoBusqueda.length<MIN_SEARCH) return
                 try {
                     // Pasamos el texto ingresado como parámetro "filtroTexto" al backend
-                    const respuesta = await buscarActivos(textoBusqueda);
+                    const filtros: FiltrosActivosAvanzado={filtroTexto: textoBusqueda}
+                    const respuesta = await buscarActivos(filtros);
                     
                     if (respuesta.data) {
                         setActivos(respuesta.data);

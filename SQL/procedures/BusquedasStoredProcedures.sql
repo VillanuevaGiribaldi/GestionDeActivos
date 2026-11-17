@@ -26,6 +26,8 @@ CREATE PROCEDURE sp_buscarActivosAvanzado(
     IN pOffset INT
 )
 BEGIN
+
+    
     -- =========================================================================
     -- 1. SANITIZACIÓN CRÍTICA (Frontend a BD)
     -- =========================================================================
@@ -117,12 +119,12 @@ BEGIN
         AND (pIdPersona IS NULL OR a.idPersona = pIdPersona)
         -- C) FILTRO PROFUNDO EN JSON (Case-insensitive)
         AND (pAtributoClave IS NULL OR pAtributoValor IS NULL 
-        OR EXISTS (
-            SELECT 1 FROM Valores v
-            INNER JOIN `Atributos` atr ON v.`idAtributo`=atr.`idAtributo`
-            WHERE atr.nombre LIKE CONCAT('%',pAtributoClave,'%') AND v.`idActivo`=a.`idActivo` AND v.valor LIKE CONCAT('%',pAtributoValor,'%')
-            )
-        ) 
+            OR EXISTS (
+                SELECT 1 FROM Valores v
+                INNER JOIN `Atributos` atr ON v.`idAtributo`=atr.`idAtributo`
+                WHERE atr.nombre LIKE CONCAT('%',pAtributoClave,'%') AND v.`idActivo`=a.`idActivo` AND v.valor LIKE CONCAT('%',pAtributoValor,'%')
+                )
+            ) 
         
     -- =========================================================================
     -- 4. ORDENAMIENTO DINÁMICO SEGURO (Anti-Inyección SQL)

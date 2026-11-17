@@ -2,14 +2,15 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
 import Login from "./pages/Login.tsx";
 import Main from "./pages/Main.tsx";
-import BuscadorActivos from './pages/BuscadorActivos';
-import Activo from "./pages/Activo.tsx";
+import BuscadorActivos from './pages/activo/BuscadorActivos';
+import Activos from './pages/activo/Activos';
+
+import Activo from "./pages/activo/Activo.tsx";
 import ProtectedRoute from "./auth/ProtectedRoute";
 import Layout from './components/Layout.tsx';
 import Ubicaciones from './pages/Ubicaciones';
 import Proveedores from './pages/Proveedores';
-import Activos from './pages/Activos';
-import Personas from "./pages/Personas.tsx";
+import Personas from "./pages/persona/Personas.tsx";
 import Marcas from "./pages/Marcas.tsx";
 import Tipos from "./pages/Tipos.tsx";
 import Usuarios from "./pages/Usuarios.tsx";
@@ -17,7 +18,7 @@ import Estados from './pages/Estados';
 import Facturas from "./pages/Factura.tsx";
 import Mantenimientos from "./pages/Mantenimiento.tsx";
 import Imagenes from "./pages/Imagenes.tsx";
-
+import PersonaDetalle from "./pages/persona/personaDetalle.tsx";
 function App() {
   return (
     <Router>
@@ -35,7 +36,10 @@ function App() {
             <Route path="/activos" element={<Activos />} />
             <Route path="/ubicaciones" element={<Ubicaciones />} />
             <Route path="/proveedores" element={<Proveedores />} />
+
             <Route path="/personas" element={<Personas />} />
+            <Route path="/persona/:id" element={<PersonaDetalle />} />
+
             <Route path="/marcas" element={<Marcas />} />
             <Route path="/tipos" element={<Tipos />} />
             <Route path="/usuarios" element={<Usuarios />} />

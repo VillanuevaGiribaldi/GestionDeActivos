@@ -127,7 +127,6 @@ class Activo {
             idPersona, atributoClave, atributoValor, 
             ordenColumna, ordenDireccion, limit, offset 
         } = filtros;
-        console.log(filtros)
         const result = await pool.execute(
             `CALL sp_buscarActivosAvanzado( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? );`, 
             [
