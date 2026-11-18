@@ -12,7 +12,7 @@ http:
       {
         "imagen": {
           "idActivo": 1,
-          "ruta":"/img/activo1.png",
+          "ruta":"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQn_iLiOPHaXS4w_A0x0Wegf47WKd4lYLGzwXSuy1LTk1pLwIkblV5Jztvw&s=10",
           "descripcion":"pc de escritorio",
           "estado":"A",
           "fecha": "2026-08-20T11:00:00.000Z"

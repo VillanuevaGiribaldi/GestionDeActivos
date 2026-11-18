@@ -12,7 +12,7 @@ http:
       {
         "atributo": {
           "idAtributo": 1,
-          "nombre":"almacenamiento",
+          "nombre":"cpu",
           "idTipo": 1,
           "tipo": "PC",
           "obligatorio": 0,

@@ -3,7 +3,6 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Login from "./pages/Login.tsx";
 import Main from "./pages/Main.tsx";
 import BuscadorActivos from './pages/activo/BuscadorActivos';
-import Activos from './pages/activo/Activos';
 
 import Activo from "./pages/activo/Activo.tsx";
 import ProtectedRoute from "./auth/ProtectedRoute";
@@ -32,8 +31,8 @@ function App() {
             <Route path="/" element={<Main />} />
             <Route path="/activos" element={<BuscadorActivos />} />
             <Route path="/activo/:id" element={<Activo />} />
+            
             {/* Ruta para el nuevo módulo auxiliar */}
-            <Route path="/activos" element={<Activos />} />
             <Route path="/ubicaciones" element={<Ubicaciones />} />
             <Route path="/proveedores" element={<Proveedores />} />
 

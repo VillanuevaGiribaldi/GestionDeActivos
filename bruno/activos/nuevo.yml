@@ -11,7 +11,7 @@ http:
     data: |-
       {
         "activo": {
-          "idMarca": 2,
+          "idMarca": 1,
           "idUbicacion": 2,
           "idTipo": 4,
           "idEstado": 1,
@@ -25,7 +25,7 @@ http:
             "6": "Windows"
           },
           "precioUnitario": 850000.00,
-          "numeroSerie": "SN-PC-2026-001",
+          "numeroSerie": "SN-PC-2026-019",
           "modelo": "Dell OptiPlex 7090"
         }
       }
