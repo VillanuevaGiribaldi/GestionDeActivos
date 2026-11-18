@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 //import { useNavigate } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import { buscarActivos } from '../../assets/services/busquedaService';
 import type { ActivoAvanzado } from '../../types/activoAvanzado';
 
@@ -11,7 +12,8 @@ export default function BuscadorActivos() {
     const [activos, setActivos] = useState<ActivoAvanzado[]>([]);
     const [cargando, setCargando] = useState(true);
     const [textoBusqueda, setTextoBusqueda] = useState('');
-   
+    
+    const [searchParams] = useSearchParams();
     //const navigate = useNavigate();
 
     // Efecto para buscar. Se dispara al montar o cuando el usuario tipea
@@ -20,8 +22,18 @@ export default function BuscadorActivos() {
             const filtros: FiltrosActivosAvanzado={};
             setCargando(true);
             try {
-                filtros.filtroTexto=textoBusqueda
-                filtros.idMarca=1
+                // Filtro principal: El texto escrito en la barra
+                if (textoBusqueda) {
+                    filtros.filtroTexto = textoBusqueda;
+                }
+        
+                const idMarcaUrl = searchParams.get('idMarca');
+                if (idMarcaUrl) {
+                    filtros.idMarca = parseInt(idMarcaUrl);
+                }
+
+                const idTipoUrl = searchParams.get('idTipo');
+                if (idTipoUrl) filtros.idTipo = parseInt(idTipoUrl);
                 
                 // Pasamos el texto ingresado como parámetro "filtroTexto" al backend
                 const respuesta = await buscarActivos(filtros);

@@ -5,11 +5,21 @@ import {
     Table, TableBody, TableCell, TableContainer,
     TableHead, TableRow, Paper, Chip
 } from "@mui/material";
+import { useNavigate } from "react-router-dom";
 
 export default function Marcas() {
     const [marcas, setMarcas] = useState<Marca[]>([]);
     const [cargando, setCargando] = useState(true);
     const [error, setError] = useState<string | null>(null);
+
+    // 1. Inicializamos navigate
+    const navigate = useNavigate();
+
+    // 2. Creamos la función manejadora
+    const handleFilaClick = (idMarca: number) => {
+        // Redirige a la pantalla de activos con el filtro aplicado
+        navigate(`/activos?idMarca=${idMarca}`);
+    };
 
     useEffect(() => {
         const fetchMarcas = async () => {
@@ -72,6 +82,9 @@ export default function Marcas() {
                                 <TableRow 
                                     key={marca.idMarca}
                                     hover
+                                    // 3. Agregamos el evento onClick
+                                    onClick={() => handleFilaClick(marca.idMarca)}
+                                    // Mantenemos el cursor pointer para indicar que es clickeable
                                     style={{ cursor: 'pointer' }}
                                 >
                                     <TableCell>{marca.idMarca}</TableCell>

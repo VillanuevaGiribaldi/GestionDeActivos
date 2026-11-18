@@ -5,11 +5,19 @@ import {
     Table, TableBody, TableCell, TableContainer,
     TableHead, TableRow, Paper, Chip
 } from "@mui/material";
+import { useNavigate } from "react-router-dom";
 
 export default function Tipos() {
     const [tipos, setTipos] = useState<Tipo[]>([]);
     const [cargando, setCargando] = useState(true);
     const [error, setError] = useState<string | null>(null);
+
+
+    const navigate = useNavigate();
+
+    const handleFilaClick = (idTipo: number) => {
+        navigate(`/activos?idTipo=${idTipo}`);
+    };
 
     useEffect(() => {
         const fetchTipos = async () => {
@@ -70,6 +78,7 @@ export default function Tipos() {
                                 <TableRow 
                                     key={tipo.idTipo}
                                     hover
+                                    onClick={() => handleFilaClick(tipo.idTipo)}
                                     style={{ cursor: 'pointer' }}
                                 >
                                     <TableCell>{tipo.idTipo}</TableCell>
