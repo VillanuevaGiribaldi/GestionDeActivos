@@ -30,7 +30,6 @@ export default function ResultadosBusqueda<T extends {
             <Table stickyHeader size="small">
                 <TableHead>
                     <TableRow>
-                        <TableCell><strong>ID</strong></TableCell>
                         <TableCell><strong>Activo</strong></TableCell>
                         <TableCell><strong>Tipo</strong></TableCell>
                         <TableCell><strong>Marca</strong></TableCell>
@@ -64,7 +63,6 @@ export default function ResultadosBusqueda<T extends {
                             
                                 
                             >
-                                <TableCell>{item.idActivo}</TableCell>
                                 <TableCell>
                                     {item.nombreActivo}
                                 </TableCell>

@@ -4,11 +4,17 @@ import { useEffect,useState } from 'react';
 import { buscarActivos } from '../../assets/services/busquedaService.tsx';
 import type { FiltrosActivosAvanzado } from '../../types/filtrosActivosAvanzado.tsx';
 import { useParams } from 'react-router-dom';
+import type { Persona } from '../../types/persona.tsx';
+import type { Usuario } from '../../types/usuario.tsx';
+
+
 
 export default function PersonaDetalle() {
     const [activos, setActivos] = useState<ActivoAvanzado[]>([]);
     const [cargando, setCargando] = useState(true);
     const { id } = useParams<{ id: string }>();
+    const [persona, setPersona] = useState<Persona>();
+    const [usuario, setUsuario] = useState<Usuario>()
     useEffect(() => {
             const fetchActivos = async () => {
                 setCargando(true);

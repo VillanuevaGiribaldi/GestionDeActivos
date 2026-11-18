@@ -8,6 +8,7 @@ import type { ActivoAvanzado } from '../../types/activoAvanzado';
 import BarraBusqueda from '../../components/BarraBusquedaTexto.tsx';
 import ResultadosBusqueda from '../../components/ResultadosBusqueda.tsx';
 import type { FiltrosActivosAvanzado } from '../../types/filtrosActivosAvanzado.tsx';
+
 export default function BuscadorActivos() {
     const [activos, setActivos] = useState<ActivoAvanzado[]>([]);
     const [cargando, setCargando] = useState(true);
