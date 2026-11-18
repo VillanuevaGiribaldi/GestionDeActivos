@@ -46,6 +46,13 @@ class Usuario {
         )
         return result[0][0][0]
     }
+    static async buscarPorIdPersona(id) {
+        const result = await pool.execute
+        (
+            'CALL sp_buscarPersonaAvanzado( NULL, ? , NULL, NULL );', [id]
+        )
+        return result[0][0][0]
+    }
 
     async compararContrasenia(password){
         if (!password || !this.passwordHash) return false;

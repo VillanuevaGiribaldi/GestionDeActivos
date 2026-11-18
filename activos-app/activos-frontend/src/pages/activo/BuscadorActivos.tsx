@@ -22,7 +22,7 @@ export default function BuscadorActivos() {
             setCargando(true);
             try {
                 filtros.filtroTexto=textoBusqueda
-                filtros.idMarca=1
+                
                 
                 // Pasamos el texto ingresado como parámetro "filtroTexto" al backend
                 const respuesta = await buscarActivos(filtros);

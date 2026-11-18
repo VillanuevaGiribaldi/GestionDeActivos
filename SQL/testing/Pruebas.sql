@@ -377,7 +377,7 @@ CALL `sp_buscarActivosAvanzado`('pc-',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NU
 -- ==========================================
 CALL sp_modificarActivo(
     @idActivoTest, @idUsuarioJuan,
-    'Corsair', 'Oficina IT', 'PC', 'Operativo',
+    1, 1, 4, 3,
     NULL, @idCarlos, NULL, 'PC-LINUX-01',
     2000.00, 'COR-PC-UBUNTU', 'One i300'
 );
@@ -423,3 +423,19 @@ SELECT * from `Estados`;
 call `sp_listarValoresActivo`(@idActivoTest);
 select * from `Ubicaciones`;
 call `sp_listarEstados`(NULL);
+
+SELECT
+        p.nombre, 
+        p.apellido, 
+        p.dni, 
+        p.cargo,
+        p.estado,
+        u.idUsuario,
+        u.idPersona, 
+        u.username, 
+        u.password, 
+        u.rol, 
+        u.estado    
+    FROM `Personas` p
+    LEFT JOIN `Usuarios` u on u.`idPersona` = p.`idPersona`
+    WHERE u.`idPersona` = 9

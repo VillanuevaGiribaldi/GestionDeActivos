@@ -603,17 +603,56 @@ BEGIN
         u.username, 
         u.password, 
         u.rol, 
-        u.estado, 
+        u.estado,
         p.nombre, 
         p.apellido, 
         p.dni, 
-        p.cargo 
+        p.cargo
+         
     FROM `Usuarios` u
     LEFT JOIN `Personas` p ON u.`idPersona` = p.`idPersona`
     WHERE u.`idUsuario` = pId;
 END//
 DELIMITER ;
 
+DROP PROCEDURE IF EXISTS sp_buscarPersonaAvanzado;
+DELIMITER //
+
+CREATE PROCEDURE sp_buscarPersonaAvanzado(
+    -- 1. Búsqueda global de texto
+    IN pFiltroTexto VARCHAR(100), 
+    
+    -- 2. Filtros exactos por catálogos (Opcionales, envían IDs)
+    IN pIdPersona INT,
+    IN pIdUsuario INT,
+    IN pEstado CHAR
+)
+BEGIN
+    IF pFiltroTexto IS NOT NULL THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El filtro de texto para personas no se encuentra implementado, por favor no lo ingrese';
+    END IF;
+    IF pIdPersona IS NULL AND pIdUsuario IS NULL THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El id de persona o usuario a buscar son obliagatorios';
+    END IF;
+    SELECT
+        p.nombre, 
+        p.apellido, 
+        p.dni, 
+        p.cargo,
+        p.estado,
+        u.idUsuario,
+        u.idPersona, 
+        u.username, 
+        u.password, 
+        u.rol, 
+        u.estado    
+    FROM `Personas` p
+    LEFT JOIN `Usuarios` u on u.`idPersona` = p.`idPersona`
+    WHERE (p.`idPersona` = pIdPersona OR  pIdPersona IS NULL ) AND (u.`idUsuario` = pIdUsuario OR pIdUsuario IS NULL )
+        AND (pEstado = p.estado OR pEstado IS NULL);      
+
+END//
+DELIMITER ;
 DROP PROCEDURE IF EXISTS sp_buscarIdPersona;
 DELIMITER //
 

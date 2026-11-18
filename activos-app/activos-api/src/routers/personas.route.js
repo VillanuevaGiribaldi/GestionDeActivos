@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { altaPersona, bajaPersona, getPersona, listarPersonas, modificarPersona, nuevaPersona } from '../controllers/personas.controller.js'
 import { authDefault } from "../controllers/auth.controller.js";
-
+import { getPersonaDeUsuario } from "../controllers/usuarios.controller.js";
 const router = Router();
 
 // AGREGAMOS LA RUTA PARA LISTAR TODOS:
@@ -13,5 +13,9 @@ router.route('/:id').get(authDefault, getPersona);
 router.route('/:id','/:id/baja').delete(authDefault, bajaPersona)
 router.route('/:id/alta').put(authDefault, altaPersona)
 router.route('/:id').put(authDefault, modificarPersona)
+
+
+router.route('/:id/usuario').get(authDefault, getPersonaDeUsuario)
+
 
 export default router;

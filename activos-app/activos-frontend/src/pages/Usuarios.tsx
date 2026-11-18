@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { getUsuarios } from '../assets/services/usuarioService';
+import { listarUsuarios } from '../assets/services/usuarioService';
 import type { Usuario } from '../types/usuario';
 import {
     Table, TableBody, TableCell, TableContainer,
@@ -14,7 +14,7 @@ export default function Usuarios() {
     useEffect(() => {
         const fetchUsuarios = async () => {
             try {
-                const respuesta = await getUsuarios();
+                const respuesta = await listarUsuarios();
                 
                 if (respuesta.error) {
                     setError(respuesta.error);

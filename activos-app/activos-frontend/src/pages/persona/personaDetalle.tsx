@@ -6,18 +6,18 @@ import type { FiltrosActivosAvanzado } from '../../types/filtrosActivosAvanzado.
 import { useParams } from 'react-router-dom';
 import type { Persona } from '../../types/persona.tsx';
 import type { Usuario } from '../../types/usuario.tsx';
-
-
+import { getUsuarioPersona, listarUsuarios } from '../../assets/services/usuarioService.tsx';
+import TarjetaPersona from '../../components/TarjetaPersona.tsx';
 
 export default function PersonaDetalle() {
     const [activos, setActivos] = useState<ActivoAvanzado[]>([]);
-    const [cargando, setCargando] = useState(true);
-    const { id } = useParams<{ id: string }>();
-    const [persona, setPersona] = useState<Persona>();
-    const [usuario, setUsuario] = useState<Usuario>()
+    const [cargandoActivos, setCargandoActivos] = useState(true);
+    const [cargandoUsuario, setCargandoUsuario] = useState(true);
+    const { id } = (useParams<{ id: string }>());
+    const [usuario, setUsuario] = useState<Usuario>();
     useEffect(() => {
             const fetchActivos = async () => {
-                setCargando(true);
+                setCargandoActivos(true);
                 try {
                     const filtros: FiltrosActivosAvanzado={}
                     if(id){
@@ -33,20 +33,42 @@ export default function PersonaDetalle() {
                 } catch (error) {
                     console.error("Error al buscar activos:", error);
                 } finally {
-                    setCargando(false);
+                    setCargandoActivos(false);
                 }
             };
+            const fetchInfoPersona= async () => {
+                setCargandoUsuario(true);
+                try {
+                    
+                    // Pasamos el texto ingresado como parámetro "filtroTexto" al backend
+                    if(!id){
+                        throw new Error("id inexistente")
+                    }
+                    const respuesta = await getUsuarioPersona(parseInt(id))
+                    console.log("Persona recibida: "+JSON.stringify(respuesta))
+                    if (respuesta.data) {
+                        setUsuario(respuesta.data);
+                    }
+                } catch (error) {
+                    console.error("Error al buscar activos:", error);
+                } finally {
+                    setCargandoActivos(false);
+                }
+            }
+            
         // Un simple "debounce" para no saturar la BD en cada pulsación de tecla
-        const delaySearch = setTimeout(fetchActivos, 400);
-        return () => clearTimeout(delaySearch);
+        fetchActivos()
+        fetchInfoPersona()
         
     }, []);
     return(
         <>
             <h1>Detalle Persona</h1>
+            <TarjetaPersona
+                PersonaData={usuario}/>
             <ResultadosBusqueda 
                 results={activos}
-                loading={cargando}
+                loading={cargandoActivos}
                                 
             />
         </>

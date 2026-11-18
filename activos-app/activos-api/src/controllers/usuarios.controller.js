@@ -129,9 +129,27 @@ const getUsuario = async (req, res) => {
         }
         delete usuarioData.password
         res.status(200).json({
-            usuario: usuarioData,
+            data: usuarioData,
             message: "Se encontró el usuario indicado"
         })
+    /*    
+        res.status(200).json({
+            data: {
+                idUsuario: usuarioData.idUsuario,
+                idPersona: usuarioData.idPersona,
+                username: usuarioData.username, 
+                rol: usuarioData.rol, 
+                estado: usuarioData.estado,
+                persona: {
+                    nombre: usuarioData.nombre, 
+                    apellido: usuarioData.apellido, 
+                    dni: usuarioData.dni, 
+                    cargo: usuarioData.cargo,
+                }
+            },
+            message: "Se encontró el usuario indicado"
+        })
+            */
     } catch (error) {
         catchSQL45000(res, error,"No se pudo encontrar el usuario")
         res.status(500).json({
@@ -165,6 +183,47 @@ const listarUsuarios = async (req, res) => {
     }
 }
 
+const getUsuariosDePersona = async (req, res) => {
+
+    try {
+        const usuarioData = await Usuario.buscarPorIdPersona(req.params.id)
+        if (!usuarioData) {
+            res.status(404).json({
+                message: "La persona indicada no tiene un usuario asociado o no"
+            })
+            return
+        }
+        delete usuarioData.password
+        res.status(200).json({
+            data: usuarioData,
+            message: "Se encontró el usuario indicado"
+        })
+    /*    
+        res.status(200).json({
+            data: {
+                idUsuario: usuarioData.idUsuario,
+                idPersona: usuarioData.idPersona,
+                username: usuarioData.username, 
+                rol: usuarioData.rol, 
+                estado: usuarioData.estado,
+                persona: {
+                    nombre: usuarioData.nombre, 
+                    apellido: usuarioData.apellido, 
+                    dni: usuarioData.dni, 
+                    cargo: usuarioData.cargo,
+                }
+            },
+            message: "Se encontró el usuario indicado"
+        })
+            */
+    } catch (error) {
+        catchSQL45000(res, error,"No se pudo encontrar el usuario")
+        if(!res.headersSent) res.status(500).json({
+            message: "error interno al buscar el usuario"
+        })
+        console.log(error)
+    }
+}
 
 export {
     nuevoUsuario,
@@ -173,5 +232,6 @@ export {
     altaUsuario,
     getUsuario,
     encriptar,
-    listarUsuarios
+    listarUsuarios,
+    getUsuariosDePersona as getPersonaDeUsuario
 }

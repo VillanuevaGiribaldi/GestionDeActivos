@@ -26,7 +26,8 @@ export default function ResultadosBusqueda<T extends {
     const navigate = useNavigate()
 
     return(
-         <TableContainer component={Paper}>
+         <TableContainer component={Paper}
+         >
             <Table stickyHeader size="small">
                 <TableHead>
                     <TableRow>

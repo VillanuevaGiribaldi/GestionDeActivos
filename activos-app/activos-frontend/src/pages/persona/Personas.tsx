@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getPersonas } from '../../assets/services/personaService';
+import { listarPersonas } from '../../assets/services/personaService';
 import type { Persona } from '../../types/persona';
 import {
     Table, TableBody, TableCell, TableContainer,
@@ -16,7 +16,7 @@ export default function Personas() {
     useEffect(() => {
         const fetchPersonas = async () => {
             try {
-                const respuesta = await getPersonas();
+                const respuesta = await listarPersonas();
                 
                 if (respuesta.error) {
                     setError(respuesta.error);
