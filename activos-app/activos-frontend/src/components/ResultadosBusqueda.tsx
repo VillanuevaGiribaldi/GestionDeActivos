@@ -34,7 +34,7 @@ export default function ResultadosBusqueda<T extends {
                         <TableCell><strong>Activo</strong></TableCell>
                         <TableCell><strong>Tipo</strong></TableCell>
                         <TableCell><strong>Marca</strong></TableCell>
-                        <TableCell><strong>Serie</strong></TableCell>
+                        <TableCell><strong>Numero de Serie</strong></TableCell>
                         <TableCell><strong>Estado</strong></TableCell>
                         <TableCell><strong>Ubicación</strong></TableCell>
                     </TableRow>
@@ -61,8 +61,6 @@ export default function ResultadosBusqueda<T extends {
                                 title="ir al Activo..."
                                 onClick={() => navigate(`/activo/${item.idActivo}`)}
                                 sx={{ cursor: "pointer" }}
-                            
-                                
                             >
                                 <TableCell>
                                     {item.nombreActivo}

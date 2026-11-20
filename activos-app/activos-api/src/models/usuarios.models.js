@@ -135,7 +135,13 @@ class Usuario {
     }
     static async listarUsuarios(estado) {
     const result = await pool.execute('CALL sp_listarUsuarios( ? );', [estado || null]);
-    return result[0][0]; 
+    return result[0][0].map(({ nombrePersona, apellidoPersona, dniPersona, cargoPersona, ...resto }) => ({
+        ...resto,
+        nombre: nombrePersona,
+        apellido: apellidoPersona,
+        dni: dniPersona,
+        cargo: cargoPersona
+    })) 
 }
 
 }

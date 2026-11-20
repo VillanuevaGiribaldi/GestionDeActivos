@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
-import { listarUsuarios } from '../assets/services/usuarioService';
-import type { Usuario } from '../types/usuario';
+import { useNavigate } from 'react-router-dom';
+
+import { listarUsuarios } from '@/assets/services/usuarioService';
+import type { Usuario } from '@/types/usuario';
 import {
     Table, TableBody, TableCell, TableContainer,
     TableHead, TableRow, Paper, Chip
@@ -10,6 +12,7 @@ export default function Usuarios() {
     const [usuarios, setUsuarios] = useState<Usuario[]>([]);
     const [cargando, setCargando] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const navigate = useNavigate();
 
     useEffect(() => {
         const fetchUsuarios = async () => {
@@ -73,6 +76,7 @@ export default function Usuarios() {
                                     key={usuario.idUsuario}
                                     hover
                                     style={{ cursor: 'pointer' }}
+                                    onClick={() => navigate(`/Persona/${usuario.idPersona}`)}
                                 >
                                     <TableCell>{usuario.idUsuario}</TableCell>
                                     <TableCell className="font-medium text-gray-900">
@@ -89,10 +93,10 @@ export default function Usuarios() {
                                         </span>
                                     </TableCell>
                                     <TableCell className="text-gray-600">
-                                        {usuario.nombrePersona} {usuario.apellidoPersona}
+                                        {usuario.nombre} {usuario.apellido}
                                     </TableCell>
                                     <TableCell className="text-gray-500">
-                                        {usuario.cargoPersona || "-"}
+                                        {usuario.cargo || "-"}
                                     </TableCell>
                                     <TableCell>
                                         <Chip 

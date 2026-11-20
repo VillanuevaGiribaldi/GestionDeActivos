@@ -1,13 +1,12 @@
-import ResultadosBusqueda from '../../components/ResultadosBusqueda.tsx';
-import type { ActivoAvanzado } from '../../types/activoAvanzado.tsx';
+import ResultadosBusqueda from '@/components/ResultadosBusqueda.tsx';
+import type { ActivoAvanzado } from '@/types/activoAvanzado.tsx';
 import { useEffect,useState } from 'react';
-import { buscarActivos } from '../../assets/services/busquedaService.tsx';
-import type { FiltrosActivosAvanzado } from '../../types/filtrosActivosAvanzado.tsx';
+import { buscarActivos } from '@/assets/services/busquedaService.tsx';
+import type { FiltrosActivosAvanzado } from '@/types/filtrosActivosAvanzado.tsx';
 import { useParams } from 'react-router-dom';
-import type { Persona } from '../../types/persona.tsx';
-import type { Usuario } from '../../types/usuario.tsx';
-import { getUsuarioPersona, listarUsuarios } from '../../assets/services/usuarioService.tsx';
-import TarjetaPersona from '../../components/TarjetaPersona.tsx';
+import type { Usuario } from '@/types/usuario.tsx';
+import { getUsuarioPersona } from '@/assets/services/usuarioService.tsx';
+import TarjetaPersona from '@/components/TarjetaPersona.tsx';
 
 export default function PersonaDetalle() {
     const [activos, setActivos] = useState<ActivoAvanzado[]>([]);

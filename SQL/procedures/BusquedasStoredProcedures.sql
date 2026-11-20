@@ -645,7 +645,7 @@ BEGIN
         u.username, 
         u.password, 
         u.rol, 
-        u.estado    
+        u.estado as estadoUsuario   
     FROM `Personas` p
     LEFT JOIN `Usuarios` u on u.`idPersona` = p.`idPersona`
     WHERE (p.`idPersona` = pIdPersona OR  pIdPersona IS NULL ) AND (u.`idUsuario` = pIdUsuario OR pIdUsuario IS NULL )
@@ -696,6 +696,7 @@ CREATE PROCEDURE sp_buscarIdProveedor(
     IN pId INT
 )
 BEGIN
+
     SELECT 
         idProveedor, 
         nombre, 
@@ -706,6 +707,42 @@ BEGIN
         estado 
     FROM Proveedores
     WHERE idProveedor = pId;
+END//
+DELIMITER ;
+
+DROP PROCEDURE IF EXISTS sp_detalleProveedor;
+DELIMITER //
+CREATE PROCEDURE sp_detalleProveedor(
+    IN pIdProveedor INT,
+    IN pFechaInicio DATETIME,
+    IN pFechaFin DATETIME,
+    IN pTipoDetalle ENUM('Facturas','Mantenimientos')
+)
+BEGIN
+    IF pIdProveedor IS NULL OR NOT EXISTS (SELECT 1 FROM `Proveedores` where `idProveedor`=pIdProveedor) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Debe indicar un proveedor valido';
+    END IF;
+    IF pFechaInicio IS NOT NULL AND pFechaFin IS NOT NULL AND pFechaInicio > pFechaFin THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'La fecha de inicio no puede ser mayor a la fecha de fin';
+    END IF;
+
+    SELECT 'Factura' as `Tipo` ,a.`idActivo`,a.nombre,f.monto,'-' as `fechaEnvio`,f.fecha as `fechaDevolucion`  FROM `Facturas` f 
+    LEFT JOIN `Activos` a ON a.`idFactura`=f.`idFactura`
+    WHERE 
+        -- Filtros dinámicos por rango de fechas
+        (pFechaInicio IS NULL OR f.fecha >= pFechaInicio) AND
+        (pFechaFin IS NULL OR f.fecha <= pFechaFin) AND 
+        f.`idProveedor`= pIdProveedor
+    
+    UNION
+    SELECT 'Mantenimiento',a.`idActivo`,a.nombre,m.`costoTotal`,m.`fechaEnvio`,m.`fechaDevolucion` FROM `Mantenimientos` m 
+    LEFT JOIN `Activos` a ON a.`idActivo`=m.`idActivo`
+    WHERE 
+        -- Filtros dinámicos por rango de fechas
+        (pFechaInicio IS NULL OR m.`fechaDevolucion` >= pFechaInicio) AND
+        (pFechaFin IS NULL OR m.`fechaDevolucion` <= pFechaFin) AND
+        m.`idProveedor`=pIdProveedor 
+    ORDER BY `fechaDevolucion` DESC;
 END//
 DELIMITER ;
 

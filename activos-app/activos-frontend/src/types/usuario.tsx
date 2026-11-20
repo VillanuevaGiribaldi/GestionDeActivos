@@ -4,6 +4,6 @@ export interface Usuario extends Persona {
     idUsuario: number;
     username: string;
     rol: string;
-    estado: string;
+    estadoUsuario: string;
     // Datos de la persona asociada
 }

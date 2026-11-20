@@ -12,7 +12,7 @@ import Proveedores from './pages/Proveedores';
 import Personas from "./pages/persona/Personas.tsx";
 import Marcas from "./pages/Marcas.tsx";
 import Tipos from "./pages/Tipos.tsx";
-import Usuarios from "./pages/Usuarios.tsx";
+import Usuarios from "./pages/usuario/Usuarios.tsx";
 import Estados from './pages/Estados';
 import Facturas from "./pages/Factura.tsx";
 import Mantenimientos from "./pages/Mantenimiento.tsx";

@@ -93,7 +93,7 @@ export default function TarjetaPersona({ PersonaData }: TarjetaPersonaProps){
                                 
                             </Box>
                             <Estado
-                                    estado={PersonaData.estado}
+                                    estado={PersonaData.estadoUsuario}
                                 />
                         </Box>
 
