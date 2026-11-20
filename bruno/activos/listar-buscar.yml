@@ -11,8 +11,7 @@ http:
     data: |-
       {
         "filtros":{
-          "filtroTexto":"",
-          "idTipo": 4
+          "filtroTexto":""
         }
       } 
   auth: inherit

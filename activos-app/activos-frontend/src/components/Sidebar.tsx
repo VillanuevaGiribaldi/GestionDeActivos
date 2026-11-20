@@ -22,6 +22,7 @@ import FactCheckIcon from '@mui/icons-material/FactCheck';
 import ReceiptIcon from '@mui/icons-material/Receipt';
 import EngineeringIcon from '@mui/icons-material/Engineering';
 import PhotoLibraryIcon from '@mui/icons-material/PhotoLibrary';
+import HistoryIcon from '@mui/icons-material/History'
 
 import { useNavigate } from 'react-router-dom';
 
@@ -91,6 +92,22 @@ export default function Sidebar() {
                                 <InventoryIcon />
                             </ListItemIcon>
                             <ListItemText primary="Activos" />
+                        </ListItemButton>
+                    </ListItem>
+                    <ListItem disablePadding>
+                        <ListItemButton 
+                            component={Link} 
+                            to="/historial"
+                            selected={location.pathname.startsWith('/historial')}
+                            sx={{
+                                '&.Mui-selected': { backgroundColor: '#334155', borderLeft: '4px solid #3b82f6' },
+                                '&:hover': { backgroundColor: '#334155' }
+                            }}
+                        >
+                            <ListItemIcon sx={{ color: 'white' }}>
+                                <HistoryIcon />
+                            </ListItemIcon>
+                            <ListItemText primary="Historial" />
                         </ListItemButton>
                     </ListItem>
                     <ListItem disablePadding>
