@@ -18,6 +18,8 @@ import Facturas from "./pages/Factura.tsx";
 import Mantenimientos from "./pages/Mantenimiento.tsx";
 import Imagenes from "./pages/Imagenes.tsx";
 import PersonaDetalle from "./pages/persona/personaDetalle.tsx";
+import Historial from "./pages/Historial.tsx";
+
 function App() {
   return (
     <Router>
@@ -46,6 +48,7 @@ function App() {
             <Route path="/facturas" element={<Facturas />} />
             <Route path="/mantenimientos" element={<Mantenimientos />} />
             <Route path="/imagenes" element={<Imagenes />} />
+            <Route path="/historial" element={<Historial />} />
           </Route>
         </Route> 
       </Routes>

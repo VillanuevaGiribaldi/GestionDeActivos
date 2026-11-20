@@ -20,7 +20,7 @@ import composicionRouter from './routers/composicionTipos.route.js'
 import activosRouter from './routers/activos.router.js'
 
 import mantenimientosRouter from './routers/mantenimientos.route.js';
-
+import historialRouter from './routers/historial.router.js'
 
 // declarar las rutas
 app.use("/api/usuario", userRouter)
@@ -41,6 +41,7 @@ app.use('/api/activo', activosRouter);
 app.use('/api/imagen', imagenesRouter)
 app.use('/api/atributo', atributosRouter)
 app.use('/api/mantenimiento', mantenimientosRouter);
+app.use('/api/historial', historialRouter);
 
 
 export default app
