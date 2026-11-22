@@ -1,26 +1,30 @@
 import { useEffect, useState } from 'react';
-import { listarMantenimientos } from '../assets/services/mantenimientoService';
-import type { Mantenimiento } from '../types/mantenimiento';
+import { useNavigate } from 'react-router-dom';
+import { getProveedores } from '../../assets/services/proveedorService';
+import type { Proveedor } from '../../types/proveedor';
 import {
     Table, TableBody, TableCell, TableContainer,
     TableHead, TableRow, Paper, Chip
 } from "@mui/material";
 
-export default function Mantenimientos() {
-    const [mantenimientos, setMantenimientos] = useState<Mantenimiento[]>([]);
+export default function Proveedores() {
+    const navigate = useNavigate();
+
+    const [proveedores, setProveedores] = useState<Proveedor[]>([]);
     const [cargando, setCargando] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
-        const fetchMantenimientos = async () => {
+        const fetchProveedores = async () => {
             try {
-                const respuesta = await listarMantenimientos();
+                const respuesta = await getProveedores();
                 
                 if (respuesta.error) {
                     setError(respuesta.error);
                 } else {
-                    const dataObtenida = (respuesta as any).mantenimientos || respuesta.data || [];
-                    setMantenimientos(dataObtenida);
+                    // Capturamos 'proveedores' (como lo envía tu backend) o 'data'
+                    const dataObtenida = (respuesta as any).proveedores || respuesta.data || [];
+                    setProveedores(dataObtenida);
                 }
             } catch (err) {
                 setError(err instanceof Error ? err.message : "Error desconocido");
@@ -29,7 +33,7 @@ export default function Mantenimientos() {
             }
         };
 
-        fetchMantenimientos();
+        fetchProveedores();
     }, []);
 
     if (error) return (
@@ -40,64 +44,62 @@ export default function Mantenimientos() {
 
     return (
         <div className="p-6 space-y-6">
-            <h1 className="text-3xl font-bold text-gray-800">Registro de Mantenimientos</h1>
+            <h1 className="text-3xl font-bold text-gray-800">Catálogo de Proveedores</h1>
             
             <TableContainer component={Paper} className="shadow-sm border border-gray-100">
                 <Table stickyHeader size="small">
                     <TableHead>
                         <TableRow>
                             <TableCell><strong>ID</strong></TableCell>
-                            <TableCell><strong>Activo</strong></TableCell>
-                            <TableCell><strong>Proveedor</strong></TableCell>
-                            <TableCell><strong>Falla Reportada</strong></TableCell>
-                            <TableCell><strong>Envío</strong></TableCell>
-                            <TableCell><strong>Costo</strong></TableCell>
+                            <TableCell><strong>Razón Social</strong></TableCell>
+                            <TableCell><strong>Dirección</strong></TableCell>
+                            <TableCell><strong>Teléfono</strong></TableCell>
+                            <TableCell><strong>Email</strong></TableCell>
                             <TableCell><strong>Estado</strong></TableCell>
                         </TableRow>
                     </TableHead>
                     <TableBody>
                         {cargando ? (
                             <TableRow>
-                                <TableCell colSpan={7} align="center" className="py-8">
-                                    Cargando historial de reparaciones...
+                                <TableCell colSpan={6} align="center" className="py-8">
+                                    Cargando proveedores...
                                 </TableCell>
                             </TableRow>
-                        ) : mantenimientos.length === 0 ? (
+                        ) : proveedores.length === 0 ? (
                             <TableRow>
-                                <TableCell colSpan={7} align="center" className="py-8 text-gray-500">
-                                    No hay mantenimientos registrados
+                                <TableCell colSpan={6} align="center" className="py-8 text-gray-500">
+                                    No hay proveedores registrados
                                 </TableCell>
                             </TableRow>
                         ) : (
-                            mantenimientos.map((mant) => (
+                            proveedores.map((proveedor) => (
                                 <TableRow 
-                                    key={mant.idMantenimiento}
+                                    key={proveedor.idProveedor}
                                     hover
+                                    onClick={() => navigate(`/proveedor/${proveedor.idProveedor}`)}
                                     style={{ cursor: 'pointer' }}
                                 >
-                                    <TableCell>{mant.idMantenimiento}</TableCell>
+                                    <TableCell>{proveedor.idProveedor}</TableCell>
                                     <TableCell className="font-medium text-gray-900">
-                                        {mant.nombreActivo} <br/>
-                                        <span className="text-xs text-gray-500">{mant.numeroSerie}</span>
+                                        {proveedor.nombre}
                                     </TableCell>
                                     <TableCell className="text-gray-600">
-                                        {mant.nombreProveedor}
+                                        {proveedor.direccion || "-"}
                                     </TableCell>
                                     <TableCell className="text-gray-600">
-                                        {mant.fallaReportada}
+                                        {proveedor.telefono || "-"}
                                     </TableCell>
                                     <TableCell className="text-gray-600">
-                                        {new Date(mant.fechaEnvio).toLocaleDateString('es-AR')}
-                                    </TableCell>
-                                    <TableCell className="text-gray-900 font-medium">
-                                        {mant.costoTotal ? `$ ${Number(mant.costoTotal).toLocaleString('es-AR')}` : "-"}
+                                        <a href={`mailto:${proveedor.mail}`} className="text-blue-600 hover:underline">
+                                            {proveedor.mail || "-"}
+                                        </a>
                                     </TableCell>
                                     <TableCell>
                                         <Chip 
-                                            label={mant.fechaDevolucion ? 'Finalizado' : 'En Curso'} 
-                                            color={mant.fechaDevolucion ? 'default' : 'warning'}
+                                            label={proveedor.estado === 'A' ? 'Activo' : 'Inactivo'} 
+                                            color={proveedor.estado === 'A' ? 'success' : 'default'}
                                             size="small"
-                                            variant={mant.fechaDevolucion ? 'outlined' : 'filled'}
+                                            variant={proveedor.estado === 'A' ? 'filled' : 'outlined'}
                                         />
                                     </TableCell>
                                 </TableRow>

@@ -8,3 +8,9 @@ export const listarMantenimientos = () => {
         method: "GET"
     });
 };
+
+export const getMantenimiento = (id: number) => {
+    return apiRequest<apiResponse<Mantenimiento>>(`/mantenimiento/${id}`, {
+        method: "GET"
+    });
+};

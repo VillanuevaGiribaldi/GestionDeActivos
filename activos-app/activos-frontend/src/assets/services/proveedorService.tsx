@@ -11,3 +11,9 @@ export const getProveedores = (params?: Record<string, string | number>) => {
         method: "GET"
     });
 };
+
+export const getProveedor = (id: number) => {
+    return apiRequest<apiResponse<Proveedor>>(`/proveedor/${id}`, {
+        method: "GET"
+    });
+};

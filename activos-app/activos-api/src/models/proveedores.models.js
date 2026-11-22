@@ -57,7 +57,7 @@ class Proveedor {
 
     static async buscarPorId(idProveedor) {
         const result = await pool.execute('CALL sp_buscarIdProveedor( ? );', [idProveedor]);
-        return result[0][0]; 
+        return result[0][0][0]; 
     }
 
     static async listarProveedor(estado) {

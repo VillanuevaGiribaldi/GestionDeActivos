@@ -11,3 +11,9 @@ export const listarFacturas = (params?: Record<string, string | number>) => {
         method: "GET"
     });
 };
+
+export const getFactura = (id: number) => {
+    return apiRequest<apiResponse<Factura>>(`/factura/${id}`, {
+        method: "GET"
+    });
+};
