@@ -12,3 +12,21 @@ export const listarMarcas = (params?: Record<string, string | number>) => {
         method: "GET"
     });
 };
+
+export interface NuevaMarcaPayload {
+    nombre: string;
+    descripcion?: string;
+    estado?: string;
+}
+
+export const crearMarca = (datos: NuevaMarcaPayload) => {
+    return apiRequest<apiResponse<unknown>>(`/marca/nueva`, {
+        method: "POST",
+        body: JSON.stringify({
+            marca: {
+                ...datos,
+                estado: datos.estado || "A",
+            },
+        }),
+    });
+};

@@ -1,48 +1,90 @@
 import { useEffect, useState } from 'react';
-import { listarMarcas } from '../assets/services/marcaService';
+import { useNavigate } from 'react-router-dom';
+import { listarMarcas, crearMarca } from '../assets/services/marcaService';
 import type { Marca } from '../types/marca';
 import {
     Table, TableBody, TableCell, TableContainer,
-    TableHead, TableRow, Paper, Chip
+    TableHead, TableRow, Paper, Chip,
+    Button, Dialog, DialogTitle, DialogContent,
+    DialogActions, TextField, Alert
 } from "@mui/material";
-import { useNavigate } from "react-router-dom";
+import AddIcon from '@mui/icons-material/Add';
 
 export default function Marcas() {
     const [marcas, setMarcas] = useState<Marca[]>([]);
     const [cargando, setCargando] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
-    // 1. Inicializamos navigate
+    // Estados del modal de creación
+    const [modalAbierto, setModalAbierto] = useState(false);
+    const [nombre, setNombre] = useState('');
+    const [descripcion, setDescripcion] = useState('');
+    const [guardando, setGuardando] = useState(false);
+    const [errorForm, setErrorForm] = useState<string | null>(null);
+
     const navigate = useNavigate();
 
-    // 2. Creamos la función manejadora
     const handleFilaClick = (idMarca: number) => {
-        // Redirige a la pantalla de activos con el filtro aplicado
         navigate(`/activos?idMarca=${idMarca}`);
     };
 
-    useEffect(() => {
-        const fetchMarcas = async () => {
-            try {
-                // Llamamos a nuestro servicio renombrado a listarMarcas
-                const respuesta = await listarMarcas();
-                
-                if (respuesta.error) {
-                    setError(respuesta.error);
-                } else {
-                    // Capturamos el listado dinámicamente
-                    const dataObtenida = (respuesta as any).marcas || respuesta.data || [];
-                    setMarcas(dataObtenida);
-                }
-            } catch (err) {
-                setError(err instanceof Error ? err.message : "Error desconocido");
-            } finally {
-                setCargando(false);
+    const fetchMarcas = async () => {
+        setCargando(true);
+        try {
+            const respuesta = await listarMarcas();
+            if (respuesta.error) {
+                setError(respuesta.error);
+            } else {
+                const dataObtenida = (respuesta as any).marcas || respuesta.data || [];
+                setMarcas(dataObtenida);
             }
-        };
+        } catch (err) {
+            setError(err instanceof Error ? err.message : "Error desconocido");
+        } finally {
+            setCargando(false);
+        }
+    };
 
+    useEffect(() => {
         fetchMarcas();
     }, []);
+
+    const handleCerrarModal = () => {
+        if (guardando) return;
+        setModalAbierto(false);
+        setNombre('');
+        setDescripcion('');
+        setErrorForm(null);
+    };
+
+    const handleCrearMarca = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setErrorForm(null);
+
+        if (!nombre.trim()) {
+            setErrorForm("El nombre de la marca es obligatorio");
+            return;
+        }
+
+        setGuardando(true);
+        try {
+            const respuesta = await crearMarca({
+                nombre: nombre.trim(),
+                descripcion: descripcion.trim(),
+            });
+
+            if (respuesta.error) {
+                setErrorForm(respuesta.error);
+            } else {
+                handleCerrarModal();
+                await fetchMarcas();
+            }
+        } catch (err) {
+            setErrorForm(err instanceof Error ? err.message : "No se pudo crear la marca");
+        } finally {
+            setGuardando(false);
+        }
+    };
 
     if (error) return (
         <div className="p-6 text-center text-red-500 font-bold">
@@ -52,8 +94,17 @@ export default function Marcas() {
 
     return (
         <div className="p-6 space-y-6">
-            <h1 className="text-3xl font-bold text-gray-800">Catálogo de Marcas</h1>
-            
+            <div className="flex items-center justify-between">
+                <h1 className="text-3xl font-bold text-gray-800">Catálogo de Marcas</h1>
+                <Button
+                    variant="contained"
+                    startIcon={<AddIcon />}
+                    onClick={() => setModalAbierto(true)}
+                >
+                    Nueva Marca
+                </Button>
+            </div>
+
             <TableContainer component={Paper} className="shadow-sm border border-gray-100">
                 <Table stickyHeader size="small">
                     <TableHead>
@@ -79,12 +130,10 @@ export default function Marcas() {
                             </TableRow>
                         ) : (
                             marcas.map((marca) => (
-                                <TableRow 
+                                <TableRow
                                     key={marca.idMarca}
                                     hover
-                                    // 3. Agregamos el evento onClick
                                     onClick={() => handleFilaClick(marca.idMarca)}
-                                    // Mantenemos el cursor pointer para indicar que es clickeable
                                     style={{ cursor: 'pointer' }}
                                 >
                                     <TableCell>{marca.idMarca}</TableCell>
@@ -95,8 +144,8 @@ export default function Marcas() {
                                         {marca.descripcion || "-"}
                                     </TableCell>
                                     <TableCell>
-                                        <Chip 
-                                            label={marca.estado === 'A' ? 'Activa' : 'Inactiva'} 
+                                        <Chip
+                                            label={marca.estado === 'A' ? 'Activa' : 'Inactiva'}
                                             color={marca.estado === 'A' ? 'success' : 'default'}
                                             size="small"
                                             variant={marca.estado === 'A' ? 'filled' : 'outlined'}
@@ -108,6 +157,42 @@ export default function Marcas() {
                     </TableBody>
                 </Table>
             </TableContainer>
+
+            <Dialog open={modalAbierto} onClose={handleCerrarModal} fullWidth maxWidth="sm">
+                <form onSubmit={handleCrearMarca}>
+                    <DialogTitle>Nueva Marca</DialogTitle>
+                    <DialogContent className="space-y-4 !pt-2">
+                        {errorForm && <Alert severity="error">{errorForm}</Alert>}
+
+                        <TextField
+                            label="Nombre"
+                            fullWidth
+                            required
+                            autoFocus
+                            value={nombre}
+                            onChange={(e) => setNombre(e.target.value)}
+                            placeholder="Ej: ASUS"
+                        />
+                        <TextField
+                            label="Descripción"
+                            fullWidth
+                            multiline
+                            rows={2}
+                            value={descripcion}
+                            onChange={(e) => setDescripcion(e.target.value)}
+                            placeholder="Ej: Fabricante de hardware y notebooks"
+                        />
+                    </DialogContent>
+                    <DialogActions className="px-6 pb-4">
+                        <Button onClick={handleCerrarModal} disabled={guardando}>
+                            Cancelar
+                        </Button>
+                        <Button type="submit" variant="contained" disabled={guardando}>
+                            {guardando ? "Guardando..." : "Guardar"}
+                        </Button>
+                    </DialogActions>
+                </form>
+            </Dialog>
         </div>
     );
 }
