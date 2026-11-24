@@ -30,3 +30,33 @@ export const crearMarca = (datos: NuevaMarcaPayload) => {
         }),
     });
 };
+
+export interface ModificarMarcaPayload {
+    nombre: string;
+    descripcion?: string;
+}
+
+export const modificarMarca = (idMarca: number, datos: ModificarMarcaPayload) => {
+    return apiRequest<apiResponse<unknown>>(`/marca/${idMarca}`, {
+        method: "PUT",
+        body: JSON.stringify({
+            marca: {
+                idMarca,
+                nombre: datos.nombre,
+                descripcion: datos.descripcion ?? "",
+            },
+        }),
+    });
+};
+
+export const bajaMarca = (idMarca: number) => {
+    return apiRequest<apiResponse<unknown>>(`/marca/${idMarca}`, {
+        method: "DELETE",
+    });
+};
+
+export const altaMarca = (idMarca: number) => {
+    return apiRequest<apiResponse<unknown>>(`/marca/${idMarca}/alta`, {
+        method: "PUT",
+    });
+};
