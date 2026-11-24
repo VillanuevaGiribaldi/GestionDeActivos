@@ -5,9 +5,10 @@ import {
     listarProveedores, 
     modificarProveedor, 
     bajaProveedor, 
-    altaProveedor 
+    altaProveedor, 
+    detalleProveedor
 } from '../controllers/proveedores.controller.js';
-import { authDefault } from "../controllers/auth.controller.js";
+import { authDefault, authView } from "../controllers/auth.controller.js";
 
 const router = Router();
 
@@ -21,5 +22,7 @@ router.route('/:id').put(authDefault, modificarProveedor);
 // Alta y Baja lógica (Nota: corregido a ruta limpia /:id para el DELETE)
 router.route('/:id').delete(authDefault, bajaProveedor);
 router.route('/:id/alta').put(authDefault, altaProveedor);
+
+router.route('/:id/detalle').get(authView,detalleProveedor);
 
 export default router;

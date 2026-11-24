@@ -726,7 +726,7 @@ BEGIN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'La fecha de inicio no puede ser mayor a la fecha de fin';
     END IF;
 
-    SELECT 'Factura' as `Tipo` ,a.`idActivo`,a.nombre,f.monto,'-' as `fechaEnvio`,f.fecha as `fechaDevolucion`  FROM `Facturas` f 
+    SELECT 'Factura' as `tipo` ,a.`idActivo`,a.nombre,f.monto,'-' as `fechaEnvio`,f.fecha as `fechaDevolucion`,f.`idFactura`,NULL as `idMantenimiento`  FROM `Facturas` f 
     LEFT JOIN `Activos` a ON a.`idFactura`=f.`idFactura`
     WHERE 
         -- Filtros dinámicos por rango de fechas
@@ -735,7 +735,7 @@ BEGIN
         f.`idProveedor`= pIdProveedor
     
     UNION
-    SELECT 'Mantenimiento',a.`idActivo`,a.nombre,m.`costoTotal`,m.`fechaEnvio`,m.`fechaDevolucion` FROM `Mantenimientos` m 
+    SELECT 'Mantenimiento',a.`idActivo`,a.nombre,m.`costoTotal`,m.`fechaEnvio`,m.`fechaDevolucion`,NULL ,m.`idMantenimiento`FROM `Mantenimientos` m 
     LEFT JOIN `Activos` a ON a.`idActivo`=m.`idActivo`
     WHERE 
         -- Filtros dinámicos por rango de fechas

@@ -67,6 +67,12 @@ class Proveedor {
         );
         return result[0][0]; 
     }
+    static async detalleProveedor(id){
+        const result = await pool.execute(
+            'CALL sp_detalleProveedor( ?, NULL, NULL, NULL );', [id]
+        );
+        return result[0][0]; 
+    }
 }
 
 export default Proveedor;

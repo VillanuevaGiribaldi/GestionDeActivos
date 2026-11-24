@@ -439,3 +439,5 @@ SELECT
     FROM `Personas` p
     LEFT JOIN `Usuarios` u on u.`idPersona` = p.`idPersona`
     WHERE u.`idPersona` = 9
+
+    call `sp_detalleProveedor`(1,NULL,NULL,NULL)

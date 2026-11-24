@@ -103,5 +103,19 @@ const altaProveedor = async (req, res) => {
         res.status(500).json({ message: "Error interno al dar de alta el proveedor" });
     }
 }
+const detalleProveedor = async (req,res) => {
+    try {
+        const idUrl = parseInt(req.params.id);
+        const result = await Proveedor.detalleProveedor(idUrl);
+        console.log(result)
+        return res.status(201).json({
+            message: "Detalle de facturas y mantenimientos obtenido", 
+            data: result    
+        });
+    } catch (error) {
+        catchSQL45000(res, error, "No se pudo buscar el detalle del proveedor");
+        res.status(500).json({ message: "Error interno al buscar el detalle del proveedor" });
+    }
+}
 
-export { nuevoProveedor, getProveedor, listarProveedores, modificarProveedor, bajaProveedor, altaProveedor };
+export { nuevoProveedor, getProveedor, listarProveedores, modificarProveedor, bajaProveedor, altaProveedor,detalleProveedor };
