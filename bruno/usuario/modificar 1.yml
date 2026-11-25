@@ -5,16 +5,20 @@ info:
 
 http:
   method: PUT
-  url: http://localhost:3000/api/usuario/4
+  url: http://localhost:3000/api/usuario/:id
+  params:
+    - name: id
+      value: "9"
+      type: path
   body:
     type: json
     data: |-
       {
           "usuario":{
-              "idUsuario": 4,
+              "idUsuario": 9,
               "idPersona": 4,
-              "username": "alopez",
-              "password":"contrasenia4",
+              "username": "jgarcia",
+              "password":"contrasenia",
               "rol": "ADMIN_IT",
               "estado": "A"
           }

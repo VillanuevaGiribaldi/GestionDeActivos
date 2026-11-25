@@ -719,7 +719,7 @@ CREATE procedure sp_modificarActivo(
     IN pIdUsuario INT, -- 
     -- No pueden ser NULL
 	IN pIdMarca INT,
-    IN pIdUbicacion INT,
+    IN pIdUbicacion INT, 
     IN pIdTipo INT,
     IN pIdEstado INT,
     -- Pueden ser NULL
@@ -1489,7 +1489,7 @@ DELIMITER //
 
 CREATE PROCEDURE sp_nuevaMarca(
     IN pNombre VARCHAR(100),
-    IN pDescripcion VARCHAR(45),
+    IN pDescripcion VARCHAR(200),
     IN pEstado CHAR(1),
     OUT pIdMarca INT
 )
@@ -1608,6 +1608,10 @@ BEGIN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'La marca indicada no existe';
     END IF;
 
+    IF EXITS (SELECT 1 FROM `Activos` WHERE `idMarca`=pIdMarca)THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'No se puede eliminar una marca con activos asociados';
+    END IF;
+
     -- 2. Baja Lógica
     UPDATE Marcas 
     SET estado = 'I' -- 'I' representa Inactivo/Baja
@@ -1624,6 +1628,10 @@ CREATE PROCEDURE sp_altaMarca(IN pIdMarca INT)
 BEGIN
     IF pIdMarca IS NULL THEN SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Debe indicar la marca a dar de alta'; END IF;
     IF NOT EXISTS (SELECT 1 FROM Marcas WHERE idMarca = pIdMarca) THEN SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'La marca indicada no existe'; END IF;
+    IF EXISTS (SELECT 1 FROM Marcas WHERE nombre = pNombre AND estado='A') THEN
+        SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'No se le puede dar de alta a la marca puesto que ya existe una con el mismo nombre';
+    END IF;
     UPDATE Marcas SET estado = 'A' WHERE idMarca = pIdMarca;
 END//
 DELIMITER ;
@@ -1733,7 +1741,11 @@ SALIR: BEGIN
             SET MESSAGE_TEXT = 'El nombre de la ubicacion no puede estar vacio';
         LEAVE SALIR;
     END IF;
-
+    -- 4.5. Validación de duplicados (UNIQUE INDEX en 'nombre')
+    IF EXISTS (SELECT 1 FROM Ubicaciones WHERE nombre = pNombre AND `idPadreUnico`=vIdUbicacionPadre AND estado='A') THEN
+        SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'No se puede tener dos ubicaciones con el mismo nombre a menos que tengan una ubicacion padre distinta';
+    END IF;
     -- 5. Obtener la ubicación padre
     IF vIdUbicacionPadre IS NOT NULL THEN
         -- 6. Verificar que la ubicación padre exista
@@ -1983,6 +1995,7 @@ BEGIN
         SIGNAL SQLSTATE '45000'
             SET MESSAGE_TEXT = 'El nombre ingresado ya pertenece a otro proveedor registrado';
     END IF;
+    
 
     -- 5. Actualización con Reemplazo Total (sin COALESCE)
     UPDATE Proveedores
@@ -2016,19 +2029,30 @@ BEGIN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El proveedor indicado no existe en el sistema';
     END IF;
 
+    
+    -- 5. verificar que si hay algo con el provedor asociado
+    IF EXISTS (SELECT 1 FROM `Facturas` WHERE `idProveedor`=pIdProveedor AND estado='A')THEN
+        SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'El proveedor indicado tiene facturas asociadas';
+    END IF;
+    IF EXISTS (SELECT 1 FROM `Mantenimientos` WHERE `idProveedor`=pIdProveedor AND estado='A')THEN
+        SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'El proveedor indicado tiene mantenimientos asociados';
+    END IF;
+    -- esto ya no es necesario por los controles de arriba    
     -- 3. CONTROL EXTRA: Mantenimientos en curso
     -- Verifica si el proveedor tiene equipos sin devolver
-    IF EXISTS (
-        SELECT 1 FROM Mantenimientos 
-        WHERE idProveedor = pIdProveedor 
-        AND fechaDevolucion IS NULL
-    ) THEN
-        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'No se puede dar de baja al proveedor porque actualmente posee activos en reparación (sin fecha de devolución).';
-    END IF;
+    -- IF EXISTS (
+    --     SELECT 1 FROM Mantenimientos 
+    --     WHERE idProveedor = pIdProveedor 
+    --     AND fechaDevolucion IS NULL
+    -- ) THEN
+    --     SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'No se puede dar de baja al proveedor porque actualmente posee activos en reparación (sin fecha de devolución).';
+    -- END IF;
 
     -- 4. Ejecución de la Baja Lógica
     UPDATE Proveedores 
-    SET estado = 'I' -- 'I' representa Inactivo / Dado de baja
+    SET estado = 'I'
     WHERE idProveedor = pIdProveedor;
 
 END//
@@ -2202,16 +2226,19 @@ BEGIN
     -- INICIO DE TRANSACCIÓN
     START TRANSACTION;
 
+    -- CALL `sp_limpiarPersona`(pIdPersona, pIdUsuario)
     -- 2. Baja Lógica de la Persona
     UPDATE Personas 
-    SET estado = 'I' -- 'I' representa Inactivo
+    SET estado = 'I' 
     WHERE idPersona = pIdPersona;
 
-    -- 3. Baja Lógica en cascada del Usuario asociado (Seguridad)
+    -- 3. Baja Lógica en cascada del Usuario asociado
     -- Si la persona no tiene usuario, este UPDATE simplemente no afectará filas, lo cual es seguro.
     UPDATE Usuarios 
     SET estado = 'I' 
     WHERE idPersona = pIdPersona;
+
+    call sp_modificarActivo ()
 
     COMMIT;
 END//
@@ -2329,6 +2356,8 @@ CREATE PROCEDURE sp_modificarUsuario(
 )
 BEGIN
     DECLARE vEstadoPersona CHAR(1);
+    DECLARE vEstadoUsuario CHAR(1);
+
 
     -- Manejador de errores (Transacciones ACID)
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
@@ -2373,13 +2402,15 @@ BEGIN
 --        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Use la función dar de baja';
 --    END IF;
 --
-    -- 4. Validación de integridad de la Persona (debe existir y estar activa)
+    -- 4. Validación de integridad de la Persona (debe existir y estar en el mismo estado que el usuario)
     SELECT estado INTO vEstadoPersona FROM Personas WHERE idPersona = pIdPersona;
+    SELECT estado INTO vEstadoUsuario FROM `Usuarios` WHERE `idUsuario` = pIdUsuario;
+
 
     IF vEstadoPersona IS NULL THEN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'La persona indicada no existe en el sistema';
-    ELSEIF vEstadoPersona = 'I' THEN
-        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'No se puede asignar el usuario a una persona dada de baja';
+    ELSEIF vEstadoPersona <> vEstadoUsuario THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'No se puede asignar la persona al usuario por que tienen estados distintos';
     END IF;
 
     -- 5. Validación de nombre de usuario duplicado (Excluyendo el usuario actual)

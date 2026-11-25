@@ -268,3 +268,91 @@ BEGIN
 
     SET pRuta = vString;
 END//
+
+DELIMITER //
+
+DROP PROCEDURE if EXists sp_limpiarPersona;
+
+CREATE PROCEDURE sp_limpiarPersona(IN pIdPersona INT, IN pIdUsuario INT)
+BEGIN
+    DECLARE done INT DEFAULT FALSE;
+    
+    -- Variables to hold the user's current data
+    DECLARE vIdActivo INT;
+    DECLARE vIdUsuario INT;
+    DECLARE vIdMarca INT;
+    DECLARE vIdUbicacion INT;
+    DECLARE vIdTipo INT;
+    DECLARE vIdEstado INT;
+    DECLARE vidFactura INT;
+    DECLARE vidCompone INT;
+    DECLARE vNombre VARCHAR(45);
+    DECLARE vPrecioUnitario DECIMAL(12,2);
+    DECLARE vNumeroSerie VARCHAR(100);
+    DECLARE vModelo VARCHAR(50);
+    
+    -- 1. Select all users with the specific idTipe
+    DECLARE activosCursor CURSOR FOR 
+        SELECT idActivo,
+--            idUsuario,
+            idMarca,
+            idUbicacion,
+            idTipo,
+            idEstado,
+            idFactura,
+            compone,
+            nombre,
+            precioUnitario,
+            numeroSerie,
+            modelo 
+        FROM `Activos`
+        WHERE `idPersona` = pIdPersona;
+        
+    DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
+
+    OPEN activosCursor;
+
+    read_loop: LOOP
+        FETCH activosCursor INTO 
+            vIdActivo,
+            -- vIdUsuario,
+            vIdMarca,
+            vIdUbicacion,
+            vIdTipo,
+            vIdEstado,
+            vidFactura,
+            vidCompone,
+            vNombre,
+            vPrecioUnitario,
+            vNumeroSerie,
+            vModelo ;
+        
+        IF done THEN
+            LEAVE read_loop;
+        END IF;
+        
+        -- 2. Call your existing SP, passing NULL for idTipe and keeping other fields unchanged
+        CALL `sp_modificarActivo`(
+            vIdActivo,
+            pIdUsuario,
+            vIdMarca,
+            vIdUbicacion,
+            vIdTipo, 
+            vIdEstado,
+            vidFactura,
+            NULL, -- Sets pIdTipo to NULL
+            vidCompone,
+            vNombre,
+            vPrecioUnitario,
+            vNumeroSerie,
+            vModelo
+        );
+
+        
+    END LOOP;
+
+    CLOSE activosCursor;
+END//
+
+DELIMITER ;
+

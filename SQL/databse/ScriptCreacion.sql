@@ -49,9 +49,10 @@ CREATE TABLE IF NOT EXISTS `GestionDeActivos`.`Marcas` (
   `idMarca` INT NOT NULL AUTO_INCREMENT,
   `nombre` VARCHAR(100) NOT NULL,
   `estado` CHAR(1) NOT NULL,
-  `descripcion` VARCHAR(45) NULL,
+  `descripcion` VARCHAR(200) NULL,
   PRIMARY KEY (`idMarca`),
-  UNIQUE INDEX `nombre_UNIQUE` (`nombre` ASC) VISIBLE)
+  UNIQUE INDEX `nombre_UNIQUE` (`nombre` ASC) VISIBLE
+  )
 ENGINE = InnoDB;
 
 

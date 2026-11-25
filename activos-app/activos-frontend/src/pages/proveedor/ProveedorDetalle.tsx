@@ -7,7 +7,7 @@ import DetalleProveedor from "./ResumenProveedor";
 
 function Campo({ etiqueta, children }: { etiqueta: string; children: React.ReactNode }) {
     return (
-        <div className="campo">
+        <div className={`campo `} >
             <dt>{etiqueta}</dt>
             <dd>{children}</dd>
         </div>
@@ -165,9 +165,9 @@ export default function ProveedorDetalle() {
             </Seccion>
 
             <Seccion titulo="Resumen de operaciones">
-                <div className="grid-campos">
+                <div className="grid-campos ">
                     {resumen.map(item => (
-                        <Campo etiqueta={item.tipo} key={item.tipo}>
+                        <Campo  etiqueta={item.tipo} key={item.tipo} >
                             <div className="space-y-1">
                                 <p>
                                     <strong>{item.cantidad}</strong> operaciones
@@ -187,7 +187,7 @@ export default function ProveedorDetalle() {
                         </Campo>
                     ))}
                 </div>
-
+                <hr className="my-2 border-gray-50" />
                 <div className="mt-4 pt-3 border-t border-gray-200 grid-campos" >
                     <Campo etiqueta="Gasto total">
                         <strong>
