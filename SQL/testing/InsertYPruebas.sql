@@ -267,13 +267,14 @@ CALL sp_nuevaFactura(
 -- ==========================================
 -- FASE 9: ACTIVOS
 -- ==========================================
+SET @idActivoGenerado = NULL;
 
 -- 5 PCs de la factura @idFacturaPC
 CALL sp_nuevoActivo(
     @idUsuarioJuan, 'Dell', 'Oficina IT', 'PC', 'Operativo',
     @idFacturaPC, NULL, NULL, 'PC-IT-001',
     JSON_OBJECT(CAST(@idAtrPC_SO AS CHAR), 'Windows 10', CAST(@idAtrPC_IP AS CHAR), '192.168.1.101'),
-    1000.00, 'DELL-PC-001', 'OptiPlex 7090'
+    1000.00, 'DELL-PC-001', 'OptiPlex 7090', @idActivoGenerado
 );
 
 CALL sp_nuevoActivo(

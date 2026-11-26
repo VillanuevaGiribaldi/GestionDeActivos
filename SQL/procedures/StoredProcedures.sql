@@ -1608,7 +1608,7 @@ BEGIN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'La marca indicada no existe';
     END IF;
 
-    IF EXITS (SELECT 1 FROM `Activos` WHERE `idMarca`=pIdMarca)THEN
+    IF EXISTS (SELECT 1 FROM `Activos` WHERE `idMarca`=pIdMarca)THEN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'No se puede eliminar una marca con activos asociados';
     END IF;
 
@@ -2238,7 +2238,7 @@ BEGIN
     SET estado = 'I' 
     WHERE idPersona = pIdPersona;
 
-    call sp_modificarActivo ()
+    call sp_modificarActivo ();
 
     COMMIT;
 END//
