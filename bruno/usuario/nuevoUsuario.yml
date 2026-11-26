@@ -11,8 +11,8 @@ http:
     data: |-
       {
           "usuario":{
-              "idPersona":10,
-              "username": "jgarcia1",
+              "idPersona": 11,
+              "username": "uprueba",
               "password":"contrasenia3",
               "rol": "SOPORTE_IT",
               "estado": "A"

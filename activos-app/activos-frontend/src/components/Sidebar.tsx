@@ -23,13 +23,19 @@ import ReceiptIcon from '@mui/icons-material/Receipt';
 import EngineeringIcon from '@mui/icons-material/Engineering';
 import PhotoLibraryIcon from '@mui/icons-material/PhotoLibrary';
 import HistoryIcon from '@mui/icons-material/History'
-
+import {IconButton} from "@mui/material";
 import { useNavigate } from 'react-router-dom';
-
+import BotonBusqueda from "./BotonBusqueda";
+import { useState } from "react";
+import { ArrowBackIos } from "@mui/icons-material";
 
 const drawerWidth = 240;
+interface SidebarProps {
+    buscando: boolean;
+    onChangeBuscando: (value: boolean) => void;
+}
+export default function Sidebar({buscando,onChangeBuscando}: SidebarProps) {
 
-export default function Sidebar() {
     const location = useLocation();
     const navigate = useNavigate();
     {console.log(location.pathname)}
@@ -47,16 +53,46 @@ export default function Sidebar() {
                 },
             }}
         >
-            <Toolbar>
-                <Typography variant="h6" noWrap component="div" sx={{ fontWeight: 'bold' }} 
-                    onClick={() => navigate(`/`)}
-                    style={{ cursor: 'pointer' }}
-                    >
-                    ITAM System
-                </Typography>
+            <Toolbar sx={{
+                justifyContent:"center",
+                px:0,
+                ml:0,
+                mr: 0,}}>
+                <Box sx={{
+                    //marginLeft:"50",  
+                    width: "100%",                  
+                    borderRadius:3,
+                    background:'#000000',
+                    display: "flex",
+                    alignItems: 'center',
+                    justifyContent: "space-evenly",
+                    gap: 1
+                    }}>
+                    <IconButton sx={{color: "white"}} onClick={()=>navigate(-1)}><ArrowBackIos /></IconButton>
+                    <Typography variant="h6" noWrap component="div" sx={{ 
+                        fontWeight: 'bold',
+                        color:"white",
+                        fontSize: 25, 
+                        lineHeight: 2.3,
+                        transform: "scaleY(1.3)",
+                        transformOrigin: "center", 
+                    }} 
+                        onClick={() => navigate(`/`)}
+                        style={{ cursor: 'pointer' }}
+                        >
+                        ITAM
+                    </Typography>
+                    <BotonBusqueda
+                        buscando={buscando}
+                        onChangeBuscando={onChangeBuscando}
+                    />
+                </Box>
+                
             </Toolbar>
             
-            <Box sx={{ overflow: 'auto', mt: 2 }}>
+            <Box sx={{ overflow: 'auto', mt: 0 }}>
+                
+                
                 <List>
                     
                     {/* Botones del Catálogo*/}

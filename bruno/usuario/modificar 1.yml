@@ -8,16 +8,16 @@ http:
   url: http://localhost:3000/api/usuario/:id
   params:
     - name: id
-      value: "9"
+      value: "7"
       type: path
   body:
     type: json
     data: |-
       {
           "usuario":{
-              "idUsuario": 9,
-              "idPersona": 4,
-              "username": "jgarcia",
+              "idUsuario": 7,
+              "idPersona": 12,
+              "username": "umodificado",
               "password":"contrasenia",
               "rol": "ADMIN_IT",
               "estado": "A"

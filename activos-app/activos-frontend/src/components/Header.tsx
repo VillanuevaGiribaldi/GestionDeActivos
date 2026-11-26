@@ -5,8 +5,13 @@ import SugerenciasBusqueda from "./SugerenciasBusqueda";
 import { buscarActivos } from "../assets/services/busquedaService";
 import '../style.css'
 import type { FiltrosActivosAvanzado } from "../types/filtrosActivosAvanzado";
+import BotonBusqueda from "./BotonBusqueda";
+import { Collapse } from "@mui/material";
 
-export default function Header(){
+interface HeaderProps {
+    abierto: boolean;
+}
+export default function Header({abierto}: HeaderProps){
         const MIN_SEARCH = 2
         const [activos, setActivos] = useState<ActivoAvanzado[]>([]);
         const [cargando, setCargando] = useState(true);
@@ -39,6 +44,8 @@ export default function Header(){
 
     return(
         <>
+        {/* <Collapse in={abierto} orientation="horizontal"> */}
+
         <header className="cabezera">
             <div className="barraBusqueda">
                 <BarraBusqueda
@@ -51,10 +58,9 @@ export default function Header(){
                     loading={cargando}
                     />
                 </div>
-                
             </div>
-            
         </header>
+        
         </>
     )
 }

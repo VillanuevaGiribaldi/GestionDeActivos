@@ -5,7 +5,11 @@ info:
 
 http:
   method: PUT
-  url: http://localhost:3000/api/usuario/4/alta
+  url: http://localhost:3000/api/usuario/:id/alta
+  params:
+    - name: id
+      value: "7"
+      type: path
   body:
     type: json
     data: ""

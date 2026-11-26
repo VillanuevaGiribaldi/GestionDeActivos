@@ -8,17 +8,17 @@ http:
   url: http://localhost:3000/api/persona/:id
   params:
     - name: id
-      value: "2"
+      value: "11"
       type: path
   body:
     type: json
     data: |-
       {
           "persona": {
-          "idPersona": 2,
-          "nombre": "María",
-          "apellido": "Gómez modificada",
-          "dni": "32987654",
+          "idPersona": 11,
+          "nombre": "p",
+          "apellido": " modificada",
+          "dni": "1111111",
           "cargo": "Gerente de Ventas",
           "estado": "I"
         }

@@ -11,9 +11,9 @@ http:
     data: |-
       {
           "persona":{
-              "nombre": "Juan",
-              "apellido": "García",
-              "dni": "45678912",
+              "nombre": "Persona",
+              "apellido": "Prueba",
+              "dni": "2222222",
               "cargo": "Pasante",
               "estado": "A"
           }
