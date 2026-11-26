@@ -267,7 +267,7 @@ CREATE TABLE IF NOT EXISTS `GestionDeActivos`.`Usuarios` (
   `idPersona` INT NOT NULL,
   `username` VARCHAR(45) NOT NULL,
   `password` VARCHAR(255) NOT NULL,
-  `rol` VARCHAR(45) NOT NULL,
+  `permisos` ENUM('VIEW','DEFAULT','ADMIN') NOT NULL,
   `estado` CHAR(1) NOT NULL,
   PRIMARY KEY (`idUsuario`),
   UNIQUE INDEX `username_UNIQUE` (`username` ASC) VISIBLE,

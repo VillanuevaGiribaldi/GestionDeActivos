@@ -2226,7 +2226,7 @@ BEGIN
     -- INICIO DE TRANSACCIÓN
     START TRANSACTION;
 
-    -- CALL `sp_limpiarPersona`(pIdPersona, pIdUsuario)
+    
     -- 2. Baja Lógica de la Persona
     UPDATE Personas 
     SET estado = 'I' 

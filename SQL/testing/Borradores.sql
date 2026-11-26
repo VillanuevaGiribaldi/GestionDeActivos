@@ -234,3 +234,7 @@ ALTER TABLE `Ubicaciones` DROP COLUMN idPadreUnico;
 ALTER TABLE Ubicaciones
   ADD COLUMN idPadreUnico INT GENERATED ALWAYS AS (IFNULL(idUbicacionPadre, 0)) VIRTUAL,
   ADD UNIQUE INDEX UX_padreNombre (idPadreUnico, nombre);
+ALTER TABLE `Usuarios` 
+	CHANGE `rol` `permisos` ENUM('VIEW','DEFAULT','ADMIN') NOT NULL ;
+
+UPDATE `Usuarios` SET rol='ADMIN'
