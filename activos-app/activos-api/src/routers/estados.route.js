@@ -7,17 +7,17 @@ import {
     altaEstado,
     listarEstados
 } from '../controllers/estados.controller.js';
-import { authDefault } from "../controllers/auth.controller.js";
+import { authAdmin, authDefault, authView } from "../controllers/auth.controller.js";
 
 const router = Router();
 
-router.route('/').get(authDefault, listarEstados);
-router.route('/nuevo').post(authDefault, nuevoEstado);
+router.route('/').get(authView, listarEstados);
+router.route('/nuevo').post(authAdmin, nuevoEstado);
 
-router.route('/:id').get(authDefault, getEstado)
-router.route('/:id').put(authDefault, modificarEstado)
-router.route('/:id','/:id/baja').delete(authDefault, bajaEstado);  
+router.route('/:id').get(authView, getEstado)
+router.route('/:id').put(authAdmin, modificarEstado)
+router.route('/:id','/:id/baja').delete(authAdmin, bajaEstado);  
 
-router.route('/:id/alta').put(authDefault, altaEstado);
+router.route('/:id/alta').put(authAdmin, altaEstado);
 
 export default router;
