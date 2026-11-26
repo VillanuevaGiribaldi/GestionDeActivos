@@ -8,18 +8,18 @@ http:
   url: http://localhost:3000/api/usuario/:id
   params:
     - name: id
-      value: "7"
+      value: "3"
       type: path
   body:
     type: json
     data: |-
       {
           "usuario":{
-              "idUsuario": 7,
-              "idPersona": 12,
-              "username": "umodificado",
+              "idUsuario": 3,
+              "idPersona": 3,
+              "username": "crodriguez",
               "password":"contrasenia",
-              "rol": "ADMIN_IT",
+              "rol": "DEFAULT",
               "estado": "A"
           }
       }
