@@ -9,7 +9,7 @@ import {
     Typography, 
     Box 
 } from "@mui/material";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation,useNavigate } from "react-router-dom";
 import BallotIcon from '@mui/icons-material/Ballot';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 import StoreIcon from '@mui/icons-material/Store';
@@ -24,9 +24,7 @@ import EngineeringIcon from '@mui/icons-material/Engineering';
 import PhotoLibraryIcon from '@mui/icons-material/PhotoLibrary';
 import HistoryIcon from '@mui/icons-material/History'
 import {IconButton} from "@mui/material";
-import { useNavigate } from 'react-router-dom';
 import BotonBusqueda from "./BotonBusqueda";
-import { useState } from "react";
 import { ArrowBackIos } from "@mui/icons-material";
 
 const drawerWidth = 240;
@@ -38,7 +36,14 @@ export default function Sidebar({buscando,onChangeBuscando}: SidebarProps) {
 
     const location = useLocation();
     const navigate = useNavigate();
-    {console.log(location.pathname)}
+    const goBack = () => {
+    if (location.key !== "/") {
+            navigate(-1);
+        } else {
+            navigate("/"); // Fallback route
+        }
+    };
+    
     return (
         <Drawer
             variant="permanent"
@@ -57,7 +62,8 @@ export default function Sidebar({buscando,onChangeBuscando}: SidebarProps) {
                 justifyContent:"center",
                 px:0,
                 ml:0,
-                mr: 0,}}>
+                mr: 0,
+                mt:1,}}>
                 <Box sx={{
                     //marginLeft:"50",  
                     width: "100%",                  
@@ -68,7 +74,9 @@ export default function Sidebar({buscando,onChangeBuscando}: SidebarProps) {
                     justifyContent: "space-evenly",
                     gap: 1
                     }}>
-                    <IconButton sx={{color: "white"}} onClick={()=>navigate(-1)}><ArrowBackIos /></IconButton>
+
+
+                    <IconButton sx={{color: "white"}} onClick={goBack}><ArrowBackIos /></IconButton>
                     <Typography variant="h6" noWrap component="div" sx={{ 
                         fontWeight: 'bold',
                         color:"white",
@@ -77,7 +85,7 @@ export default function Sidebar({buscando,onChangeBuscando}: SidebarProps) {
                         transform: "scaleY(1.3)",
                         transformOrigin: "center", 
                     }} 
-                        onClick={() => navigate(`/`)}
+                        onClick={()=>navigate("/")}
                         style={{ cursor: 'pointer' }}
                         >
                         ITAM
