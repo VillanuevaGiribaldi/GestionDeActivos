@@ -2087,10 +2087,10 @@ CREATE PROCEDURE sp_nuevaPersona(
 )
 BEGIN
     -- 1. Sanitización de entradas
-    SET pNombre = TRIM(pNombre);
-    SET pApellido = TRIM(pApellido);
+    IF pNombre IS NOT NULL THEN SET pNombre = TRIM(pNombre); END IF;
+    IF pApellido IS NOT NULL THEN SET pApellido = TRIM(pApellido); END IF;
     IF pDni IS NOT NULL THEN SET pDni = TRIM(pDni); END IF;
-    SET pCargo = TRIM(pCargo);
+    IF pCargo IS NOT NULL THEN SET pCargo = TRIM(pCargo); END IF;
 
     -- 2. Validación de campos obligatorios
     IF pNombre IS NULL OR pNombre = '' THEN
@@ -2099,6 +2099,10 @@ BEGIN
     
     IF pApellido IS NULL OR pApellido = '' THEN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El apellido de la persona es obligatorio';
+    END IF;
+    
+    IF pDni IS NULL OR pDni = '' THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El DNI es obligatorio';
     END IF;
     
     IF pCargo IS NULL OR pCargo = '' THEN
@@ -2119,9 +2123,7 @@ BEGIN
     INSERT INTO Personas (nombre, apellido, dni, cargo, estado)
     VALUES (pNombre, pApellido, pDni, pCargo, pEstado);
 
-    -- 6. Retorno del ID autogenerado
     SET pIdPersona = LAST_INSERT_ID();
-
 END//
 DELIMITER ;
 
@@ -2168,6 +2170,10 @@ BEGIN
     
     IF pApellido IS NULL OR pApellido = '' THEN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El apellido de la persona es obligatorio';
+    END IF;
+    
+    IF pDni IS NULL OR pDni = '' THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El DNI es obligatorio';
     END IF;
     
     IF pCargo IS NULL OR pCargo = '' THEN

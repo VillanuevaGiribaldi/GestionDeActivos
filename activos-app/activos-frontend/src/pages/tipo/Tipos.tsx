@@ -6,8 +6,8 @@ import {
     modificarTipo,
     bajaTipo,
     altaTipo,
-} from '../assets/services/tipoService';
-import type { Tipo } from '../types/tipo';
+} from '../../assets/services/tipoService';
+import type { Tipo } from '../../types/tipo';
 import {
     Table, TableBody, TableCell, TableContainer,
     TableHead, TableRow, Paper, Chip,
@@ -19,6 +19,7 @@ import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import BlockIcon from '@mui/icons-material/Block';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import InventoryIcon from '@mui/icons-material/Inventory';
 
 export default function Tipos() {
     const [tipos, setTipos] = useState<Tipo[]>([]);
@@ -41,6 +42,11 @@ export default function Tipos() {
     const navigate = useNavigate();
 
     const handleFilaClick = (idTipo: number) => {
+        navigate(`/tipo/${idTipo}`);
+    };
+
+    const handleVerActivos = (e: React.MouseEvent, idTipo: number) => {
+        e.stopPropagation();
         navigate(`/activos?idTipo=${idTipo}`);
     };
 
@@ -246,6 +252,16 @@ export default function Tipos() {
                                             />
                                         </TableCell>
                                         <TableCell align="right" className="whitespace-nowrap">
+                                            <Tooltip title="Ver activos de este tipo">
+                                                <IconButton
+                                                    size="small"
+                                                    color="default"
+                                                    onClick={(e) => handleVerActivos(e, tipo.idTipo)}
+                                                >
+                                                    <InventoryIcon fontSize="small" />
+                                                </IconButton>
+                                            </Tooltip>
+
                                             <Tooltip title="Editar tipo">
                                                 <IconButton
                                                     size="small"

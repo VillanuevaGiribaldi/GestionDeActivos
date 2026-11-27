@@ -12,7 +12,8 @@ import Proveedores from './pages/proveedor/Proveedores.tsx';
 import ProveedorDetalle from './pages/proveedor/ProveedorDetalle.tsx';
 import Personas from "./pages/persona/Personas.tsx";
 import Marcas from "./pages/Marcas.tsx";
-import Tipos from "./pages/Tipos.tsx";
+import Tipos from "./pages/tipo/Tipos.tsx";
+import TipoDetalle from "./pages/tipo/TipoDetalle.tsx";
 import Usuarios from "./pages/usuario/Usuarios.tsx";
 import Estados from './pages/Estados';
 import Facturas from "./pages/factura/Factura.tsx";
@@ -54,6 +55,8 @@ function App() {
             <Route path="/mantenimiento/:id" element={<MantenimientoDetalle />} />
             <Route path="/imagenes" element={<Imagenes />} />
             <Route path="/historial" element={<Historial />} />
+            <Route path="/tipos" element={<Tipos />} />
+            <Route path="/tipo/:id" element={<TipoDetalle />} />
           </Route>
         </Route> 
       </Routes>

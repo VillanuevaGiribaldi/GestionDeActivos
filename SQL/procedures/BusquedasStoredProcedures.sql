@@ -833,17 +833,18 @@ DELIMITER ;
 DROP PROCEDURE IF EXISTS sp_listarAtributos;
 DELIMITER //
 CREATE PROCEDURE sp_listarAtributos(
-    IN pIdTipo CHAR(1)
+    IN pIdTipo INT
 )
 BEGIN
-    SELECT 
-        a.`idAtributo`,
-        a.`idTipo`,
+    SELECT
+        a.idAtributo,
+        a.idTipo,
         a.nombre,
-        a.obligatorio,
-        a.`porDefecto` 
-    FROM `Atributos` a
-    WHERE (a.`idTipo`=pIdTipo OR pIdTipo IS NULL) ;
+        a.porDefecto,
+        a.obligatorio
+    FROM Atributos a
+    WHERE pIdTipo IS NULL OR a.idTipo = pIdTipo
+    ORDER BY a.obligatorio DESC, a.nombre ASC;
 END//
 DELIMITER ;
 -- ============================================= Buscar Id Atributos

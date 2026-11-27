@@ -58,3 +58,9 @@ export const altaTipo = (idTipo: number) => {
         method: "PUT",
     });
 };
+
+export const getTipo = (id: number) => {
+    return apiRequest<apiResponse<Tipo>>(`/tipo/${id}`, {
+        method: "GET",
+    });
+};

@@ -80,7 +80,7 @@ CREATE TABLE IF NOT EXISTS `GestionDeActivos`.`Personas` (
   `idPersona` INT NOT NULL AUTO_INCREMENT,
   `nombre` VARCHAR(45) NOT NULL,
   `apellido` VARCHAR(45) NOT NULL,
-  `dni` VARCHAR(45) NULL,
+  `dni` VARCHAR(45) NOT NULL,
   `cargo` VARCHAR(100) NOT NULL,
   `estado` CHAR(1) NOT NULL,
   PRIMARY KEY (`idPersona`),

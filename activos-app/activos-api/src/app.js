@@ -38,8 +38,6 @@ app.use('/api/atributo', atributosRouter);
 app.use('/api/composicion', composicionRouter);
 app.use('/api/activo', activosRouter);
 
-app.use('/api/imagen', imagenesRouter)
-app.use('/api/atributo', atributosRouter)
 app.use('/api/mantenimiento', mantenimientosRouter);
 app.use('/api/historial', historialRouter);
 
