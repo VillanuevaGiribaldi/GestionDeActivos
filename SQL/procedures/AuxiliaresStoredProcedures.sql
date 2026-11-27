@@ -340,7 +340,7 @@ BEGIN
             vIdTipo, 
             vIdEstado,
             vidFactura,
-            NULL, -- Sets pIdTipo to NULL
+            NULL, -- Sets pIdPersona to NULL
             vidCompone,
             vNombre,
             vPrecioUnitario,

@@ -234,6 +234,7 @@ ALTER TABLE `Ubicaciones` DROP COLUMN idPadreUnico;
 ALTER TABLE Ubicaciones
   ADD COLUMN idPadreUnico INT GENERATED ALWAYS AS (IFNULL(idUbicacionPadre, 0)) VIRTUAL,
   ADD UNIQUE INDEX UX_padreNombre (idPadreUnico, nombre);
+
   
   
 -- 1. Verificar si hay registros sin DNI
@@ -247,3 +248,9 @@ WHERE dni IS NULL OR TRIM(dni) = '';
 -- 2. Hacer obligatoria la columna (mantiene el UNIQUE INDEX existente)
 ALTER TABLE Personas
 MODIFY COLUMN dni VARCHAR(45) NOT NULL;
+
+ALTER TABLE `Usuarios` 
+	CHANGE `rol` `permisos` ENUM('VIEW','DEFAULT','ADMIN') NOT NULL ;
+
+UPDATE `Usuarios` SET rol='ADMIN'
+
