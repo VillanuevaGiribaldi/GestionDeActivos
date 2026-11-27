@@ -99,7 +99,7 @@ const listarMarcas = async (req,res) => {
         }
         const result = await Marca.listarMarcas(estado)
         res.status(200).json({ message: "operación exitosa",
-            marcas: result
+            data: result
          });
     } catch (error) {
         console.error('Error al buscar las marcas guardadas:', error);

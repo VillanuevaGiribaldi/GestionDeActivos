@@ -49,7 +49,7 @@ const listarMantenimientos = async (req, res) => {
         const mantenimientos = await Mantenimiento.listarMantenimientos(estado, idActivo);
         return res.status(200).json({
             message: "Operación exitosa",
-            mantenimientos
+            data: mantenimientos
         });
     } catch (error) {
         console.error('Error al listar los mantenimientos:', error);

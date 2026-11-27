@@ -171,7 +171,7 @@ const listarUsuarios = async (req, res) => {
         const result = await Usuario.listarUsuarios(estado);
         
         return res.status(200).json({
-            usuarios: result,
+            data: result,
             message: "Listado de usuarios obtenido exitosamente"
         });
     } catch (error) {

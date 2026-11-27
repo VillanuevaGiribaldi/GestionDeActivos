@@ -44,7 +44,7 @@ const listarFacturas = async (req, res) => {
         const result = await Factura.listarFacturas(estado);
         res.status(200).json({ 
             message: "Operación exitosa",
-            facturas: result
+            data: result
         });
     } catch (error) {
         console.error('Error al buscar las facturas guardadas:', error);

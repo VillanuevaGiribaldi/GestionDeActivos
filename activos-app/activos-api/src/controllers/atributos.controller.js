@@ -92,7 +92,7 @@ const listarAtributos = async (req, res) => {
         const atributos = await Atributo.listarAtributos( idTipo);
         return res.status(200).json({
             message: "Operación exitosa",
-            atributos
+            data: atributos
         });
     } catch (error) {
         console.error('Error al listar los atributos:', error);

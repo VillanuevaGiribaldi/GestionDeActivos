@@ -74,7 +74,7 @@ const authDefault = async (req, res, next) => {
         const decoded = jwt.verify(req.headers.authorization.split(" ")[1], process.env.JWT_SECRET || 'secreto_de_prueba_temporal');
         // Permite el paso si el rol incluye 'IT' Ej. ADMIN_IT, SOPORTE_IT, PASANTE_IT)
         if (decoded.rol==('VIEW')) {
-            return res.status(403).json({ message: "Acceso denegado. Se requiere ser empleado de TI." });
+            return res.status(401).json({ message: "Acceso denegado. Se requiere ser empleado de TI." });
         }
         req.usuario = decoded;
         next();

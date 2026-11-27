@@ -98,10 +98,10 @@ const altaEstado = async (req, res) => {
 const listarEstados = async (req, res) => {
     try {
         const filtro = req.query.estado || null;
-        const estados = await Estado.listarEstados(filtro);
+        const data = await Estado.listarEstados(filtro);
         return res.status(200).json({
             message: "Operación exitosa",
-            estados
+            data
         });
     } catch (error) {
         console.error('Error al listar los estados:', error);

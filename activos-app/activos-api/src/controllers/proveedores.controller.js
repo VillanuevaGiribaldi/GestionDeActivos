@@ -48,7 +48,7 @@ const listarProveedores = async (req, res) => {
         const result = await Proveedor.listarProveedor(estado);
         res.status(200).json({ 
             message: "Operación exitosa",
-            proveedores: result
+            data: result
          });
     } catch (error) {
         console.error('Error al buscar los proveedores guardados:', error);

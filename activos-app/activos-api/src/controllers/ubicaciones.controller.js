@@ -101,7 +101,7 @@ const listarUbicaciones = async (req, res) => {
         const ubicaciones = (await Ubicacion.listarUbicaciones(estado));
         return res.status(200).json({
             message: "operación exitosa",
-            ubicaciones
+            data: ubicaciones
         });
     } catch (error) {
         console.error('Error al listar las ubicaciones:', error);

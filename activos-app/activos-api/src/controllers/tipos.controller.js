@@ -118,7 +118,7 @@ const listarTipos = async (req, res) => {
         const tipos = await Tipo.listarTipos(estado);
         return res.status(200).json({
             message: "Operación exitosa",
-            tipos: tipos
+            data: tipos
         });
     } catch (error) {
         console.error('Error al listar los tipos:', error);

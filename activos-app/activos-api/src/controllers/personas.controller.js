@@ -46,7 +46,7 @@ const listarPersonas = async (req, res) => {
         const personas = await Persona.listarPersonas(estado);
         
         return res.status(200).json({
-            personas: personas,
+            data: personas,
             message: "Listado de personas obtenido exitosamente"
         });
     } catch (error) {
