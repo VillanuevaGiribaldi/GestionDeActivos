@@ -8,37 +8,40 @@ import type { ActivoAvanzado } from '../../types/activoAvanzado';
 import BarraBusqueda from '../../components/BarraBusquedaTexto.tsx';
 import ResultadosBusqueda from '../../components/ResultadosBusqueda.tsx';
 import type { FiltrosActivosAvanzado } from '../../types/filtrosActivosAvanzado.tsx';
+import Filtros from '@/components/Filtros.tsx';
 
 export default function BuscadorActivos() {
     const [activos, setActivos] = useState<ActivoAvanzado[]>([]);
     const [cargando, setCargando] = useState(true);
     const [textoBusqueda, setTextoBusqueda] = useState('');
-    
+    const [filtros,setFiltros] = useState<FiltrosActivosAvanzado>({})
     const [searchParams] = useSearchParams();
     //const navigate = useNavigate();
 
     // Efecto para buscar. Se dispara al montar o cuando el usuario tipea
     useEffect(() => {
         const fetchActivos = async () => {
-            const filtros: FiltrosActivosAvanzado={};
+            //const filtros: FiltrosActivosAvanzado={};
             setCargando(true);
             try {
                 // Filtro principal: El texto escrito en la barra
                 if (textoBusqueda) {
-                    filtros.filtroTexto = textoBusqueda;
+                    setFiltros(prev => ({...prev,filtroTexto: textoBusqueda}))
                 }
         
                 const idMarcaUrl = searchParams.get('idMarca');
                 if (idMarcaUrl) {
-                    filtros.idMarca = parseInt(idMarcaUrl);
+                    setFiltros(prev => ({...prev,idMarca : parseInt(idMarcaUrl)}))
+
                 }
 
                 const idTipoUrl = searchParams.get('idTipo');
-                if (idTipoUrl) filtros.idTipo = parseInt(idTipoUrl);
+                if (idTipoUrl) setFiltros(prev => ({...prev,idTipo : parseInt(idTipoUrl)}))
+                    
                 
                 // Pasamos el texto ingresado como parámetro "filtroTexto" al backend
                 const respuesta = await buscarActivos(filtros);
-                console.log(respuesta)
+                //console.log(respuesta)
                 if (respuesta.data) {
                     setActivos(respuesta.data);
                 }
@@ -59,7 +62,7 @@ export default function BuscadorActivos() {
         <div className="p-6 bg-gray-50 min-h-screen">
             <div className="max-w-7xl mx-auto space-y-6">
                 <h1 className="text-3xl font-bold text-gray-800">Inventario General</h1>
-
+                
                 {/* Barra de Búsqueda Global */}
                 <BarraBusqueda 
                     texto={textoBusqueda}
@@ -67,6 +70,11 @@ export default function BuscadorActivos() {
                     placeholder='Ingrese el nombre de un activo'
                 />
 
+                {/* Filtros */}
+                <Filtros
+                    filtro={filtros}
+                    setFiltros={setFiltros}
+                />
                 {/* Grilla de Resultados */}
                 <ResultadosBusqueda 
                     results={activos}
