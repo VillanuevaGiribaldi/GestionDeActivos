@@ -47,11 +47,10 @@ class Atributo {
         const result = await pool.execute('CALL sp_buscarIdAtributo( ? );', [idAtributo]);
         return result[0][0][0];
     }
-
     static async listarAtributos(idTipo = null) {
         const result = await pool.execute(
             'CALL sp_listarAtributos( ? );',
-            [idTipo ?? null]
+            [idTipo ]
         );
         return result[0][0];
     }

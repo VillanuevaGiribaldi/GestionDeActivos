@@ -14,49 +14,56 @@ export default function BuscadorActivos() {
     const [activos, setActivos] = useState<ActivoAvanzado[]>([]);
     const [cargando, setCargando] = useState(true);
     const [textoBusqueda, setTextoBusqueda] = useState('');
-    const [filtros,setFiltros] = useState<FiltrosActivosAvanzado>({})
+    
     const [searchParams] = useSearchParams();
+    const [filtros, setFiltros] = useState<FiltrosActivosAvanzado>(() => {
+        const inicial: FiltrosActivosAvanzado = {};
+        const idMarca = searchParams.get('idMarca');
+        const idTipo = searchParams.get('idTipo');
+        if (idMarca) inicial.idMarca = parseInt(idMarca);
+        if (idTipo) inicial.idTipo = parseInt(idTipo);
+        return inicial;
+    });
     //const navigate = useNavigate();
-
+    // Keep filters in sync if the URL changes while the page is already mounted
+    useEffect(() => {
+        const idMarca = searchParams.get('idMarca');
+        const idTipo = searchParams.get('idTipo');
+        setFiltros(prev => ({
+            ...prev,
+            idMarca: idMarca ? parseInt(idMarca) : undefined,
+            idTipo: idTipo ? parseInt(idTipo) : undefined,
+        }));
+    }, [searchParams]);
     // Efecto para buscar. Se dispara al montar o cuando el usuario tipea
     useEffect(() => {
+    let cancelado = false;
+
         const fetchActivos = async () => {
-            //const filtros: FiltrosActivosAvanzado={};
             setCargando(true);
             try {
-                // Filtro principal: El texto escrito en la barra
-                if (textoBusqueda) {
-                    setFiltros(prev => ({...prev,filtroTexto: textoBusqueda}))
-                }
-        
-                const idMarcaUrl = searchParams.get('idMarca');
-                if (idMarcaUrl) {
-                    setFiltros(prev => ({...prev,idMarca : parseInt(idMarcaUrl)}))
-
-                }
-
-                const idTipoUrl = searchParams.get('idTipo');
-                if (idTipoUrl) setFiltros(prev => ({...prev,idTipo : parseInt(idTipoUrl)}))
-                    
-                
-                // Pasamos el texto ingresado como parámetro "filtroTexto" al backend
-                const respuesta = await buscarActivos(filtros);
-                //console.log(respuesta)
-                if (respuesta.data) {
+                const respuesta = await buscarActivos({
+                    ...filtros,
+                    filtroTexto: textoBusqueda || undefined,
+                });
+                if (!cancelado && respuesta.data) {
                     setActivos(respuesta.data);
                 }
             } catch (error) {
-                console.error("Error al buscar activos:", error);
+                console.error('Error al buscar activos:', error);
             } finally {
-                setCargando(false);
+                if (!cancelado) setCargando(false);
             }
         };
-
+        
         // Un simple "debounce" para no saturar la BD en cada pulsación de tecla
         const delaySearch = setTimeout(fetchActivos, 400);
-        return () => clearTimeout(delaySearch);
+        return () => {
+            clearTimeout(delaySearch)
+            cancelado=true
+        };
         
-    }, [textoBusqueda]);
+    }, [textoBusqueda, filtros]);
 
     return (
         <div className="p-6 bg-gray-50 min-h-screen">

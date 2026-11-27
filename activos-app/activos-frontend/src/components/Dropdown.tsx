@@ -35,6 +35,9 @@ export default function Dropdown({
                     )
                 }
             >
+                <MenuItem value="">
+                    Todos los estados
+                </MenuItem>
                 {opciones.map((opcion) => (
                     <MenuItem key={opcion.id} value={opcion.id}>
                         {opcion.nombre}
